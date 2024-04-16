@@ -25,10 +25,13 @@
 #include <Eigen/Geometry>
 #include "json.h"
 #include "stb_image.hpp"
+#include "parsers.hpp"
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "stb_image_resize.h"
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 
 #define DEBUG 0
 #define _USE_MATH_DEFINES
@@ -36,84 +39,19 @@
 #define EPSILON 1e-8
 #define MAX_TEXTURE_WIDTH 1024
 #define SH_COEFF0 0.2820948f
+#define DEFAULT_PURPLE glm::vec3(102, 51, 153); //0,...,255
 
-
-#define OBJ_NAME "Skull"
+#define OBJ_NAME "materialCube"
 #define OBJ_FORMAT ".obj"
 #define TEXTURE_FORMAT ".jpg"
 #define BASE_DATASET_FOLDER "C:\\Users\\sscolari\\Desktop\\dataset\\"  OBJ_NAME  "\\"
 
 using json = nlohmann::json;
 
-struct Gaussian3D {
-    Gaussian3D(glm::vec3 position, glm::vec3 normal, glm::vec3 scale, glm::vec4 rotation, glm::vec3 RGB, float opacity)
-        : position(position), normal(normal), scale(scale), rotation(rotation), sh0(RGB), opacity(opacity){};
-    Gaussian3D() : position(NULL), normal(NULL), scale(NULL), rotation(NULL), sh0(NULL), opacity(NULL) {};
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 scale;
-    glm::vec4 rotation;
-    glm::vec3 sh0;
-    float opacity;
-};
-
-// Class to represent a mesh
-class Mesh {
-public:
-    std::string name;
-    std::vector<std::pair<std::vector<int>, std::vector<int>>> faces; // Pairs of vertex indices and uv indices
-
-    Mesh(const std::string& name = "Unnamed") : name(name) {}
-};
-
-
 // Simple function to parse an OBJ file into meshes
-std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>> parseObjFileToMeshes(const std::string& filename) {
-    std::vector<glm::vec3> globalVertices;
-    std::vector<glm::vec2> globalUvs;
-    std::vector<Mesh> meshes;
-    Mesh* currentMesh = nullptr;
-    std::ifstream file(filename);
-    std::string line;
 
-    while (std::getline(file, line)) {
-        if (line.find('o') == 0 || line.find('g') == 0) {
-            std::string meshName = line.substr(2);
-            meshes.emplace_back(meshName);
-            currentMesh = &meshes.back();
-        }
-        else if (line.find('v') == 0 && line[1] == ' ') {
-            glm::vec3 vertex;
-            std::istringstream(line.substr(2)) >> vertex.x >> vertex.y >> vertex.z;
-            globalVertices.push_back(vertex);
-        }
-        else if (line.find("vt") == 0) {
-            glm::vec2 uv;
-            std::istringstream(line.substr(3)) >> uv.x >> uv.y;
-            globalUvs.push_back(uv);
-        }
-        else if (line.find('f') == 0) {
-            std::vector<int> vertexIndices, uvIndices;
-            std::istringstream iss(line.substr(2));
-            std::string part;
-            while (iss >> part) {
-                auto slashPos = part.find('/');
-                int vertIdx = std::stoi(part.substr(0, slashPos)) - 1;
-                vertexIndices.push_back(vertIdx);
 
-                if (slashPos != std::string::npos && slashPos + 1 < part.size()) {
-                    int uvIdx = std::stoi(part.substr(slashPos + 1)) - 1;
-                    uvIndices.push_back(uvIdx);
-                }
-            }
-            if (currentMesh) {
-                currentMesh->faces.emplace_back(vertexIndices, uvIndices);
-            }
-        }
-    }
-
-    return std::make_tuple(meshes, globalVertices, globalUvs);
-}
+bool file_exists(std::string fn) { return std::experimental::filesystem::exists(fn); }
 
 // Function to check if a point is inside a triangle
 bool pointInTriangle(const glm::vec2& pt, const glm::vec2& v1, const glm::vec2& v2, const glm::vec2& v3) {
@@ -209,11 +147,13 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
-        // Example for f_rest properties
-        float zeroValue = 0.0f;
+
+        // TODO: this takes up basically 65% of the space and I do not even need to use it
+        float zeroValue = 0.0f; 
         for (int i = 0; i < 45; i++) {
             file.write(reinterpret_cast<const char*>(&zeroValue), sizeof(zeroValue));
         }
+
         //Opacity
         file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
 
@@ -230,12 +170,18 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
     file.close();
 }
 
+//vertexIndices, uvIndices, normalIndices
 // Function to find a 3D position from UV coordinates, this is probably the main bottleneck, as complexity grows with more complex 3D models.
 //Need to think of possible smarter ways to do this
+/*
 std::tuple<glm::vec3, std::string, glm::vec3, std::array<glm::vec3, 3>, std::array<glm::vec2, 3>> find3DPositionFromUV(const std::vector<Mesh>& meshes, const glm::vec2& targetUv, const std::vector<glm::vec3>& globalVertices, const std::vector<glm::vec2>& globalUvs) {
     for (const auto& mesh : meshes) {
         for (const auto& face : mesh.faces) {
-            if (face.first.size() < 3 || face.second.size() < 3) {
+            std::vector<int> vertexIndices = std::get<0>(face);
+            std::vector<int> uvIndices = std::get<1>(face);
+            std::vector<int> normalIndices = std::get<2>(face);
+
+            if (face.first.size() != 3 || face.second.size() != 3) {
                 continue; // Skip non-triangular faces
             }
 
@@ -263,6 +209,7 @@ std::tuple<glm::vec3, std::string, glm::vec3, std::array<glm::vec3, 3>, std::arr
     //std::cout << "3D point not found for given UV" << std::endl;
     return { glm::vec3(0,0,0), "NotFound", glm::vec3(0,0,0), {}, {} }; // Return an empty result if no matching face is found
 }
+*/
 
 //I think this function can be optimized a lot, I am passing and rearranging vector info too many times, need to make it more concise
 static Eigen::Matrix<double, 3, 2>  computeUv3DJacobian(const std::array<glm::vec3, 3> verticesTriangle3D, const std::array<glm::vec2, 3> verticesTriangleUV) {
@@ -360,7 +307,8 @@ std::vector<Gaussian3D> drawLine(glm::vec3 initialPos, glm::vec3 finalPos, glm::
                 log(glm::vec3(isotropicScale, isotropicScale, isotropicScale)),
                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), //Gaussian is isotropic so not used
                 getColor(color),
-                1.0f
+                1.0f,
+                Material()
             )
         );
     }
@@ -380,7 +328,8 @@ std::vector<Gaussian3D> createEncompassingTriangle(std::array<glm::vec3, 3> posi
                 log(glm::vec3(isotropicScale, isotropicScale, isotropicScale)),
                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), //Gaussian is isotropic so not used
                 color,
-                1.0f
+                1.0f,
+                Material()
             )
         );
     }
@@ -503,6 +452,14 @@ glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image)
     return { r, g, b, a};
 }
 
+float displacementAtPos(const int width, int X, int Y, unsigned char* displacement_image)
+{
+    unsigned bytePerPixel = 1;
+    unsigned char* pixelOffset = displacement_image + (X + width * Y) * bytePerPixel;
+    //from my understanding a negative value is 0.0, if at 148 it means no displacement and at 255, full displacement
+    return ((static_cast<float>(pixelOffset[0] - 128) / 255.0f));
+}
+
 float computeTriangleAreaUV(const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3) {
     float area = 0.5f * std::abs(uv1.x * (uv2.y - uv3.y) +
         uv2.x * (uv3.y - uv1.y) +
@@ -604,6 +561,21 @@ unsigned char* loadImage(std::string texturePath, int& textureWidth, int& textur
     return image;
 }
 
+void printMaterials(const std::map<std::string, Material>& materials) {
+    for (const auto& pair : materials) {
+        const std::string& name = pair.first;
+        const Material& mat = pair.second;
+        std::cout << "Material Name: " << name << std::endl
+            << "  Ambient: (" << mat.ambient.x << ", " << mat.ambient.y << ", " << mat.ambient.z << ")" << std::endl
+            << "  Diffuse: (" << mat.diffuse.x << ", " << mat.diffuse.y << ", " << mat.diffuse.z << ")" << std::endl
+            << "  Specular: (" << mat.specular.x << ", " << mat.specular.y << ", " << mat.specular.z << ")" << std::endl
+            << "  Specular Exponent: " << mat.specularExponent << std::endl
+            << "  Transparency: " << mat.transparency << std::endl
+            << "  Optical Density: " << mat.opticalDensity << std::endl
+            << "  Diffuse Map: " << mat.diffuseMap << std::endl << std::endl;
+    }
+}
+
 int main() {
     // Example call to subprocess (simplified)
     //folder, obj and texture should have same name (easier)
@@ -618,21 +590,68 @@ int main() {
     std::vector<Mesh> meshes = std::get<0>(result);
     std::vector<glm::vec3> globalVertices = std::get<1>(result);
     std::vector<glm::vec2> globalUvs = std::get<2>(result);
+    std::vector<glm::vec3> globalNormals = std::get<3>(result);
 
-    std::string texturePath = BASE_DATASET_FOLDER + std::string(OBJ_NAME) + TEXTURE_FORMAT;
+    std::string base_color_texturePath = BASE_DATASET_FOLDER + std::string(OBJ_NAME) + TEXTURE_FORMAT;
+    //std::string normal_texturePath = BASE_DATASET_FOLDER + std::string("normal") + TEXTURE_FORMAT;
+    std::string displacement_texturePath = BASE_DATASET_FOLDER + std::string("displacement") + TEXTURE_FORMAT;
+    std::string material_path = BASE_DATASET_FOLDER + std::string(OBJ_NAME) + ".mtl";
+
+    std::map<std::string, Material> materials;
+    if (file_exists(material_path)) {
+        materials = parseMtlFile(material_path);
+    }
+    else {
+        materials = { { DEFAULT_MATERIAL_NAME , Material() } };
+    }
+
     std::cout << meshes.size() << " " << globalVertices.size() << " " << globalUvs.size() << std::endl;
 
     int rgbTextureWidth, rgbTextureHeight;
+    int normalTextureWidth, normalTextureHeight;
+    int displacementTextureWidth, displacementTextureHeight;
+    unsigned char* rgb_image = nullptr;
+    unsigned char* displacement_map;
+    unsigned char* normal_map;
 
-    unsigned char* rgb_image = loadImage(texturePath, rgbTextureWidth, rgbTextureHeight);
+    bool rgb_exists = false;
+    //TODO: handle this fucking better, it is a disgrace how bad cases are handled tbh
+    if (file_exists(base_color_texturePath))
+    {
+        rgb_image = loadImage(base_color_texturePath, rgbTextureWidth, rgbTextureHeight);
+        rgb_exists = true;
+    } 
+    else
+    {
+        rgbTextureWidth = MAX_TEXTURE_WIDTH;
+        rgbTextureHeight = MAX_TEXTURE_WIDTH;
+        if (!file_exists(material_path))
+        {
+            throw std::exception();
+        }
+    }
+
+    /*
+    if (file_exists(displacement_texturePath))
+    {
+        displacement_map = loadImage(displacement_texturePath, displacementTextureWidth, displacementTextureHeight);
+    }
+    else
+    {
+        //using rgbTextureWidth and rgbTextureWidth as if we are here it means no exception was thrown and these two vars have a value
+        displacementTextureWidth = rgbTextureWidth;
+        displacementTextureHeight = rgbTextureHeight;
+
+        displacement_map = new unsigned char[rgbTextureWidth * rgbTextureHeight]; // 1 byte per pixel
+        memset(displacement_map, 0, rgbTextureWidth * rgbTextureHeight); // Set all pixels to 0
+    }
+    */
+
+    //unsigned char* normal_map = loadImage(normal_texturePath, normalTextureWidth, normalTextureHeight);
 
     std::vector<Gaussian3D> gaussians_3D_list;
     float image_area = (rgbTextureWidth * rgbTextureHeight);
-    
-    // Calculate σ based on the density and desired overlap, I derive this simple formula from 
-
-    //TODO: Should find a better way to compute sigma and do it based on the size of the current triangle to tesselate
-    
+        
     glm::vec3 lightDir = glm::normalize(glm::vec3(0, -1, 0));
 
     for (const auto& mesh : meshes) {
@@ -640,9 +659,17 @@ int main() {
         for (const auto& triangleFace : mesh.faces) {
             std::vector<glm::vec3> triangleVertices;
             std::vector<glm::vec2> triangleUVs;
+            std::vector<glm::vec3> triangleNormals;
+            Material material = materials[triangleFace.materialName]; //even if none it defaults to default material
+            //All the following is texture related computation
+            std::vector<int> vertexIndices = triangleFace.vertexIndices;
+            std::vector<int> uvIndices = triangleFace.uvIndices;
+            std::vector<int> normalIndices = triangleFace.normalIndices;
+
             for (int i = 0; i < 3; ++i) {
-                triangleVertices.push_back(globalVertices[triangleFace.first[i]]);
-                triangleUVs.push_back(globalUvs[triangleFace.second[i]]);
+                triangleVertices.push_back(globalVertices[vertexIndices[i]]);
+                triangleUVs.push_back(globalUvs[uvIndices[i]]);
+                triangleNormals.push_back(globalNormals[normalIndices[i]]);
             }
 
             // Compute the bounding box in UV space
@@ -655,9 +682,10 @@ int main() {
             glm::ivec2 minPixel = uvToPixel(minUV, rgbTextureWidth - 1, rgbTextureHeight - 1);
             glm::ivec2 maxPixel = uvToPixel(maxUV, rgbTextureWidth - 1, rgbTextureHeight - 1);
 
-            std::vector<std::pair<glm::vec3, glm::vec4>> positionsOnTriangleSurfaceAndRGBs;
+            std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec4, Material>> positionsOnTriangleSurfaceAndRGBs;
 
             // Rasterize the triangle within the bounding box
+            //TODO: need to write a totally different logic for objects that use materials
             for (int y = minPixel.y; y <= maxPixel.y; ++y) {
                 for (int x = minPixel.x; x <= maxPixel.x; ++x) {
                       
@@ -672,17 +700,33 @@ int main() {
                             triangleVertices[1] * v +
                             triangleVertices[2] * w;
 
-                        glm::vec4 rgba = rgbaAtPos(rgbTextureWidth, x, (rgbTextureHeight - 1) - y, rgb_image);
+                        glm::vec3 interpolatedNormal =
+                            triangleNormals[0] * u +
+                            triangleNormals[1] * v +
+                            triangleNormals[2] * w;
 
-                        //TODO: Insert displacement offset retrieval and normal mapping here
+                        if (rgb_exists)
+                        {
+                            glm::vec4 rgba = rgbaAtPos(rgbTextureWidth, x, (rgbTextureHeight - 1) - y, rgb_image);
+                            //TODO: Insert displacement offset retrieval and normal mapping here
+                            //float displacementValue = displacementAtPos(displacementTextureWidth, x, (displacementTextureHeight - 1) - y, displacement_map) / 5.0f;
 
-                        positionsOnTriangleSurfaceAndRGBs.push_back(std::make_pair(interpolatedPos, rgba));
+                            positionsOnTriangleSurfaceAndRGBs.push_back(std::make_tuple(interpolatedNormal, interpolatedPos, rgba, Material()));
+                        }
+                        else {
+                            glm::vec4 rgba = glm::vec4(material.diffuse, 1.0f);
+                            positionsOnTriangleSurfaceAndRGBs.push_back(std::make_tuple(interpolatedNormal, interpolatedPos, rgba, material));
+
+                        }
+                        
 
                     }
 
                 }
             }
             
+            // Calculate σ based on the density and desired overlap, I derive this simple formula from 
+            //TODO: Should find a better way to compute sigma and do it based on the size of the current triangle to tesselate
             float scale_factor_multiplier = .5f;
             float sigma = scale_factor_multiplier * sqrt(2.0f / image_area);
                         
@@ -690,36 +734,36 @@ int main() {
                 glm::normalize(glm::cross(triangleVertices[1] - triangleVertices[0], triangleVertices[2] - triangleVertices[0]));
 
             std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationGaussian(sigma, triangleVertices, triangleUVs);
+            glm::vec4 rotation = std::get<0>(rotAndScale);
+            glm::vec3 scale = std::get<1>(rotAndScale);
             
-            //glm::vec4 rot       = std::get<0>(rotAndScale);
-            //glm::mat3 mat	    = glm::toMat3(glm::quat(rot.x, rot.y, rot.z, rot.w));
+            //float scaleRatio = scale.x / scale.y;
 
-            float lambert       = glm::dot(normal, lightDir);
-            float ambientTerm   = 1.0f;
             //DEBUG NORMAL DRAWING
             //drawNormal(triangleVertices, normal, gaussians_3D_list);
             //---------------
-            
-            for (auto& posRgb : positionsOnTriangleSurfaceAndRGBs)
+            //float lambert = glm::dot(gaussian_3d.normal, lightDir);
+            //float ambientTerm = 1.0f;
+
+            //glm::vec4 shadedColor = rgba * (lambert + ambientTerm);
+
+            for (auto& normalPosRgbDispl : positionsOnTriangleSurfaceAndRGBs)
             {
+                glm::vec3 interpolatedNormal = std::get<0>(normalPosRgbDispl);
+                glm::vec4 rgba = std::get<2>(normalPosRgbDispl);
+                Material material = std::get<3>(normalPosRgbDispl);
+                
                 Gaussian3D gaussian_3d;
-
-                gaussian_3d.normal = normal;
-
-                gaussian_3d.position = std::get<0>(posRgb);
-
-                glm::vec4 rgba = std::get<1>(posRgb) * (lambert + ambientTerm);
-
+                gaussian_3d.normal = interpolatedNormal; 
+                gaussian_3d.rotation = rotation;
+                gaussian_3d.scale = scale;
                 gaussian_3d.sh0 = getColor(glm::vec3(rgba.r, rgba.g, rgba.b));
                 gaussian_3d.opacity = rgba.a;
+                gaussian_3d.position = std::get<1>(normalPosRgbDispl); //+(gaussian_3d.normal * z_displacement);
+                gaussian_3d.material = material;
 
-                gaussian_3d.rotation = std::get<0>(rotAndScale);
-                gaussian_3d.scale = std::get<1>(rotAndScale);
-
-                gaussians_3D_list.push_back(gaussian_3d);
-                
+                gaussians_3D_list.push_back(gaussian_3d); 
             }
-
             triangleUVs.clear();
             triangleVertices.clear();
     
