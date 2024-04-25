@@ -40,6 +40,7 @@ Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all th
 
 - **View-Dependent Accuracy**: Mesh2Splat is not yet capable of capturing view-dependant lighting effects.
 - **Material information**: Currently not yet able to load all material information, just Albedo.
+- **Textures not working for .glTF**: I am currently in the process of changing how I read the data from ```.obj``` to ```.glTF```, and I have currently not completed the parsing logic for the textures, so only materials work.
 
 ## References
 
