@@ -129,16 +129,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="gaussianComputations.cpp" />
+    <ClCompile Include="gaussianUtilities.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="parsers.cpp" />
-    <ClCompile Include="stb_image.hpp" />
+    <ClCompile Include="stb_image.h" />
+    <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="json.h" />
-    <ClInclude Include="obj_loader.hpp" />
+    <ClInclude Include="gaussianComputations.hpp" />
+    <ClInclude Include="gaussianUtilities.hpp" />
+    <ClInclude Include="json.hpp" />
+    <ClInclude Include="params.hpp" />
     <ClInclude Include="parsers.hpp" />
     <ClInclude Include="stb_image_resize.h" />
     <ClInclude Include="stb_image_write.h" />
+    <ClInclude Include="tiny_gltf.h" />
     <ClInclude Include="utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

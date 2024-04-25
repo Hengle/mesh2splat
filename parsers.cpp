@@ -1,6 +1,51 @@
 #include "parsers.hpp"
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "tiny_gltf.h"
+#define STB_IMAGE_RESIZE_IMPLEMENTATION
+#include "stb_image_resize.h"
+
+unsigned char* loadImage(std::string texturePath, int& textureWidth, int& textureHeight)
+{
+    int bpp;
+    int bytes_per_pixel = 3;
+    unsigned char* image = stbi_load(texturePath.c_str(), &textureWidth, &textureHeight, &bpp, bytes_per_pixel);
+
+    std::cout << "Image: " << texturePath << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
+
+    std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + TEXTURE_FORMAT;
+    float aspect_ratio = (float)textureHeight / (float)textureWidth;
+
+    if (textureWidth > MAX_TEXTURE_WIDTH)
+    {
+        // Specify new width and height
+
+        int new_width = MAX_TEXTURE_WIDTH;
+        int new_height = static_cast<int>(new_width * aspect_ratio);
+
+        // Allocate memory for the resized image
+        unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bytes_per_pixel);
+
+        // Resize the image
+        stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bytes_per_pixel);
+
+        // Save the resized image
+        stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bytes_per_pixel, resized_data, new_width * bytes_per_pixel);
+        free(resized_data);
+        stbi_image_free(image);
+        image = stbi_load(resized_texture_name_location.c_str(), &textureWidth, &textureHeight, &bpp, bytes_per_pixel);
 
 
+        std::cout << "Image: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
+        
+        
+    }
+
+    return image;
+}
+
+/*
 std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseObjFileToMeshes(const std::string& filename) {
     std::vector<glm::vec3> globalVertices;
     std::vector<glm::vec2> globalUvs;
@@ -71,6 +116,7 @@ std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, st
 
     return std::make_tuple(meshes, globalVertices, globalUvs, globalNormals);
 }
+*/
 
 glm::vec3 computeNormal(glm::vec3 A, glm::vec3 B, glm::vec3 C) {
     return glm::normalize(glm::cross(B - A, C - A));
@@ -154,3 +200,224 @@ std::map<std::string, Material> parseMtlFile(const std::string& filename) {
 
     return materials;
 }
+
+template<typename T>
+std::vector<T> getBufferData(const tinygltf::Model& model, int accessorIndex) {
+    const auto& accessor    = model.accessors[accessorIndex];
+    const auto& bufferView  = model.bufferViews[accessor.bufferView];
+    const auto& buffer      = model.buffers[bufferView.buffer];
+
+    const T* dataPtr = reinterpret_cast<const T*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+    return std::vector<T>(dataPtr, dataPtr + accessor.count);
+}
+
+MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) {
+    MaterialGltf mat;
+    if (materialIndex < 0 || materialIndex >= model.materials.size()) {
+        mat.name = DEFAULT_MATERIAL_NAME;
+        return mat;
+    }
+
+    const tinygltf::Material& gltfMaterial = model.materials[materialIndex];
+    mat.name = gltfMaterial.name;
+
+    // Parse base color factor if available
+    auto it = gltfMaterial.values.find("baseColorFactor");
+    if (it != gltfMaterial.values.end()) {
+        mat.baseColorFactor = glm::vec4(
+            static_cast<float>(it->second.ColorFactor()[0]),
+            static_cast<float>(it->second.ColorFactor()[1]),
+            static_cast<float>(it->second.ColorFactor()[2]),
+            static_cast<float>(it->second.ColorFactor()[3])
+        );
+    }
+
+    // Additional properties can be parsed similarly
+    return mat;
+}
+
+std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseGltfFileToMeshAndGlobalData(const std::string& filename) {
+    tinygltf::Model model;
+    tinygltf::TinyGLTF loader;
+    std::string err;
+    std::string warn;
+
+    bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename);
+    if (!ret) {
+        std::cerr << "Failed to load glTF: " << err << std::endl;
+        return {};
+    }
+
+    if (!warn.empty()) {
+        std::cout << "glTF parse warning: " << warn << std::endl;
+    }
+
+    std::vector<glm::vec3>  globalVertices;
+    std::vector<glm::vec2>  globalUvs;
+    std::vector<glm::vec3>  globalNormals;
+    std::vector<Mesh>       meshes;
+
+    //remember that "when a 3D model is created as GLTF it is already triangulated"
+    for (const auto& mesh : model.meshes) {
+        Mesh myMesh(mesh.name);
+        for (const auto& primitive : mesh.primitives) {
+            const tinygltf::Accessor& indicesAccessor = model.accessors[primitive.indices];
+            const tinygltf::BufferView& bufferView = model.bufferViews[indicesAccessor.bufferView];
+            const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+            const unsigned char* indexData = buffer.data.data() + bufferView.byteOffset + indicesAccessor.byteOffset;
+            std::vector<int> indices(indicesAccessor.count);
+
+            if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
+                const uint16_t* buf = reinterpret_cast<const uint16_t*>(indexData);
+                for (size_t i = 0; i < indicesAccessor.count; i++) {
+                    indices[i] = buf[i];
+                }
+            }
+            else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
+                const uint32_t* buf = reinterpret_cast<const uint32_t*>(indexData);
+                for (size_t i = 0; i < indicesAccessor.count; i++) {
+                    indices[i] = buf[i];
+                }
+            }
+
+            // Extract vertex data
+            auto vertices       = getBufferData<glm::vec3>(model, primitive.attributes.at("POSITION"));
+            auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));
+            auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
+
+            MaterialGltf mat    = parseGltfMaterial(model, primitive.material);
+
+            globalVertices.insert(globalVertices.end(), vertices.begin(), vertices.end());
+            globalUvs.insert(globalUvs.end(), uvs.begin(), uvs.end());
+            globalNormals.insert(globalNormals.end(), normals.begin(), normals.end());
+
+            //TODO: parse also materials and handle them
+            //std::string materialName = model.materials[primitive.material].name;
+            
+            for (size_t i = 0; i < indices.size(); i += 3) {
+                std::vector<int> faceVertexIndices  = { indices[i], indices[i + 1], indices[i + 2] };
+                std::vector<int> faceUvIndices      = faceVertexIndices;
+                std::vector<int> faceNormalIndices  = faceVertexIndices;
+                myMesh.faces.emplace_back(faceVertexIndices, faceUvIndices, faceNormalIndices, mat);
+            }
+            meshes.push_back(myMesh);
+        }
+    }
+    return { meshes, globalVertices, globalUvs, globalNormals };
+}
+
+void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
+    std::ofstream file(filename, std::ios::binary | std::ios::out);
+
+    // Write header in ASCII
+    file << "ply\n";
+    file << "format binary_little_endian 1.0\n";
+    file << "element vertex " << gaussians.size() << "\n";
+
+    file << "property float x\n";
+    file << "property float y\n";
+    file << "property float z\n";
+
+    file << "property float nx\n";
+    file << "property float ny\n";
+    file << "property float nz\n";
+
+    file << "property float f_dc_0\n";
+    file << "property float f_dc_1\n";
+    file << "property float f_dc_2\n";
+    for (int i = 0; i < 45; i++)
+    {
+        file << "property float f_rest_" << i << "\n";
+    }
+
+    file << "property float opacity\n";
+
+    file << "property float scale_0\n";
+    file << "property float scale_1\n";
+    file << "property float scale_2\n";
+
+    file << "property float rot_0\n";
+    file << "property float rot_1\n";
+    file << "property float rot_2\n";
+    file << "property float rot_3\n";
+
+    file << "end_header\n";
+
+    // Write vertex data in binary
+    for (const auto& gaussian : gaussians) {
+        //Mean
+        file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.position.z), sizeof(gaussian.position.z));
+        //Normal
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.x), sizeof(gaussian.normal.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
+        //RGB
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
+
+        // TODO: this takes up basically 65% of the space and I do not even need to use it
+        float zeroValue = 0.0f;
+        for (int i = 0; i < 45; i++) {
+            file.write(reinterpret_cast<const char*>(&zeroValue), sizeof(zeroValue));
+        }
+
+        //Opacity
+        file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
+
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.y), sizeof(gaussian.scale.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.z), sizeof(gaussian.scale.z));
+        //Rotation
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.x), sizeof(gaussian.rotation.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.y), sizeof(gaussian.rotation.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.z), sizeof(gaussian.rotation.z));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.w), sizeof(gaussian.rotation.w));
+    }
+
+    file.close();
+}
+
+
+//vertexIndices, uvIndices, normalIndices
+// Function to find a 3D position from UV coordinates, this is probably the main bottleneck, as complexity grows with more complex 3D models.
+//Need to think of possible smarter ways to do this
+/*
+std::tuple<glm::vec3, std::string, glm::vec3, std::array<glm::vec3, 3>, std::array<glm::vec2, 3>> find3DPositionFromUV(const std::vector<Mesh>& meshes, const glm::vec2& targetUv, const std::vector<glm::vec3>& globalVertices, const std::vector<glm::vec2>& globalUvs) {
+    for (const auto& mesh : meshes) {
+        for (const auto& face : mesh.faces) {
+            std::vector<int> vertexIndices = std::get<0>(face);
+            std::vector<int> uvIndices = std::get<1>(face);
+            std::vector<int> normalIndices = std::get<2>(face);
+
+            if (face.first.size() != 3 || face.second.size() != 3) {
+                continue; // Skip non-triangular faces
+            }
+
+            std::array<glm::vec2, 3> triangleUvs = { globalUvs[face.second[0]], globalUvs[face.second[1]], globalUvs[face.second[2]] };
+            std::array<glm::vec3, 3> triangleVertices = { globalVertices[face.first[0]], globalVertices[face.first[1]], globalVertices[face.first[2]] };
+
+            //std::cout << "rad angle: " << rad_angle << std::endl;
+            if (pointInTriangle(targetUv, triangleUvs[0], triangleUvs[1], triangleUvs[2])) {
+                float u;
+                float v;
+                float w;
+                computeBarycentricCoords(targetUv, triangleUvs[0], triangleUvs[1], triangleUvs[2], u, v, w);
+
+                glm::vec3 interpolatedPos =
+                    globalVertices[face.first[0]] * u +
+                    globalVertices[face.first[1]] * v +
+                    globalVertices[face.first[2]] * w;
+
+                glm::vec3 normal = glm::cross(globalVertices[face.first[1]] - globalVertices[face.first[0]], globalVertices[face.first[2]] - globalVertices[face.first[0]]);
+
+                return { interpolatedPos, mesh.name,  glm::normalize(normal), triangleVertices, triangleUvs };
+            }
+        }
+    }
+    //std::cout << "3D point not found for given UV" << std::endl;
+    return { glm::vec3(0,0,0), "NotFound", glm::vec3(0,0,0), {}, {} }; // Return an empty result if no matching face is found
+}
+*/
