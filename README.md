@@ -23,7 +23,7 @@ The (current) core concept behind Mesh2Splat is quite simple:
 
 ## Usage
 Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all the different parameters in ```src/utils/params.hpp```:
-- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name)
+- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only .glTF format is supported.
 - Modifying how this is handled is simple, but at the moment the code expects the following folder structure:<br>
 **dataset/**<br>
 ├─ **object_x/**<br>
