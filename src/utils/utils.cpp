@@ -63,12 +63,12 @@ glm::vec2 pixelToUV(const glm::ivec2& pixel, int textureWidth, int textureHeight
 
 glm::ivec2 uvToPixel(const glm::vec2& uv, int textureWidth, int textureHeight) {
     // Convert back to pixel coordinates
-    int x = static_cast<int>(uv.x * textureWidth);
-    int y = static_cast<int>(uv.y * textureHeight);
+    int x = static_cast<int>(uv.x * textureWidth) - 0.5f;
+    int y = static_cast<int>(uv.y * textureHeight) - 0.5f; //ATTENTION: remember to then swap the order of the pixels in the rgba_to_pos
 
     // Clamp the coordinates to ensure they're within the texture bounds
     // This accounts for potential rounding errors that might place the pixel outside the texture
-    x = std::max(0, std::min(x, textureWidth));
+    x = std::max(0, std::min(x, textureWidth)); //zero-based pixel indexing
     y = std::max(0, std::min(y, textureHeight));
 
     return glm::ivec2(x, y);
@@ -126,19 +126,22 @@ float srgb_to_linear_float(float x) {
         return powf((x + 0.055f) / 1.055f, 2.4f);
 }
 
-//https://stackoverflow.com/a/48235560
-glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image)
-{
-    unsigned bytePerPixel = 3;
-    unsigned char* pixelOffset = rgb_image + (X + width * Y) * bytePerPixel;
 
-    float r = ((static_cast<float>(pixelOffset[0]) / 255.0f));
-    float g = ((static_cast<float>(pixelOffset[1]) / 255.0f));
-    float b = ((static_cast<float>(pixelOffset[2]) / 255.0f));
-    //float a = bytePerPixel >= 4 ? (float)pixelOffset[3] : 255.0f;
-    float a = 1.0f;
+glm::vec4 rgbaAtPos(const int width, int X, int Y, std::vector<unsigned char> rgb_image, const int bpp) {
+    size_t index = (Y * width + X) * bpp;
 
-    return { r, g, b, a };
+
+    printf("X: %d, Y: %d\n", X, Y);
+
+
+    //TODO: remember to switch back to [ ] instead of .at once finished debugging
+    float r = (static_cast<float>(rgb_image.at(index)) / 255.0f);
+    float g = (static_cast<float>(rgb_image.at(index + 1)) / 255.0f);
+    float b = (static_cast<float>(rgb_image.at(index + 2)) / 255.0f);
+    //float a = (bpp >= 4 && index + 3 < rgb_image.size()) ? (static_cast<float>(rgb_image[index + 3]) / 255.0f) : 1.0f;
+    //TODO: what to do about opacity?
+
+    return { r, g, b, 1.0f };
 }
 
 float displacementAtPos(const int width, int X, int Y, unsigned char* displacement_image)
@@ -154,4 +157,93 @@ float computeTriangleAreaUV(const glm::vec2& uv1, const glm::vec2& uv2, const gl
         uv2.x * (uv3.y - uv1.y) +
         uv3.x * (uv1.y - uv2.y));
     return area;
+}
+
+//https://en.wikipedia.org/wiki/Cube_mapping
+void convert_xyz_to_cube_uv(float x, float y, float z, int* index, float* u, float* v)
+{
+    float absX = fabs(x);
+    float absY = fabs(y);
+    float absZ = fabs(z);
+
+    int isXPositive = x > 0 ? 1 : 0;
+    int isYPositive = y > 0 ? 1 : 0;
+    int isZPositive = z > 0 ? 1 : 0;
+
+    float maxAxis, uc, vc;
+
+    // POSITIVE X
+    if (isXPositive && absX >= absY && absX >= absZ) {
+        // u (0 to 1) goes from +z to -z
+        // v (0 to 1) goes from -y to +y
+        maxAxis = absX;
+        uc = -z;
+        vc = y;
+        *index = 0;
+    }
+    // NEGATIVE X
+    if (!isXPositive && absX >= absY && absX >= absZ) {
+        // u (0 to 1) goes from -z to +z
+        // v (0 to 1) goes from -y to +y
+        maxAxis = absX;
+        uc = z;
+        vc = y;
+        *index = 1;
+    }
+    // POSITIVE Y
+    if (isYPositive && absY >= absX && absY >= absZ) {
+        // u (0 to 1) goes from -x to +x
+        // v (0 to 1) goes from +z to -z
+        maxAxis = absY;
+        uc = x;
+        vc = -z;
+        *index = 2;
+    }
+    // NEGATIVE Y
+    if (!isYPositive && absY >= absX && absY >= absZ) {
+        // u (0 to 1) goes from -x to +x
+        // v (0 to 1) goes from -z to +z
+        maxAxis = absY;
+        uc = x;
+        vc = z;
+        *index = 3;
+    }
+    // POSITIVE Z
+    if (isZPositive && absZ >= absX && absZ >= absY) {
+        // u (0 to 1) goes from -x to +x
+        // v (0 to 1) goes from -y to +y
+        maxAxis = absZ;
+        uc = x;
+        vc = y;
+        *index = 4;
+    }
+    // NEGATIVE Z
+    if (!isZPositive && absZ >= absX && absZ >= absY) {
+        // u (0 to 1) goes from +x to -x
+        // v (0 to 1) goes from -y to +y
+        maxAxis = absZ;
+        uc = -x;
+        vc = y;
+        *index = 5;
+    }
+
+    // Convert range from -1 to 1 to 0 to 1
+    *u = 0.5f * (uc / maxAxis + 1.0f);
+    *v = 0.5f * (vc / maxAxis + 1.0f);
+}
+
+void convert_cube_uv_to_xyz(int index, float u, float v, float* x, float* y, float* z)
+{
+    // convert range 0 to 1 to -1 to 1
+    float uc = 2.0f * u - 1.0f;
+    float vc = 2.0f * v - 1.0f;
+    switch (index)
+    {
+        case 0: *x = 1.0f; *y = vc; *z = -uc; break;	// POSITIVE X
+        case 1: *x = -1.0f; *y = vc; *z = uc; break;	// NEGATIVE X
+        case 2: *x = uc; *y = 1.0f; *z = -vc; break;	// POSITIVE Y
+        case 3: *x = uc; *y = -1.0f; *z = vc; break;	// NEGATIVE Y
+        case 4: *x = uc; *y = vc; *z = 1.0f; break;	    // POSITIVE Z
+        case 5: *x = -uc; *y = vc; *z = -1.0f; break;	// NEGATIVE Z
+    }
 }

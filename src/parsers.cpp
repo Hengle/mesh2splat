@@ -6,15 +6,24 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../thirdParty/stb_image_resize.h"
 
-unsigned char* loadImage(std::string texturePath, int& textureWidth, int& textureHeight)
+//TODO should not by default use 3 channels but for now that is ok
+//TODO: Careful to remember that the image is saved with its original name, if you change filename after 
+std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWidth, int& textureHeight)
 {
+    size_t pos = texturePath.rfind('.');
+    std::string image_format = texturePath.substr(pos + 1);
     int bpp;
-    int bytes_per_pixel = 3;
-    unsigned char* image = stbi_load(texturePath.c_str(), &textureWidth, &textureHeight, &bpp, bytes_per_pixel);
+    unsigned char* image = stbi_load(texturePath.c_str(), &textureWidth, &textureHeight, &bpp, 0);
 
+    if (image == NULL) {
+        printf("Error in loading the image\n");
+        exit(1);
+    }
+
+    //TODO: use or printf or std::cout, choose
     std::cout << "Image: " << texturePath << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
 
-    std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + TEXTURE_FORMAT;
+    std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + "." + image_format;
     float aspect_ratio = (float)textureHeight / (float)textureWidth;
 
     if (textureWidth > MAX_TEXTURE_WIDTH)
@@ -25,24 +34,51 @@ unsigned char* loadImage(std::string texturePath, int& textureWidth, int& textur
         int new_height = static_cast<int>(new_width * aspect_ratio);
 
         // Allocate memory for the resized image
-        unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bytes_per_pixel);
+        unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bpp);
 
         // Resize the image
-        stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bytes_per_pixel);
+        stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
 
         // Save the resized image
-        stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bytes_per_pixel, resized_data, new_width * bytes_per_pixel);
-        free(resized_data);
+        stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
+        
+        stbi_image_free(resized_data);
         stbi_image_free(image);
-        image = stbi_load(resized_texture_name_location.c_str(), &textureWidth, &textureHeight, &bpp, bytes_per_pixel);
+        
+        image = stbi_load(resized_texture_name_location.c_str(), &textureWidth, &textureHeight, &bpp, 0);
 
+        if (image == NULL) {
+            printf("Error in loading the resized image\n");
+            exit(1);
+        }
 
         std::cout << "Image: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
-        
-        
+                
     }
 
-    return image;
+    return std::make_pair(image, bpp);
+}
+
+
+std::pair<bool, int> loadImageIntoVector(std::string filepath, int& width, int& height, std::vector<unsigned char>& vecToFill)
+{
+    auto imageAndBpp = loadImage(filepath, width, height);
+    bool found = false;
+
+    unsigned char* textureImage = std::get<0>(imageAndBpp);
+    int bpp                     = std::get<1>(imageAndBpp);
+
+    if (!textureImage) {
+        std::cerr << "Failed to load image from " << filepath << std::endl;
+    }
+    else {
+        vecToFill.resize(width * height * bpp);
+        std::memcpy(&vecToFill[0], textureImage, vecToFill.size());
+        stbi_image_free(textureImage); // Freeing the allocated memory
+        found = true;
+    }  
+
+    return std::make_pair(found, bpp);
 }
 
 /*
@@ -201,42 +237,69 @@ std::map<std::string, Material> parseMtlFile(const std::string& filename) {
     return materials;
 }
 
+//https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 template<typename T>
 std::vector<T> getBufferData(const tinygltf::Model& model, int accessorIndex) {
+    //The second step of structuring the data is accomplished with accessor objects. An accessor refers to a bufferview
+    //They define how the data of a bufferView has to be interpreted by providing information about the data types and the layout.
+    //Each accessor also has a byteOffset property. For the example above, it has been 0 for both accessors, because there was only one accessor for each bufferView.
+    //But when multiple accessors refer to the same bufferView, then the byteOffset describes where the data of the accessor starts, relative to the bufferView that it refers to.
     const auto& accessor    = model.accessors[accessorIndex];
-    const auto& bufferView  = model.bufferViews[accessor.bufferView];
+    const auto& bufferView  = model.bufferViews[accessor.bufferView]; //"A bufferView describes a "chunk" or a "slice" of the whole, raw buffer data."
+    //For a specific buffer, a bufferview might describe the part of the buffer that contains the data of the indices, and the other might describe the vertex positions
+    //Bytoffset refers to offset in whole buffer
     const auto& buffer      = model.buffers[bufferView.buffer];
-
-    const T* dataPtr = reinterpret_cast<const T*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]);
+    
+    //TODO: This may not be too safe and I should write this a bit better, but it is not production code so for now it works
+    const T* dataPtr = reinterpret_cast<const T*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]); //accessor.byteOffset: The offset relative to the start of the buffer view in bytes.
     return std::vector<T>(dataPtr, dataPtr + accessor.count);
 }
 
 MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) {
-    MaterialGltf mat;
     if (materialIndex < 0 || materialIndex >= model.materials.size()) {
-        mat.name = DEFAULT_MATERIAL_NAME;
-        return mat;
+        return MaterialGltf(); 
     }
 
     const tinygltf::Material& gltfMaterial = model.materials[materialIndex];
-    mat.name = gltfMaterial.name;
+    MaterialGltf material;
 
-    // Parse base color factor if available
-    auto it = gltfMaterial.values.find("baseColorFactor");
-    if (it != gltfMaterial.values.end()) {
-        mat.baseColorFactor = glm::vec4(
-            static_cast<float>(it->second.ColorFactor()[0]),
-            static_cast<float>(it->second.ColorFactor()[1]),
-            static_cast<float>(it->second.ColorFactor()[2]),
-            static_cast<float>(it->second.ColorFactor()[3])
+    material.name = gltfMaterial.name;
+
+    // Parse base color factor
+    auto colorIt = gltfMaterial.values.find("baseColorFactor");
+    if (colorIt != gltfMaterial.values.end()) {
+        material.baseColorFactor = glm::vec4(
+            static_cast<float>(colorIt->second.ColorFactor()[0]),
+            static_cast<float>(colorIt->second.ColorFactor()[1]),
+            static_cast<float>(colorIt->second.ColorFactor()[2]),
+            static_cast<float>(colorIt->second.ColorFactor()[3])
         );
     }
 
-    // Additional properties can be parsed similarly
-    return mat;
+    // Parse base color texture
+    auto texIt = gltfMaterial.values.find("baseColorTexture");
+    if (texIt != gltfMaterial.values.end()) {
+        int textureIndex = texIt->second.TextureIndex();
+        const tinygltf::Texture& texture = model.textures[textureIndex];
+        const tinygltf::Image& image = model.images[texture.source];
+        //I assume the texture is in the same folder as the loaded .gltf file
+        //blender unfortunately does not correctly export the path, so i have no way of recovering the full path of the resource image
+        std::string imagePath = BASE_DATASET_FOLDER + image.name + "." + image.mimeType.substr(image.mimeType.find("/") + 1);
+
+        material.baseColorTexture.path = imagePath;
+        material.baseColorTexture.texCoordIndex = texIt->second.TextureTexCoord();
+        material.baseColorTexture.width = image.width;
+        material.baseColorTexture.height = image.height;
+
+    }
+    
+    material.metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
+    material.roughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
+
+    return material;
 }
 
-std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseGltfFileToMeshAndGlobalData(const std::string& filename) {
+std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseGltfFileToMesh(const std::string& filename) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string err;
@@ -260,6 +323,7 @@ std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, st
     //remember that "when a 3D model is created as GLTF it is already triangulated"
     for (const auto& mesh : model.meshes) {
         Mesh myMesh(mesh.name);
+        
         for (const auto& primitive : mesh.primitives) {
             const tinygltf::Accessor& indicesAccessor = model.accessors[primitive.indices];
             const tinygltf::BufferView& bufferView = model.bufferViews[indicesAccessor.bufferView];
@@ -282,22 +346,21 @@ std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, st
 
             // Extract vertex data
             auto vertices       = getBufferData<glm::vec3>(model, primitive.attributes.at("POSITION"));
-            auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));
+            auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));         
             auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
 
-            MaterialGltf mat    = parseGltfMaterial(model, primitive.material);
-
+            //TODO: in future hold a meshVertices list specific to each mesh/primitive as indexing is relative to the primitive
             globalVertices.insert(globalVertices.end(), vertices.begin(), vertices.end());
             globalUvs.insert(globalUvs.end(), uvs.begin(), uvs.end());
             globalNormals.insert(globalNormals.end(), normals.begin(), normals.end());
 
-            //TODO: parse also materials and handle them
-            //std::string materialName = model.materials[primitive.material].name;
-            
+            MaterialGltf mat = parseGltfMaterial(model, primitive.material);
+
+            //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
             for (size_t i = 0; i < indices.size(); i += 3) {
-                std::vector<int> faceVertexIndices  = { indices[i], indices[i + 1], indices[i + 2] };
-                std::vector<int> faceUvIndices      = faceVertexIndices;
-                std::vector<int> faceNormalIndices  = faceVertexIndices;
+                std::vector<glm::vec3> faceVertexIndices  = { vertices[indices[i]], vertices[indices[i + 1]], vertices[indices[i + 2]] };
+                std::vector<glm::vec2> faceUvIndices      = { uvs[indices[i]], uvs[indices[i + 1]], uvs[indices[i + 2]] };
+                std::vector<glm::vec3> faceNormalIndices  = { normals[indices[i]], normals[indices[i + 1]], normals[indices[i + 2]] };
                 myMesh.faces.emplace_back(faceVertexIndices, faceUvIndices, faceNormalIndices, mat);
             }
             meshes.push_back(myMesh);

@@ -28,15 +28,35 @@ struct Material {
     Material() : ambient(0.0f), diffuse(0.0f), specular(0.0f), specularExponent(0.0f), transparency(1.0f), opticalDensity(1.0f) {}
 };
 
+struct TextureInfo {
+    std::string path;
+    int texCoordIndex; // Texture coordinate set index used by this texture
+    unsigned char* texture;
+    int width, height;
+
+    TextureInfo(const std::string& path = "defaultInfo", int texCoordIndex = 0, unsigned char* texture = nullptr, int width = 0, int height = 0) : path(path), texCoordIndex(texCoordIndex), texture(texture), width(width), height(height) {}
+};
+
 struct MaterialGltf {
     std::string name;
     glm::vec4 baseColorFactor; // Default: white
+    TextureInfo baseColorTexture; // Texture for the base color
+    TextureInfo normalTexture; // Normal map
+    float metallicFactor; // Metallic-Roughness map
+    float roughnessFactor; // Metallic-Roughness map
 
-    MaterialGltf(const std::string name, const glm::vec4 baseColorFactor) : name(name), baseColorFactor(baseColorFactor) {}
+    MaterialGltf() : name("Default"), baseColorFactor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
+        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicFactor(0.0f), roughnessFactor(0.0f) {}
 
-    MaterialGltf() : name(DEFAULT_MATERIAL_NAME), baseColorFactor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)) {}
+    MaterialGltf(const std::string name, const glm::vec4 baseColorFactor) : 
+        name(name), baseColorFactor(baseColorFactor), 
+        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicFactor(0.0f), roughnessFactor(0.0f) {}
 
-    // TODO: Extend with more properties as needed (e.g., metallic, roughness, etc.)
+    MaterialGltf(const std::string& name, const glm::vec4& baseColorFactor, const TextureInfo& baseColorTexture = TextureInfo(),
+        const TextureInfo& normalTexture = TextureInfo(), const float metallicFactor = 0.0f, const float roughnessFactor = 0.0f)
+        : name(name), baseColorFactor(baseColorFactor), baseColorTexture(baseColorTexture),
+        normalTexture(normalTexture), metallicFactor(metallicFactor), roughnessFactor(roughnessFactor) {}
+
 };
 
 struct Gaussian3D {
@@ -53,12 +73,12 @@ struct Gaussian3D {
 };
 
 struct Face {
-    std::vector<int> vertexIndices;
-    std::vector<int> uvIndices;
-    std::vector<int> normalIndices;
+    std::vector<glm::vec3> vertexIndices;
+    std::vector<glm::vec2> uvIndices;
+    std::vector<glm::vec3> normalIndices;
     MaterialGltf material;  // Added to store material for each face
 
-    Face(const std::vector<int>& verts, const std::vector<int>& uvs, const std::vector<int>& norms, MaterialGltf& mat)
+    Face(const std::vector<glm::vec3>& verts, const std::vector<glm::vec2>& uvs, const std::vector<glm::vec3>& norms, MaterialGltf& mat)
         : vertexIndices(verts), uvIndices(uvs), normalIndices(norms), material(mat) {}
 };
 
@@ -95,9 +115,12 @@ float linear_to_srgb_float(float x); //Assumes 0,...,1 range
 //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
 float srgb_to_linear_float(float x); //Assumes 0,...,1 range 
 
-glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image);
+glm::vec4 rgbaAtPos(const int width, int X, int Y, std::vector<unsigned char> rgb_image, const int bpp);
 
 float displacementAtPos(const int width, int X, int Y, unsigned char* displacement_image);
 
 float computeTriangleAreaUV(const glm::vec2& uv1, const glm::vec2& uv2, const glm::vec2& uv3);
 
+void convert_xyz_to_cube_uv(float x, float y, float z, int* index, float* u, float* v);
+
+void convert_cube_uv_to_xyz(int index, float u, float v, float* x, float* y, float* z);

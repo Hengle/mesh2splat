@@ -9,15 +9,14 @@
 #define SH_COEFF0 0.28209479177387814f
 #define DEFAULT_PURPLE glm::vec3(102, 51, 153); //RGB - 0 , ... , 255
 
-#define OBJ_NAME					"sphere2"
+#define OBJ_NAME					"cubeGltf"
 #define OBJ_FORMAT					".glb"
-#define TEXTURE_FORMAT				".jpg"
 #define OUTPUT_GAUSSIAN_FORMAT		".ply"
 #define DEFAULT_MATERIAL_NAME		"mm_default_material"
 
 #define BASE_DATASET_FOLDER						"C:/Users/sscolari/Desktop/dataset/"  OBJ_NAME  "/"					
+
 #define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1		"C:/Users/sscolari/Desktop/halcyon/Content/GaussianSplatting/Mesh2SplatOut.ply"
 #define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2		"C:/Users/sscolari/Desktop/outputGaussians/" OBJ_NAME OUTPUT_GAUSSIAN_FORMAT
 
 #define OUTPUT_FILENAME							BASE_DATASET_FOLDER OBJ_NAME OBJ_FORMAT
-#define ALBEDO_TEXTURE_MAP_FILENAME				BASE_DATASET_FOLDER OBJ_NAME TEXTURE_FORMAT

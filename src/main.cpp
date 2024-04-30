@@ -30,7 +30,7 @@ int main() {
     */
 
     printf("Parsing input mesh\n");
-    auto parsedGltfModel = parseGltfFileToMeshAndGlobalData(OUTPUT_FILENAME);
+    auto parsedGltfModel = parseGltfFileToMesh(OUTPUT_FILENAME);
     
     std::vector<Mesh>       meshes          = std::get<0>(parsedGltfModel);
     std::vector<glm::vec3>  globalVertices  = std::get<1>(parsedGltfModel);
@@ -43,101 +43,101 @@ int main() {
         "[Total number of meshes: %zu]\n[Total number of vertices : %zu]\n[Total number of UVs : %zu]\n[Total number of normlas : %zu]\n", 
         meshes.size(), globalVertices.size(), globalUvs.size(), globalNormals.size()
     );
-
-    int rgbTextureWidth = 0, rgbTextureHeight = 0;
-    int normalTextureWidth = 0,normalTextureHeight = 0;
-    int displacementTextureWidth = 0, displacementTextureHeight = 0;
-
-    unsigned char 
-        *rgb_image = nullptr, 
-        *displacement_map = nullptr, 
-        *normal_map = nullptr;
-
-    bool rgb_exists = false;
-
-    //TODO: handle this fucking better
-    if (file_exists(ALBEDO_TEXTURE_MAP_FILENAME))
-    {
-        rgb_image   = loadImage(ALBEDO_TEXTURE_MAP_FILENAME, rgbTextureWidth, rgbTextureHeight);
-        rgb_exists  = true;
-    } 
-    else
-    {
-        rgbTextureWidth     = MAX_TEXTURE_WIDTH;
-        rgbTextureHeight    = MAX_TEXTURE_WIDTH;
-    }
-
+ 
     std::vector<Gaussian3D> gaussians_3D_list;
-    float image_area = (rgbTextureWidth * rgbTextureHeight);
+    
     int j = 0;
+
+    //TODO: I believe having an initial reference UV space would be ideal
+
+    std::map<std::string, std::pair<std::vector<unsigned char>, int>> loadedImages;
 
     for (const auto& mesh : meshes) {
         j++;
         printf("%zu triangle faces for mesh number %d / %zu\n", mesh.faces.size(), j, meshes.size());
         for (const auto& triangleFace : mesh.faces) {
 
-            std::vector<glm::vec3> triangleVertices;
-            std::vector<glm::vec2> triangleUVs;
-            std::vector<glm::vec3> triangleNormals;
             MaterialGltf materialGltf = triangleFace.material; //even if none it defaults to default material
 
-            //All the following is texture related computation
-            std::vector<int> vertexIndices  = triangleFace.vertexIndices;
-            std::vector<int> uvIndices      = triangleFace.uvIndices;
-            std::vector<int> normalIndices  = triangleFace.normalIndices;
+            // If texture for this face not yet loaded, do so
+            if (loadedImages.find(materialGltf.baseColorTexture.path) == loadedImages.end())
+            {
+                std::vector<unsigned char> vecToFill;
+                std::pair<bool, int> successAndBpp = loadImageIntoVector(materialGltf.baseColorTexture.path, materialGltf.baseColorTexture.width, materialGltf.baseColorTexture.height, vecToFill);
+                bool success = std::get<0>(successAndBpp);
+                int bpp = std::get<1>(successAndBpp);
+                loadedImages.emplace(materialGltf.baseColorTexture.path, std::make_pair(vecToFill, bpp));
+            } 
 
-            for (int i = 0; i < 3; ++i) {
-                triangleVertices.push_back(globalVertices[vertexIndices[i]]);
-                triangleUVs.push_back(globalUvs[uvIndices[i]]);
-                triangleNormals.push_back(globalNormals[normalIndices[i]]);
-            }
+            //TODO: obviously if there is no texture you need to do something otherwise wont rasterize shit and wont find correspondence in pixel
+            //This will have to stay like this until I establish a common initial UV mapping; for now, as a requirement, the model needs to have a UV mapping
+            
+
 #if SHOULD_RASTERIZE
             // Compute the bounding box in UV space
-            std::pair<glm::vec2, glm::vec2> minMaxUV = computeUVBoundingBox(triangleUVs);
+            std::pair<glm::vec2, glm::vec2> minMaxUV = computeUVBoundingBox(triangleFace.uvIndices);
 
             glm::vec2 minUV = std::get<0>(minMaxUV);
             glm::vec2 maxUV = std::get<1>(minMaxUV);
 
             // Convert bounding box to pixel coordinates
-            glm::ivec2 minPixel = uvToPixel(minUV, rgbTextureWidth - 1, rgbTextureHeight - 1);
-            glm::ivec2 maxPixel = uvToPixel(maxUV, rgbTextureWidth - 1, rgbTextureHeight - 1);
+            glm::ivec2 minPixel = uvToPixel(minUV, materialGltf.baseColorTexture.width, materialGltf.baseColorTexture.height);
+            glm::ivec2 maxPixel = uvToPixel(maxUV, materialGltf.baseColorTexture.width, materialGltf.baseColorTexture.height);
 
             std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec4, MaterialGltf>> positionsOnTriangleSurfaceAndRGBs;
 
+            if (minPixel.x < 0 || minPixel.y < 0 || maxPixel.x > materialGltf.baseColorTexture.width || maxPixel.y > materialGltf.baseColorTexture.height)
+            {
+                printf("Error in computing the UV bounding box, size out of bounds\n");
+                exit(1);
+            }
+            else if (minPixel.x == maxPixel.x && minPixel.y == maxPixel.y)
+            {
+                printf("Error, degenerate BB\n");
+                exit(1);
+            }
+
             for (int y = minPixel.y; y <= maxPixel.y; ++y) {
                 for (int x = minPixel.x; x <= maxPixel.x; ++x) {
-                      
-                    glm::vec2 pixelUV = pixelToUV(glm::ivec2(x, y), rgbTextureWidth - 1, rgbTextureHeight - 1);
-                                           
-                    if (pointInTriangle(pixelUV, triangleUVs[0], triangleUVs[1], triangleUVs[2])) {
+                    glm::vec2 pixelUV = pixelToUV(glm::ivec2(x, y), materialGltf.baseColorTexture.width, materialGltf.baseColorTexture.height);
+
+                    if (pointInTriangle(pixelUV, triangleFace.uvIndices[0], triangleFace.uvIndices[1], triangleFace.uvIndices[2])) {
                         float u, v, w;
-                        computeBarycentricCoords(pixelUV, triangleUVs[0], triangleUVs[1], triangleUVs[2], u, v, w);
+                        computeBarycentricCoords(pixelUV, triangleFace.uvIndices[0], triangleFace.uvIndices[1], triangleFace.uvIndices[2], u, v, w);
 
                         glm::vec3 interpolatedPos =
-                            triangleVertices[0] * u +
-                            triangleVertices[1] * v +
-                            triangleVertices[2] * w;
+                            triangleFace.vertexIndices[0] * u +
+                            triangleFace.vertexIndices[1] * v +
+                            triangleFace.vertexIndices[2] * w;
 
                         glm::vec3 interpolatedNormal = glm::normalize(
-                            triangleNormals[0] * u +
-                            triangleNormals[1] * v +
-                            triangleNormals[2] * w);
+                            triangleFace.normalIndices[0] * u +
+                            triangleFace.normalIndices[1] * v +
+                            triangleFace.normalIndices[2] * w);
 
-                        glm::vec4 normalColor((interpolatedNormal + glm::vec3(1.0f, 1.0f, 1.0f)) / 2.0f, 1.0f);
+                        //glm::vec4 normalColor((interpolatedNormal + glm::vec3(1.0f, 1.0f, 1.0f)) / 2.0f, 1.0f);
 
-                        if (rgb_exists)
+                        if (materialGltf.baseColorTexture.path != "defaultInfo" && materialGltf.baseColorTexture.path != "")
                         {
-                            //glm::vec4 rgba = normalColor;
-                            glm::vec4 rgba = rgbaAtPos(rgbTextureWidth, x, (rgbTextureHeight - 1) - y, rgb_image);
+
+                            glm::vec4 rgba_from_texture = rgbaAtPos(
+                                materialGltf.baseColorTexture.width,
+                                x, materialGltf.baseColorTexture.height - 1 - y,
+                                loadedImages.at(materialGltf.baseColorTexture.path).first,
+                                loadedImages.at(materialGltf.baseColorTexture.path).second
+                            );
+
+
                             //TODO: unify so that just pass material even when texture, the rgba is the albedo, no need for rgba slot
-                            positionsOnTriangleSurfaceAndRGBs.push_back(std::make_tuple(interpolatedNormal, interpolatedPos, rgba, MaterialGltf("mat", rgba)));
+                            positionsOnTriangleSurfaceAndRGBs.push_back(std::make_tuple(interpolatedNormal, interpolatedPos, rgba_from_texture, materialGltf));
                         }
                         else {
+
                             glm::vec4 rgba = materialGltf.baseColorFactor;
                             positionsOnTriangleSurfaceAndRGBs.push_back(std::make_tuple(interpolatedNormal, interpolatedPos, rgba, materialGltf));
 
                         }
-                        
+
 
                     }
 
@@ -147,9 +147,9 @@ int main() {
             // Calculate σ based on the density and desired overlap, I derive this simple formula from 
             //TODO: Should find a better way to compute sigma and do it based on the size of the current triangle to tesselate
             float scale_factor_multiplier = .75f;
+            float image_area = (materialGltf.baseColorTexture.width * materialGltf.baseColorTexture.height);
             float sigma = scale_factor_multiplier * sqrt(2.0f / image_area);
-
-            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationGaussian(sigma, triangleVertices, triangleUVs);
+            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationGaussian(sigma, triangleFace.vertexIndices, triangleFace.uvIndices);
 
             glm::vec4 rotation = std::get<0>(rotAndScale);
             glm::vec3 scale = std::get<1>(rotAndScale);
@@ -196,21 +196,21 @@ int main() {
             }
 
 #endif
-
             for (auto& normalPosRgbDispl : positionsOnTriangleSurfaceAndRGBs)
             {
-                glm::vec3 interpolatedNormal = std::get<0>(normalPosRgbDispl);
-                glm::vec4 rgba = std::get<2>(normalPosRgbDispl);
-                MaterialGltf material = std::get<3>(normalPosRgbDispl);
+                glm::vec3 interpolatedNormal    = std::get<0>(normalPosRgbDispl);
+                glm::vec3 position              = std::get<1>(normalPosRgbDispl);
+                glm::vec4 rgba                  = std::get<2>(normalPosRgbDispl);
+                MaterialGltf material           = std::get<3>(normalPosRgbDispl);
                 
                 Gaussian3D gaussian_3d;
+                gaussian_3d.position    = position;
                 gaussian_3d.normal      = interpolatedNormal; 
                 gaussian_3d.rotation    = rotation;
                 gaussian_3d.scale       = scale;
                 gaussian_3d.sh0         = getColor(glm::vec3(linear_to_srgb_float(rgba.r), linear_to_srgb_float(rgba.g), linear_to_srgb_float(rgba.b)));
                 gaussian_3d.opacity     = rgba.a;
-                gaussian_3d.position    = std::get<1>(normalPosRgbDispl);
-                gaussian_3d.material    = material;
+                gaussian_3d.material    = material; //TODO: still need to embed this info in the .ply
 
                 gaussians_3D_list.push_back(gaussian_3d); 
             }
