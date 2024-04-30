@@ -23,7 +23,7 @@ The (current) core concept behind Mesh2Splat is quite simple:
 
 ## Usage
 Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all the different parameters in ```src/utils/params.hpp```:
-- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name)
+- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only .glTF format is supported.
 - Modifying how this is handled is simple, but at the moment the code expects the following folder structure:<br>
 **dataset/**<br>
 ├─ **object_x/**<br>
@@ -40,6 +40,10 @@ Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all th
 
 - **View-Dependent Accuracy**: Mesh2Splat is not yet capable of capturing view-dependant lighting effects.
 - **Material information**: Currently not yet able to load all material information, just Albedo.
+- **Textures still WIP for .glTF**: I am currently in the process of changing how I read the data from ```.obj``` to ```.glTF```, and how texture information is read is not too robust yet.
+
+## Known issues
+- **jpg format**: if using Blender and UV mapping with a ```.jpg``` texture, it will save it's mimetype as ```.jpeg```, invalidating some preliminary code I wrote. Just save it as ```.jpeg```, as it is equivalent to ```.jpg```
 
 ## References
 
