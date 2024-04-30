@@ -91,14 +91,14 @@ int main() {
         }
         
 
-        printf("%zu triangle faces for mesh number %d / %zu\n", mesh.faces.size(), j, meshes.size());
+        printf("\n%zu triangle faces for mesh number %d / %zu\n", mesh.faces.size(), j, meshes.size());
         for (const auto& triangleFace : mesh.faces) {
             
             printProgressBar((float)t / (float)totFaces);
             t++;
 
             // If texture for this face not yet loaded, do so
-            //TODO: This is toooooooo slow but supports multiple different albedo textures per mesh
+            //TODO: This is toooooooo slow (10x/20x) but supports multiple different albedo textures per mesh
             /*
             if (loadedImages.find(materialGltf.baseColorTexture.path) == loadedImages.end())
             {
@@ -145,10 +145,10 @@ int main() {
                             triangleFace.vertexIndices[1] * v +
                             triangleFace.vertexIndices[2] * w;
 
-                        glm::vec3 interpolatedNormal = glm::normalize(
+                        glm::vec3 interpolatedNormal = 
                             triangleFace.normalIndices[0] * u +
                             triangleFace.normalIndices[1] * v +
-                            triangleFace.normalIndices[2] * w);
+                            triangleFace.normalIndices[2] * w;
 
                         //glm::vec4 normalColor((interpolatedNormal + glm::vec3(1.0f, 1.0f, 1.0f)) / 2.0f, 1.0f);
 
@@ -240,10 +240,10 @@ int main() {
                 
                 Gaussian3D gaussian_3d;
                 gaussian_3d.position    = position;
-                gaussian_3d.normal      = interpolatedNormal; 
+                gaussian_3d.normal      = glm::normalize(interpolatedNormal); 
                 gaussian_3d.rotation    = rotation;
                 gaussian_3d.scale       = scale;
-                gaussian_3d.sh0         = getColor(glm::vec3(rgba.r, rgba.g, rgba.b));
+                gaussian_3d.sh0         = getColor(glm::vec3(linear_to_srgb_float(rgba.r), linear_to_srgb_float(rgba.g), linear_to_srgb_float(rgba.b)));
                 gaussian_3d.opacity     = rgba.a;
                 gaussian_3d.material    = material; //TODO: still need to embed this info in the .ply
 

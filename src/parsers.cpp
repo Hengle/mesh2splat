@@ -381,32 +381,36 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
     file << "format binary_little_endian 1.0\n";
     file << "element vertex " << gaussians.size() << "\n";
 
-    file << "property float x\n";
-    file << "property float y\n";
-    file << "property float z\n";
+    file << "property float x\n";       //0
+    file << "property float y\n";       //1
+    file << "property float z\n";       //2
 
-    file << "property float nx\n";
-    file << "property float ny\n";
-    file << "property float nz\n";
+    file << "property float nx\n";      //3
+    file << "property float ny\n";      //4
+    file << "property float nz\n";      //5
 
-    file << "property float f_dc_0\n";
-    file << "property float f_dc_1\n";
-    file << "property float f_dc_2\n";
+    file << "property float f_dc_0\n";  //6
+    file << "property float f_dc_1\n";  //7
+    file << "property float f_dc_2\n";  //8
+    /*
     for (int i = 0; i < 45; i++)
     {
         file << "property float f_rest_" << i << "\n";
     }
+    */
+    file << "property float metallicFactor\n";  //9
+    file << "property float roughnessFactor\n"; //10
 
-    file << "property float opacity\n";
+    file << "property float opacity\n";         //11
 
-    file << "property float scale_0\n";
-    file << "property float scale_1\n";
-    file << "property float scale_2\n";
+    file << "property float scale_0\n";         //12
+    file << "property float scale_1\n";         //13
+    file << "property float scale_2\n";         //14
 
-    file << "property float rot_0\n";
-    file << "property float rot_1\n";
-    file << "property float rot_2\n";
-    file << "property float rot_3\n";
+    file << "property float rot_0\n";           //15
+    file << "property float rot_1\n";           //16
+    file << "property float rot_2\n";           //17
+    file << "property float rot_3\n";           //18
 
     file << "end_header\n";
 
@@ -426,10 +430,19 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
 
         // TODO: this takes up basically 65% of the space and I do not even need to use it
+        /*
         float zeroValue = 0.0f;
         for (int i = 0; i < 45; i++) {
             file.write(reinterpret_cast<const char*>(&zeroValue), sizeof(zeroValue));
         }
+        */
+
+        //---------NEW--------------------
+        //Material properties
+
+        file.write(reinterpret_cast<const char*>(&gaussian.material.metallicFactor), sizeof(gaussian.material.metallicFactor));
+        file.write(reinterpret_cast<const char*>(&gaussian.material.roughnessFactor), sizeof(gaussian.material.roughnessFactor));
+        //--------------------------------
 
         //Opacity
         file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
