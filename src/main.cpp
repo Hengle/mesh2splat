@@ -24,47 +24,21 @@ void printProgressBar(float percentage)
 }
 
 int main() {
-    //I am investigating a memory leak
-    //_CrtSetReportMode(_CRT_WARN, _CRTDBG_MODE_FILE);
-    //_CrtSetReportFile(_CRT_WARN, _CRTDBG_FILE_STDOUT);
-    //_CrtSetReportMode(_CRT_ERROR, _CRTDBG_MODE_FILE);
-    //_CrtSetReportFile(_CRT_ERROR, _CRTDBG_FILE_STDOUT);
-    //_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
-    //_CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDOUT);
-    
-    /*
-    if (_CrtDumpMemoryLeaks()) {
-        std::cout << "Memory leaks!\n";
-    }
-    else {
-        std::cout << "No leaks\n";
-    }
-    */
-
     printf("Parsing input mesh\n");
-    auto parsedGltfModel = parseGltfFileToMesh(OUTPUT_FILENAME);
-    
-    std::vector<Mesh>       meshes          = std::get<0>(parsedGltfModel);
-    std::vector<glm::vec3>  globalVertices  = std::get<1>(parsedGltfModel);
-    std::vector<glm::vec2>  globalUvs       = std::get<2>(parsedGltfModel);
-    std::vector<glm::vec3>  globalNormals   = std::get<3>(parsedGltfModel);
+    std::vector<Mesh> meshes = parseGltfFileToMesh(OUTPUT_FILENAME); //TODO: Struct is more readable and leaves no space for doubt
+
 
     printf("Parsed input mesh\n");
-
-    printf(
-        "[Total number of meshes: %zu]\n[Total number of vertices : %zu]\n[Total number of UVs : %zu]\n[Total number of normlas : %zu]\n", 
-        meshes.size(), globalVertices.size(), globalUvs.size(), globalNormals.size()
-    );
  
-    std::vector<Gaussian3D> gaussians_3D_list;
+    std::vector<Gaussian3D> gaussians_3D_list; //TODO: Think if can allocate space instead of having the vector dynamic size
     
     int j = 0;
 
     //TODO: I believe having an initial reference UV space would be ideal
 
-    std::map<std::string, std::pair<std::vector<unsigned char>, int>> loadedImages;
+    //std::map<std::string, std::pair<std::vector<unsigned char>, int>> loadedImages;
     int t = 0;
-    int totFaces = 0;
+    size_t totFaces = 0;
     for (const auto& mesh : meshes) 
     {
         totFaces += mesh.faces.size();
@@ -86,12 +60,14 @@ int main() {
             bpp = std::get<1>(textureAndBpp);
         }
         else {
-            mesh.material.baseColorTexture.width = MAX_TEXTURE_WIDTH;
-            mesh.material.baseColorTexture.height = MAX_TEXTURE_WIDTH;
+            mesh.material.baseColorTexture.width = MAX_TEXTURE_SIZE;
+            mesh.material.baseColorTexture.height = MAX_TEXTURE_SIZE;
         }
         
 
         printf("\n%zu triangle faces for mesh number %d / %zu\n", mesh.faces.size(), j, meshes.size());
+        std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec4, MaterialGltf>> positionsOnTriangleSurfaceAndRGBs;
+
         for (const auto& triangleFace : mesh.faces) {
             
             printProgressBar((float)t / (float)totFaces);
@@ -113,19 +89,20 @@ int main() {
             //TODO: obviously if there is no texture you need to do something otherwise wont rasterize shit and wont find correspondence in pixel
             //This will have to stay like this until I establish a common initial UV mapping; for now, as a requirement, the model needs to have a UV mapping
             
-
+            //TODO: split load and rasterization
 #if SHOULD_RASTERIZE
             // Compute the bounding box in UV space
-            std::pair<glm::vec2, glm::vec2> minMaxUV = computeUVBoundingBox(triangleFace.uvIndices);
+            std::pair<glm::vec2, glm::vec2> minMaxUV = computeUVBoundingBox(triangleFace.uv); //TODO: struct struct struct
 
             glm::vec2 minUV = std::get<0>(minMaxUV);
             glm::vec2 maxUV = std::get<1>(minMaxUV);
 
             // Convert bounding box to pixel coordinates
-            glm::ivec2 minPixel = uvToPixel(minUV, mesh.material.baseColorTexture.width-1, mesh.material.baseColorTexture.height-1);
-            glm::ivec2 maxPixel = uvToPixel(maxUV, mesh.material.baseColorTexture.width-1, mesh.material.baseColorTexture.height-1);
+            
+            glm::ivec2 minPixel = uvToPixel(minUV, mesh.material.baseColorTexture.width, mesh.material.baseColorTexture.height);
+            glm::ivec2 maxPixel = uvToPixel(maxUV, mesh.material.baseColorTexture.width, mesh.material.baseColorTexture.height);
 
-            std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec4, MaterialGltf>> positionsOnTriangleSurfaceAndRGBs;
+            
 
             if (minPixel.x == maxPixel.x && minPixel.y == maxPixel.y)
             {                
@@ -136,21 +113,23 @@ int main() {
                 for (int x = minPixel.x; x <= maxPixel.x; ++x) {
                     glm::vec2 pixelUV = pixelToUV(glm::ivec2(x, y), mesh.material.baseColorTexture.width - 1, mesh.material.baseColorTexture.height - 1);
 
-                    if (pointInTriangle(pixelUV, triangleFace.uvIndices[0], triangleFace.uvIndices[1], triangleFace.uvIndices[2])) {
+                    if (pointInTriangle(pixelUV, triangleFace.uv[0], triangleFace.uv[1], triangleFace.uv[2])) {
                         float u, v, w;
-                        computeBarycentricCoords(pixelUV, triangleFace.uvIndices[0], triangleFace.uvIndices[1], triangleFace.uvIndices[2], u, v, w);
+                        computeBarycentricCoords(pixelUV, triangleFace.uv[0], triangleFace.uv[1], triangleFace.uv[2], u, v, w);
 
                         glm::vec3 interpolatedPos =
-                            triangleFace.vertexIndices[0] * u +
-                            triangleFace.vertexIndices[1] * v +
-                            triangleFace.vertexIndices[2] * w;
+                            triangleFace.pos[0] * u +
+                            triangleFace.pos[1] * v +
+                            triangleFace.pos[2] * w;
 
                         glm::vec3 interpolatedNormal = 
-                            triangleFace.normalIndices[0] * u +
-                            triangleFace.normalIndices[1] * v +
-                            triangleFace.normalIndices[2] * w;
+                            triangleFace.normal[0] * u +
+                            triangleFace.normal[1] * v +
+                            triangleFace.normal[2] * w;
 
-                        //glm::vec4 normalColor((interpolatedNormal + glm::vec3(1.0f, 1.0f, 1.0f)) / 2.0f, 1.0f);
+                        //glm::vec4 normalColor(glm::normalize(interpolatedNormal) * .5f + 0.5f, 1.0f);
+
+                        //TODO: Create the gaussians directly here no need to save position and color use STREAMING
 
                         if (meshTexture != NULL && bpp != 0) //use texture for rgba
                         {
@@ -180,11 +159,11 @@ int main() {
             // Calculate σ based on the density and desired overlap, I derive this simple formula from 
             //TODO: Should find a better way to compute sigma and do it based on the size of the current triangle to tesselate
             //TODO: should base this on nyquist sampling rate: https://www.pbr-book.org/3ed-2018/Texture/Sampling_and_Antialiasing#FindingtheTextureSamplingRate
-
+            //TODO: do outside
             float scale_factor_multiplier = .75f;
             float image_area = (mesh.material.baseColorTexture.width * mesh.material.baseColorTexture.height);
-            float sigma = scale_factor_multiplier * sqrt(2.0f / image_area);
-            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationGaussian(sigma, triangleFace.vertexIndices, triangleFace.uvIndices);
+            float sigma = scale_factor_multiplier * sqrtf(2.0f / image_area);
+            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationGaussian(sigma, triangleFace.pos, triangleFace.uv);
 
             glm::vec4 rotation = std::get<0>(rotAndScale);
             glm::vec3 scale = std::get<1>(rotAndScale);
@@ -249,6 +228,8 @@ int main() {
 
                 gaussians_3D_list.push_back(gaussian_3d); 
             }
+
+            positionsOnTriangleSurfaceAndRGBs.clear();
 
         }
                 

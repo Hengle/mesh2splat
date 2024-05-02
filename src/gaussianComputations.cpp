@@ -61,7 +61,7 @@ std::vector<std::pair<glm::vec3, float>> getSortedEigenvectorEigenvalues(Eigen::
     return eigenPairs;
 }
 
-std::pair<glm::vec4, glm::vec3> getScaleRotationGaussian(const float sigma2d, std::vector<glm::vec3> verticesTriangle3D, std::vector<glm::vec2> verticesTriangleUVs)
+std::pair<glm::vec4, glm::vec3> getScaleRotationGaussian(const float sigma2d, const glm::vec3* verticesTriangle3D, const glm::vec2* verticesTriangleUVs)
 {
     //Building CovMat2D
     //float rho = 0.0f; //Pearson Corr. Coeff. (PCC)
@@ -94,9 +94,9 @@ std::pair<glm::vec4, glm::vec3> getScaleRotationGaussian(const float sigma2d, st
     std::vector<std::pair<glm::vec3, float>> eigenPairs = getSortedEigenvectorEigenvalues(covMat3d);
 
     //Computing and setting scale values from the eigenvalues
-    float SD_x = sqrt(eigenPairs[2].second); //sqrt of eigenvalues..., jacobian by normal dot should yield 0 (to check)
-    float SD_y = sqrt(eigenPairs[1].second);
-    float SD_z = (std::min(SD_x, SD_y) / 5.0f);
+    float SD_x = sqrtf(eigenPairs[2].second); //sqrt of eigenvalues..., jacobian by normal dot should yield 0 (to check)
+    float SD_y = sqrtf(eigenPairs[1].second);
+    float SD_z = (std::min(SD_x, SD_y) / 5.0f); //TODO: magic hyperparameter
 
     glm::vec3 x = glm::normalize(eigenPairs[2].first);
     glm::vec3 y = glm::normalize(eigenPairs[1].first);

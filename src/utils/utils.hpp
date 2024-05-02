@@ -73,15 +73,12 @@ struct Gaussian3D {
 };
 
 struct Face {
-    std::vector<glm::vec3> vertexIndices;
-    std::vector<glm::vec2> uvIndices;
-    std::vector<glm::vec3> normalIndices;
-
-    Face(const std::vector<glm::vec3>& verts, const std::vector<glm::vec2>& uvs, const std::vector<glm::vec3>& norms)
-        : vertexIndices(verts), uvIndices(uvs), normalIndices(norms) {}
+    glm::vec3 pos[3];
+    glm::vec2 uv[3];
+    glm::vec3 normal[3];
 };
 
-class Mesh {
+class Mesh { //TODO: 
 public:
     std::string name;
     std::vector<Face> faces; // Tuple of vertex indices, uv indices and normalIndices
@@ -107,7 +104,7 @@ glm::vec2 pixelToUV(const glm::ivec2& pixel, int textureWidth, int textureHeight
 
 glm::ivec2 uvToPixel(const glm::vec2& uv, int textureWidth, int textureHeight);
 
-std::pair<glm::vec2, glm::vec2> computeUVBoundingBox(const std::vector<glm::vec2>& triangleUVs);
+std::pair<glm::vec2, glm::vec2> computeUVBoundingBox(const glm::vec2* triangleUVs);
 
 //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
 float linear_to_srgb_float(float x); //Assumes 0,...,1 range 

@@ -8,7 +8,7 @@
 
 //TODO should not by default use 3 channels but for now that is ok
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
-std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWidth, int& textureHeight)
+std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
 {
     size_t pos = texturePath.rfind('.');
     std::string image_format = texturePath.substr(pos + 1);
@@ -26,16 +26,17 @@ std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWi
     std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + "." + image_format;
     float aspect_ratio = (float)textureHeight / (float)textureWidth;
 
-    if (textureWidth > MAX_TEXTURE_WIDTH)
+    if (textureWidth > MAX_TEXTURE_SIZE)
     {
         // Specify new width and height
 
-        int new_width = MAX_TEXTURE_WIDTH;
+        int new_width = MAX_TEXTURE_SIZE;
         int new_height = static_cast<int>(new_width * aspect_ratio);
 
         // Allocate memory for the resized image
         unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bpp);
 
+        //TODO!: use the resized data!
         // Resize the image
         stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
 
@@ -239,7 +240,7 @@ std::map<std::string, Material> parseMtlFile(const std::string& filename) {
 
 //https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 template<typename T>
-std::vector<T> getBufferData(const tinygltf::Model& model, int accessorIndex) {
+const T* getBufferData(const tinygltf::Model& model, int accessorIndex) {
     //The second step of structuring the data is accomplished with accessor objects. An accessor refers to a bufferview
     //They define how the data of a bufferView has to be interpreted by providing information about the data types and the layout.
     //Each accessor also has a byteOffset property. For the example above, it has been 0 for both accessors, because there was only one accessor for each bufferView.
@@ -252,23 +253,25 @@ std::vector<T> getBufferData(const tinygltf::Model& model, int accessorIndex) {
     
     //TODO: This may not be too safe and I should write this a bit better, but it is not production code so for now it works
     const T* dataPtr = reinterpret_cast<const T*>(&buffer.data[bufferView.byteOffset + accessor.byteOffset]); //accessor.byteOffset: The offset relative to the start of the buffer view in bytes.
-    return std::vector<T>(dataPtr, dataPtr + accessor.count);
+    
+    return dataPtr;
 }
 
 MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) {
+    //TODO: if its an index you do not need negatives so use unsigned
     if (materialIndex < 0 || materialIndex >= model.materials.size()) {
         return MaterialGltf(); 
     }
 
-    const tinygltf::Material& gltfMaterial = model.materials[materialIndex];
-    MaterialGltf material;
+    const tinygltf::Material& material = model.materials[materialIndex];
+    MaterialGltf materialGltf;
 
-    material.name = gltfMaterial.name;
+    materialGltf.name = material.name;
 
     // Parse base color factor
-    auto colorIt = gltfMaterial.values.find("baseColorFactor");
-    if (colorIt != gltfMaterial.values.end()) {
-        material.baseColorFactor = glm::vec4(
+    auto colorIt = material.values.find("baseColorFactor");
+    if (colorIt != material.values.end()) {
+        materialGltf.baseColorFactor = glm::vec4(
             static_cast<float>(colorIt->second.ColorFactor()[0]),
             static_cast<float>(colorIt->second.ColorFactor()[1]),
             static_cast<float>(colorIt->second.ColorFactor()[2]),
@@ -277,8 +280,8 @@ MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) 
     }
 
     // Parse base color texture
-    auto texIt = gltfMaterial.values.find("baseColorTexture");
-    if (texIt != gltfMaterial.values.end()) {
+    auto texIt = material.values.find("baseColorTexture");
+    if (texIt != material.values.end()) {
         int textureIndex = texIt->second.TextureIndex();
         const tinygltf::Texture& texture = model.textures[textureIndex];
         const tinygltf::Image& image = model.images[texture.source];
@@ -286,22 +289,22 @@ MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) 
         //blender unfortunately does not correctly export the path, so i have no way of recovering the full path of the resource image
         std::string imagePath = BASE_DATASET_FOLDER + image.name + "." + image.mimeType.substr(image.mimeType.find("/") + 1);
 
-        material.baseColorTexture.path = imagePath;
-        material.baseColorTexture.texCoordIndex = texIt->second.TextureTexCoord();
+        materialGltf.baseColorTexture.path = imagePath;
+        materialGltf.baseColorTexture.texCoordIndex = texIt->second.TextureTexCoord();
         
         //TODO: here I should actually load and save the images instead of just doing this, update it!
-        material.baseColorTexture.width = image.width > MAX_TEXTURE_WIDTH ? MAX_TEXTURE_WIDTH : image.width;
-        material.baseColorTexture.height = image.height > MAX_TEXTURE_WIDTH ? MAX_TEXTURE_WIDTH : image.height;
+        materialGltf.baseColorTexture.width = std::min(MAX_TEXTURE_SIZE, image.width);
+        materialGltf.baseColorTexture.height = std::min(MAX_TEXTURE_SIZE, image.height);
 
     }
     
-    material.metallicFactor = gltfMaterial.pbrMetallicRoughness.metallicFactor;
-    material.roughnessFactor = gltfMaterial.pbrMetallicRoughness.roughnessFactor;
+    materialGltf.metallicFactor = material.pbrMetallicRoughness.metallicFactor;
+    materialGltf.roughnessFactor = material.pbrMetallicRoughness.roughnessFactor;
 
-    return material;
+    return materialGltf;
 }
 
-std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseGltfFileToMesh(const std::string& filename) {
+std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string err;
@@ -351,26 +354,28 @@ std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, st
             auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));         
             auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
 
-            //TODO: in future hold a meshVertices list specific to each mesh/primitive as indexing is relative to the primitive
-            globalVertices.insert(globalVertices.end(), vertices.begin(), vertices.end());
-            globalUvs.insert(globalUvs.end(), uvs.begin(), uvs.end());
-            globalNormals.insert(globalNormals.end(), normals.begin(), normals.end());
-
             myMesh.material = parseGltfMaterial(model, primitive.material);
 
             //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
-            for (size_t i = 0; i < indices.size(); i += 3) {
-                std::vector<glm::vec3> faceVertexIndices  = { vertices[indices[i]], vertices[indices[i + 1]], vertices[indices[i + 2]] };
-                std::vector<glm::vec2> faceUvIndices      = { uvs[indices[i]], uvs[indices[i + 1]], uvs[indices[i + 2]] };
-                std::vector<glm::vec3> faceNormalIndices  = { normals[indices[i]], normals[indices[i + 1]], normals[indices[i + 2]] };
-                myMesh.faces.emplace_back(faceVertexIndices, faceUvIndices, faceNormalIndices);
-                
+            myMesh.faces.resize(indices.size() / 3);
+            Face* dst = myMesh.faces.data();
+            for (size_t i = 0, count = indices.size(); i < count; i += 3, ++dst) {             
+
+                size_t index[3] = { indices[i], indices[i + 1], indices[i + 2] };
+
+                for (int e = 0; e < 3; e++)
+                {
+                    dst->pos[e] = vertices[index[e]];
+                    dst->uv[e] = uvs[index[e]];
+                    dst->normal[e] = normals[index[e]];
+                }
+                    
             }
             
             meshes.push_back(myMesh);
         }
     }
-    return { meshes, globalVertices, globalUvs, globalNormals };
+    return meshes; //TODO: struct struct struct!
 }
 
 void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {

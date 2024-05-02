@@ -62,28 +62,30 @@ glm::vec2 pixelToUV(const glm::ivec2& pixel, int textureWidth, int textureHeight
 }
 
 glm::ivec2 uvToPixel(const glm::vec2& uv, int textureWidth, int textureHeight) {
+    //TODO: should pass true width/height not with -1
     //TODO: consider bilinear filtering, why implement again all this when it is already supported in hardware...
     // Convert back to pixel coordinates
-    int x = static_cast<int>(uv.x * textureWidth) - 0.5f;
-    int y = static_cast<int>(uv.y * textureHeight) - 0.5f; //ATTENTION: remember to then swap the order of the pixels in the rgba_to_pos
+    int x = static_cast<int>(uv.x * textureWidth - 0.5f);
+    int y = static_cast<int>(uv.y * textureHeight - 0.5f); //ATTENTION: remember to then swap the order of the pixels in the rgba_to_pos
 
     // Clamp the coordinates to ensure they're within the texture bounds
     // This accounts for potential rounding errors that might place the pixel outside the texture
-    x = std::max(0, std::min(x, textureWidth)); //zero-based pixel indexing
-    y = std::max(0, std::min(y, textureHeight));
+    x = glm::clamp(x, 0, textureWidth - 1);
+    y = glm::clamp(y, 0, textureHeight - 1);
 
     return glm::ivec2(x, y);        
 }
 
-std::pair<glm::vec2, glm::vec2> computeUVBoundingBox(const std::vector<glm::vec2>& triangleUVs) {
-    if (triangleUVs.empty()) {
+std::pair<glm::vec2, glm::vec2> computeUVBoundingBox(const glm::vec2* triangleUVs) {
+    if (triangleUVs == NULL) {
         return { glm::vec2(0, 0), glm::vec2(0, 0) };
     }
 
     float minU = triangleUVs[0].x, maxU = triangleUVs[0].x;
     float minV = triangleUVs[0].y, maxV = triangleUVs[0].y;
 
-    for (const auto& uv : triangleUVs) {
+    for (int i = 0; i < 3; i++) {
+        glm::vec2 uv = triangleUVs[i];
         minU = std::min(minU, uv.x);
         maxU = std::max(maxU, uv.x);
 
@@ -132,9 +134,9 @@ glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image, con
     size_t index = (Y * width + X) * bpp;
 
     //TODO: remember to switch back to [ ] instead of .at once finished debugging
-    float r = (static_cast<float>(rgb_image[index]) / 255.0f);
-    float g = (static_cast<float>(rgb_image[index + 1]) / 255.0f);
-    float b = (static_cast<float>(rgb_image[index + 2]) / 255.0f);
+    float r = static_cast<float>(rgb_image[index]) / 255.0f;
+    float g = static_cast<float>(rgb_image[index + 1]) / 255.0f;
+    float b = static_cast<float>(rgb_image[index + 2]) / 255.0f;
     //float a = (bpp >= 4 && index + 3 < rgb_image.size()) ? (static_cast<float>(rgb_image[index + 3]) / 255.0f) : 1.0f;
     //TODO: what to do about opacity?
 
