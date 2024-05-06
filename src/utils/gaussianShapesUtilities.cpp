@@ -3,7 +3,7 @@
 std::vector<Gaussian3D> drawLine(glm::vec3 initialPos, glm::vec3 finalPos, glm::vec3 color, float isotropicScale, float opacity = 1.0f)
 {
     std::vector<glm::vec3> interpolatedPositions;
-    for (int i = 0; i < 30; i++)
+    for (int i = 0; i < 1; i++)
     {
         float alpha = ((float)i) / 100.0f;
         interpolatedPositions.push_back(floatToVec3(1 - alpha) * initialPos + floatToVec3(alpha) * finalPos);
@@ -75,7 +75,7 @@ std::vector<Gaussian3D> drawCube(std::vector<glm::vec3> positions, glm::vec3 col
     return cubeEdges;
 }
 
-void addNormalVector3DGaussianRepresentation(std::vector<glm::vec3> triangleVertices, glm::vec3 normal, std::vector<Gaussian3D>& gaussians_3D_list)
+void addNormalVector3DGaussianRepresentation(const glm::vec3* triangleVertices, glm::vec3 normal, std::vector<Gaussian3D>& gaussians_3D_list)
 {
     glm::vec3 center = (1.0f / 3.0f) * (triangleVertices[0] + triangleVertices[1] + triangleVertices[2]);
     std::vector<Gaussian3D> normalLine = drawLine(center, center + (normal * 5.0f), glm::vec3(0.294f, 0.706f, 0.89f), 0.01f);

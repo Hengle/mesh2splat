@@ -14,6 +14,8 @@
 #define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
 #include <experimental/filesystem>
 #define EMPTY_TEXTURE "empty_texture"
+#define GLM_ENABLE_EXPERIMENTAL
+#include <gtx/string_cast.hpp>
 #include "params.hpp"
 
 struct Material {

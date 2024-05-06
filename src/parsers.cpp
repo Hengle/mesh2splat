@@ -6,7 +6,6 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../thirdParty/stb_image_resize.h"
 
-//TODO should not by default use 3 channels but for now that is ok
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
 std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
 {
@@ -20,7 +19,6 @@ std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWi
         exit(1);
     }
 
-    //TODO: use or printf or std::cout, choose
     std::cout << "Image: " << texturePath << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
 
     std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + "." + image_format;
@@ -36,124 +34,22 @@ std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWi
         // Allocate memory for the resized image
         unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bpp);
 
-        //TODO!: use the resized data!
         // Resize the image
         stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
+        textureWidth = new_width;
+        textureHeight = new_height;
 
         // Save the resized image
-        stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
-        
-        stbi_image_free(resized_data);
+        //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
         stbi_image_free(image);
-        
-        image = stbi_load(resized_texture_name_location.c_str(), &textureWidth, &textureHeight, &bpp, 0);
+        std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
 
-        if (image == NULL) {
-            printf("Error in loading the resized image\n");
-            exit(1);
-        }
-
-        std::cout << "Image: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
-                
+        return std::make_pair(resized_data, bpp);
+       
     }
 
     return std::make_pair(image, bpp);
 }
-
-
-std::pair<bool, int> loadImageIntoVector(std::string filepath, int& width, int& height, std::vector<unsigned char>& vecToFill)
-{
-    auto imageAndBpp = loadImage(filepath, width, height);
-    bool found = false;
-
-    unsigned char* textureImage = std::get<0>(imageAndBpp);
-    int bpp                     = std::get<1>(imageAndBpp);
-
-    if (!textureImage) {
-        std::cerr << "Failed to load image from " << filepath << std::endl;
-    }
-    else {
-        vecToFill.resize(width * height * bpp);
-        std::memcpy(&vecToFill[0], textureImage, vecToFill.size());
-        stbi_image_free(textureImage); // Freeing the allocated memory
-        found = true;
-    }  
-
-    return std::make_pair(found, bpp);
-}
-
-/*
-std::tuple<std::vector<Mesh>, std::vector<glm::vec3>, std::vector<glm::vec2>, std::vector<glm::vec3>> parseObjFileToMeshes(const std::string& filename) {
-    std::vector<glm::vec3> globalVertices;
-    std::vector<glm::vec2> globalUvs;
-    std::vector<glm::vec3> globalNormals;
-    std::vector<Mesh> meshes;
-    std::string currentMaterial;
-    Mesh* currentMesh = nullptr;
-
-    std::ifstream file(filename);
-    std::string line;
-
-    while (std::getline(file, line)) {
-        if (line.find('o') == 0 || line.find('g') == 0) {
-            std::string meshName = line.substr(2);
-            meshes.emplace_back(meshName);
-            currentMesh = &meshes.back();
-        }
-        else if (line.find("usemtl") == 0) {
-            currentMaterial = line.substr(7); // Capture material name after "usemtl"
-        }
-        else if (line.find('v') == 0 && line[1] == ' ') {
-            glm::vec3 vertex;
-            std::istringstream(line.substr(2)) >> vertex.x >> vertex.y >> vertex.z;
-            globalVertices.push_back(vertex);
-        }
-        else if (line.find("vt") == 0) {
-            glm::vec2 uv;
-            std::istringstream(line.substr(3)) >> uv.x >> uv.y;
-            globalUvs.push_back(uv);
-        }
-        else if (line.find("vn") == 0) {
-            glm::vec3 normal;
-            std::istringstream(line.substr(3)) >> normal.x >> normal.y >> normal.z;
-            globalNormals.push_back(normal);
-        }
-        else if (line.find('f') == 0) {
-            std::vector<int> vertexIndices, uvIndices, normalIndices;
-            std::istringstream iss(line.substr(2));
-            std::string part;
-            while (iss >> part) {
-                std::size_t firstSlash = part.find('/');
-                std::size_t secondSlash = part.rfind('/');
-                int vertIdx = std::stoi(part.substr(0, firstSlash)) - 1;
-                vertexIndices.push_back(vertIdx);
-
-                if (firstSlash != std::string::npos && firstSlash + 1 < secondSlash) {
-                    int uvIdx = std::stoi(part.substr(firstSlash + 1, secondSlash - firstSlash - 1)) - 1;
-                    uvIndices.push_back(uvIdx);
-                }
-
-                if (secondSlash != std::string::npos && secondSlash + 1 < part.size()) {
-                    int normIdx = std::stoi(part.substr(secondSlash + 1)) - 1;
-                    normalIndices.push_back(normIdx);
-                }
-            }
-            if (currentMesh) {
-                if (currentMaterial.length() != 0)
-                {
-                    currentMesh->faces.emplace_back(vertexIndices, uvIndices, normalIndices, currentMaterial);
-                }
-                else {
-                    currentMesh->faces.emplace_back(vertexIndices, uvIndices, normalIndices, DEFAULT_MATERIAL_NAME); // find: [1] to understand
-                }
-                
-            }
-        }
-    }
-
-    return std::make_tuple(meshes, globalVertices, globalUvs, globalNormals);
-}
-*/
 
 glm::vec3 computeNormal(glm::vec3 A, glm::vec3 B, glm::vec3 C) {
     return glm::normalize(glm::cross(B - A, C - A));
@@ -320,9 +216,6 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
         std::cout << "glTF parse warning: " << warn << std::endl;
     }
 
-    std::vector<glm::vec3>  globalVertices;
-    std::vector<glm::vec2>  globalUvs;
-    std::vector<glm::vec3>  globalNormals;
     std::vector<Mesh>       meshes;
 
     //remember that "when a 3D model is created as GLTF it is already triangulated"
@@ -355,10 +248,12 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
             auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
 
             myMesh.material = parseGltfMaterial(model, primitive.material);
+            std::cout << "\nColor: " << glm::to_string(myMesh.material.baseColorFactor) << std::endl;
 
             //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
             myMesh.faces.resize(indices.size() / 3);
             Face* dst = myMesh.faces.data();
+            
             for (size_t i = 0, count = indices.size(); i < count; i += 3, ++dst) {             
 
                 size_t index[3] = { indices[i], indices[i + 1], indices[i + 2] };
@@ -397,12 +292,7 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
     file << "property float f_dc_0\n";  //6
     file << "property float f_dc_1\n";  //7
     file << "property float f_dc_2\n";  //8
-    /*
-    for (int i = 0; i < 45; i++)
-    {
-        file << "property float f_rest_" << i << "\n";
-    }
-    */
+
     file << "property float metallicFactor\n";  //9
     file << "property float roughnessFactor\n"; //10
 
@@ -434,20 +324,12 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
         file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
 
-        // TODO: this takes up basically 65% of the space and I do not even need to use it
-        /*
-        float zeroValue = 0.0f;
-        for (int i = 0; i < 45; i++) {
-            file.write(reinterpret_cast<const char*>(&zeroValue), sizeof(zeroValue));
-        }
-        */
-
-        //---------NEW--------------------
+        //---------NEW-----------------------------------------------------
         //Material properties
 
         file.write(reinterpret_cast<const char*>(&gaussian.material.metallicFactor), sizeof(gaussian.material.metallicFactor));
         file.write(reinterpret_cast<const char*>(&gaussian.material.roughnessFactor), sizeof(gaussian.material.roughnessFactor));
-        //--------------------------------
+        //-----------------------------------------------------------------
 
         //Opacity
         file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
@@ -464,45 +346,3 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
 
     file.close();
 }
-
-
-//vertexIndices, uvIndices, normalIndices
-// Function to find a 3D position from UV coordinates, this is probably the main bottleneck, as complexity grows with more complex 3D models.
-//Need to think of possible smarter ways to do this
-/*
-std::tuple<glm::vec3, std::string, glm::vec3, std::array<glm::vec3, 3>, std::array<glm::vec2, 3>> find3DPositionFromUV(const std::vector<Mesh>& meshes, const glm::vec2& targetUv, const std::vector<glm::vec3>& globalVertices, const std::vector<glm::vec2>& globalUvs) {
-    for (const auto& mesh : meshes) {
-        for (const auto& face : mesh.faces) {
-            std::vector<int> vertexIndices = std::get<0>(face);
-            std::vector<int> uvIndices = std::get<1>(face);
-            std::vector<int> normalIndices = std::get<2>(face);
-
-            if (face.first.size() != 3 || face.second.size() != 3) {
-                continue; // Skip non-triangular faces
-            }
-
-            std::array<glm::vec2, 3> triangleUvs = { globalUvs[face.second[0]], globalUvs[face.second[1]], globalUvs[face.second[2]] };
-            std::array<glm::vec3, 3> triangleVertices = { globalVertices[face.first[0]], globalVertices[face.first[1]], globalVertices[face.first[2]] };
-
-            //std::cout << "rad angle: " << rad_angle << std::endl;
-            if (pointInTriangle(targetUv, triangleUvs[0], triangleUvs[1], triangleUvs[2])) {
-                float u;
-                float v;
-                float w;
-                computeBarycentricCoords(targetUv, triangleUvs[0], triangleUvs[1], triangleUvs[2], u, v, w);
-
-                glm::vec3 interpolatedPos =
-                    globalVertices[face.first[0]] * u +
-                    globalVertices[face.first[1]] * v +
-                    globalVertices[face.first[2]] * w;
-
-                glm::vec3 normal = glm::cross(globalVertices[face.first[1]] - globalVertices[face.first[0]], globalVertices[face.first[2]] - globalVertices[face.first[0]]);
-
-                return { interpolatedPos, mesh.name,  glm::normalize(normal), triangleVertices, triangleUvs };
-            }
-        }
-    }
-    //std::cout << "3D point not found for given UV" << std::endl;
-    return { glm::vec3(0,0,0), "NotFound", glm::vec3(0,0,0), {}, {} }; // Return an empty result if no matching face is found
-}
-*/
