@@ -9,6 +9,7 @@
 #include "parsers.hpp"
 #include "utils/gaussianShapesUtilities.hpp"
 #include "gaussianComputations.hpp"
+#include "poissonDiskSampling.hpp"
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
@@ -34,7 +35,23 @@ int roll(int min, int max)
     return that;
 }
 
+
+
+// functor to detemine distance between points
+class UniformConverter : public PoissonDiskSampling::Converter {
+public:
+    UniformConverter(double len) {
+        len_ = len;
+    }
+    double operator()(double val) {
+        return len_;
+    };
+private:
+    double len_;
+};
+
 int main() {
+
     printf("Parsing input mesh\n");
     std::vector<Mesh> meshes = parseGltfFileToMesh(OUTPUT_FILENAME); //TODO: Struct is more readable and leaves no space for doubt
 
@@ -58,21 +75,9 @@ int main() {
         meshNumber++;
         //TODO: I dont really like this, but it works
 
-        unsigned char* meshTexture = NULL;
-        int bpp = 0;
+        std::map<std::string, std::pair<unsigned char*, int>> textureTypeMap;
 
-        if (mesh.material.baseColorTexture.path != EMPTY_TEXTURE)
-        {
-            std::pair<unsigned char*, int> textureAndBpp = loadImage(mesh.material.baseColorTexture.path, mesh.material.baseColorTexture.width, mesh.material.baseColorTexture.height);
-
-            meshTexture = std::get<0>(textureAndBpp);
-            bpp = std::get<1>(textureAndBpp);
-        }
-        else {
-            mesh.material.baseColorTexture.width = MAX_TEXTURE_SIZE;
-            mesh.material.baseColorTexture.height = MAX_TEXTURE_SIZE;
-        }
-        
+        loadAllTexturesIntoMap(mesh.material, textureTypeMap);
 
         printf("\n%zu triangle faces for mesh number %d / %zu\n", mesh.faces.size(), meshNumber, meshes.size());
         //std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec4, MaterialGltf>> positionsOnTriangleSurfaceAndRGBs;
@@ -82,7 +87,7 @@ int main() {
             printProgressBar((float)t / (float)totFaces);
             t++;
 
-            // Calculate σ based on the density and desired overlap, I derive this simple formula from 
+            // Calculate σ based on the density and desired overlap, I derived this simple formula
             //TODO: Should find a better way to compute sigma and do it based on the size of the current triangle to tesselate
             //TODO: should base this on nyquist sampling rate: https://www.pbr-book.org/3ed-2018/Texture/Sampling_and_Antialiasing#FindingtheTextureSamplingRate
             //TODO: do outside
@@ -90,7 +95,8 @@ int main() {
             float image_area = (mesh.material.baseColorTexture.width * mesh.material.baseColorTexture.height);
             float sigma = scale_factor_multiplier * sqrtf(2.0f / image_area);
             glm::vec3 computedNormal;
-            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationAndNormalGaussian(sigma, triangleFace.pos, triangleFace.uv, computedNormal);
+            glm::mat3 matForTangentSpace;
+            std::pair<glm::vec4, glm::vec3> rotAndScale = getScaleRotationAndNormalGaussian(sigma, triangleFace.pos, triangleFace.uv, matForTangentSpace);
 
             glm::vec4 rotation = std::get<0>(rotAndScale);
             glm::vec3 scale = std::get<1>(rotAndScale);
@@ -130,32 +136,38 @@ int main() {
                             triangleFace.pos[2] * w;
 
                         glm::vec3 interpolatedNormal = 
-                            glm::normalize(triangleFace.normal[0]) * u +
-                                glm::normalize(triangleFace.normal[1]) * v +
-                                    glm::normalize(triangleFace.normal[2]) * w;
-                        
-                        glm::vec4 rgba(0.0f, 0.0f, 0.0f, 0.0f);
-
-                        if (meshTexture != NULL && bpp != 0) //use texture for rgba
-                        {
-                            rgba = rgbaAtPos(
-                                mesh.material.baseColorTexture.width,
-                                x, y,
-                                meshTexture, bpp
+                            glm::normalize(
+                                triangleFace.normal[0] * u +
+                                triangleFace.normal[1] * v +
+                                triangleFace.normal[2] * w
                             );
-                        } else { //use material for rgba
-                            rgba = mesh.material.baseColorFactor;
-                        }
+                        
+                        glm::vec4 interpolatedTangent =
+                            glm::normalize(
+                                triangleFace.tangent[0] * u +
+                                triangleFace.tangent[1] * v +
+                                triangleFace.tangent[2] * w
+                            );
+
+                        glm::vec4 rgba(0.0f, 0.0f, 0.0f, 0.0f);
+                        float metallicFactor;
+                        float roughnessFactor;
+
+                        //Building TBN matrix, because if I use the one per splat (which is currently basically per triangle), the normals will not be nicely interpolated
+                        
+                        computeAndLoadTextureInformation(textureTypeMap, mesh.material, x, y, rgba, metallicFactor, roughnessFactor, interpolatedNormal, interpolatedTangent, matForTangentSpace);
 
                         {
                             Gaussian3D gaussian_3d;
                             gaussian_3d.position = interpolatedPos;
-                            gaussian_3d.normal = glm::normalize(interpolatedNormal);
+                            gaussian_3d.normal = interpolatedNormal;
                             gaussian_3d.rotation = rotation;
                             gaussian_3d.scale = scale;
                             gaussian_3d.sh0 = getColor(glm::vec3((rgba.r), (rgba.g), (rgba.b)));
                             gaussian_3d.opacity = rgba.a;
                             gaussian_3d.material = mesh.material;
+                            gaussian_3d.material.metallicFactor = metallicFactor;
+                            gaussian_3d.material.roughnessFactor = roughnessFactor;
 
                             gaussians_3D_list.push_back(gaussian_3d);
                         }

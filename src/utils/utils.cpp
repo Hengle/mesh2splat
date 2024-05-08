@@ -246,3 +246,78 @@ void convert_cube_uv_to_xyz(int index, float u, float v, float* x, float* y, flo
         case 5: *x = -uc; *y = vc; *z = -1.0f; break;	// NEGATIVE Z
     }
 }
+
+glm::vec3 GenerateTangent(glm::vec3& normal) {
+    glm::vec3 tangent;
+    if (abs(normal.x) < abs(normal.z))
+        tangent = glm::cross(normal, glm::vec3(0.0f, 0.0f, 0.0f));
+    else
+        tangent = glm::cross(normal, glm::vec3(1.0f, 1.0f, 1.0f));
+    return glm::normalize(tangent);
+}
+
+glm::mat3 ConstructTBN(glm::vec3 normal) {
+    glm::vec3 tangent = GenerateTangent(normal);
+    glm::vec3 bitangent = glm::normalize(cross(normal, tangent));
+    return glm::mat3(tangent, bitangent, glm::normalize(normal));
+}
+
+void computeAndLoadTextureInformation(std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap, MaterialGltf& material, const int x, const int y, glm::vec4& rgba, float& metallicFactor, float& roughnessFactor, glm::vec3& normal, glm::vec4& tangent, glm::mat3& modelMat)
+{
+    //TODO: I do not support yet the indirection to the texture component of the model, meaning I cannot take advantage of the samplers
+    //TODO: "The first three components (RGB) MUST be encoded with the sRGB transfer function."
+    if (textureTypeMap.find(BASE_COLOR_TEXTURE) != textureTypeMap.end()) //use texture for rgba
+    {
+        rgba = rgbaAtPos(
+            material.baseColorTexture.width,
+            x, y,
+            textureTypeMap[BASE_COLOR_TEXTURE].first, textureTypeMap[BASE_COLOR_TEXTURE].second
+        );
+    }
+    else { //use material for rgba
+        rgba = material.baseColorFactor;
+    }
+
+    if (textureTypeMap.find(METALLIC_ROUGHNESS_TEXTURE) != textureTypeMap.end()) //use texture for rgba
+    {
+        glm::vec4 metallicRoughness = rgbaAtPos(
+            material.metallicRoughnessTexture.width,
+            x, y,
+            textureTypeMap[METALLIC_ROUGHNESS_TEXTURE].first, textureTypeMap[METALLIC_ROUGHNESS_TEXTURE].second
+        );
+        metallicFactor = material.metallicFactor * metallicRoughness.b;
+        roughnessFactor = material.roughnessFactor * metallicRoughness.g;
+        if (metallicRoughness.r != 1.0f) {
+            //TODO: Handle AO in this case as if it is different from 1 it means that something else was embedded here and it should be AO
+        }
+    }
+    else {
+        metallicFactor = material.metallicFactor;
+        roughnessFactor = material.roughnessFactor;
+    }
+
+    if (textureTypeMap.find(NORMAL_TEXTURE) != textureTypeMap.end())
+    {
+        glm::vec3 rgba_normal_info(rgbaAtPos(
+            material.baseColorTexture.width,
+            x, y,
+            textureTypeMap[NORMAL_TEXTURE].first, textureTypeMap[NORMAL_TEXTURE].second
+        ));
+
+        //rgba_normal_info = glm::vec3(srgb_to_linear_float(rgba_normal_info.x), srgb_to_linear_float(rgba_normal_info.y), srgb_to_linear_float(rgba_normal_info.z));
+        
+        glm::vec3 tangentXYZ(tangent);
+        glm::vec3 retrievedNormal   = glm::normalize(glm::normalize(glm::vec3(rgba_normal_info) * 2.0f - 1.0f) * glm::vec3(material.normalScale, material.normalScale, 1.0f)); //https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#_material_normaltextureinfo_scale
+        glm::vec3 bitangent         = glm::normalize(glm::cross(retrievedNormal, glm::vec3(tangent)) * tangent.w); //tangent.w is the bitangent sign
+        glm::mat3 TBN(tangentXYZ, bitangent, glm::normalize(retrievedNormal));
+        normal = modelMat * TBN * retrievedNormal; //should transform in model space
+        
+        //OK so now I have the interpolated tangent, the interpolated normal, and the TBN matrix.
+        //Just a heads up for later debugging in case cant fix things: https://www.reddit.com/r/GraphicsProgramming/comments/z2khzc/comment/ixiw0se/ sRGB might break things
+    }
+    else { //use material for rgba
+        rgba = material.baseColorFactor;
+    }
+
+    //TODO: AO, and EMISSIVE missing
+}

@@ -6,8 +6,9 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../thirdParty/stb_image_resize.h"
 
+
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
-std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
+std::pair<unsigned char*, int> loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
 {
     size_t pos = texturePath.rfind('.');
     std::string image_format = texturePath.substr(pos + 1);
@@ -21,7 +22,7 @@ std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWi
 
     std::cout << "Image: " << texturePath << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
 
-    std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + "." + image_format;
+    std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + texturePath + "." + image_format;
     float aspect_ratio = (float)textureHeight / (float)textureWidth;
 
     if (textureWidth > MAX_TEXTURE_SIZE)
@@ -49,6 +50,62 @@ std::pair<unsigned char*, int> loadImage(std::string texturePath, int& textureWi
     }
 
     return std::make_pair(image, bpp);
+}
+
+void loadAllTexturesIntoMap(MaterialGltf& material, std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap)
+{
+    
+    //TODO: THIS IS NOT NICE CODE, IT CAN BE GENERALIZED TO AVOID REPEATING BY SIMPLY PASSING the TextureInfo
+    
+    //BASECOLOR ALBEDO TEXTURE LOAD
+    if (material.baseColorTexture.path != EMPTY_TEXTURE)
+    {
+        textureTypeMap.emplace(BASE_COLOR_TEXTURE, loadImageAndBpp(material.baseColorTexture.path, material.baseColorTexture.width, material.baseColorTexture.height));
+    }
+    else {
+        material.baseColorTexture.width = MAX_TEXTURE_SIZE;
+        material.baseColorTexture.height = MAX_TEXTURE_SIZE;
+    }
+
+    //METALLIC-ROUGHNESS TEXTURE LOAD
+    if (material.metallicRoughnessTexture.path != EMPTY_TEXTURE)
+    {
+        textureTypeMap.emplace(METALLIC_ROUGHNESS_TEXTURE, loadImageAndBpp(material.metallicRoughnessTexture.path, material.metallicRoughnessTexture.width, material.metallicRoughnessTexture.height));
+    }
+    else {
+        material.metallicRoughnessTexture.width = MAX_TEXTURE_SIZE;
+        material.metallicRoughnessTexture.height = MAX_TEXTURE_SIZE;
+    }
+
+    //NORMAL TEXTURE LOAD
+    if (material.normalTexture.path != EMPTY_TEXTURE)
+    {
+        textureTypeMap.emplace(NORMAL_TEXTURE, loadImageAndBpp(material.normalTexture.path, material.normalTexture.width, material.normalTexture.height));
+    }
+    else {
+        material.normalTexture.width = MAX_TEXTURE_SIZE;
+        material.normalTexture.height = MAX_TEXTURE_SIZE;
+    }
+
+    //OCCLUSION TEXTURE LOAD
+    if (material.occlusionTexture.path != EMPTY_TEXTURE)
+    {
+        textureTypeMap.emplace(OCCLUSION_TEXTURE, loadImageAndBpp(material.occlusionTexture.path, material.occlusionTexture.width, material.occlusionTexture.height));
+    }
+    else {
+        material.occlusionTexture.width = MAX_TEXTURE_SIZE;
+        material.occlusionTexture.height = MAX_TEXTURE_SIZE;
+    }
+
+    //EMISSIVE TEXTURE LOAD
+    if (material.emissiveTexture.path != EMPTY_TEXTURE)
+    {
+        textureTypeMap.emplace(EMISSIVE_TEXTURE, loadImageAndBpp(material.emissiveTexture.path, material.emissiveTexture.width, material.emissiveTexture.height));
+    }
+    else {
+        material.emissiveTexture.width = MAX_TEXTURE_SIZE;
+        material.emissiveTexture.height = MAX_TEXTURE_SIZE;
+    }
 }
 
 glm::vec3 computeNormal(glm::vec3 A, glm::vec3 B, glm::vec3 C) {
@@ -153,10 +210,46 @@ const T* getBufferData(const tinygltf::Model& model, int accessorIndex) {
     return dataPtr;
 }
 
-MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) {
-    //TODO: if its an index you do not need negatives so use unsigned
+static TextureInfo parseTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter) {
+    TextureInfo info;
+
+    // Checking and extracting the texture index from the parameter
+    auto it = textureParameter.json_double_value.find("index");
+    if (it != textureParameter.json_double_value.end()) {
+        int textureIndex = static_cast<int>(it->second);
+        if (textureIndex >= 0 && textureIndex < model.textures.size()) {
+            const tinygltf::Texture& texture = model.textures[textureIndex];
+            if (texture.source >= 0 && texture.source < model.images.size()) {
+                const tinygltf::Image& image = model.images[texture.source];
+
+                // Base path handling
+                std::string basePath = BASE_DATASET_FOLDER; // Update this path as necessary.
+                std::string fileExtension = image.mimeType.substr(image.mimeType.find_last_of('/') + 1);
+                info.path = basePath + image.name + "." + fileExtension;
+
+                // Dimensions
+                info.width = image.width;
+                info.height = image.height;
+            }
+
+            // Handling texCoord index if present
+            auto texCoordIt = textureParameter.json_double_value.find("texCoord");
+            if (texCoordIt != textureParameter.json_double_value.end()) {
+                info.texCoordIndex = static_cast<int>(texCoordIt->second);
+            }
+            else {
+                info.texCoordIndex = 0; // Default texture coordinate set
+            }
+        }
+    }
+
+    return info;
+}
+
+
+static MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) {
     if (materialIndex < 0 || materialIndex >= model.materials.size()) {
-        return MaterialGltf(); 
+        return MaterialGltf();
     }
 
     const tinygltf::Material& material = model.materials[materialIndex];
@@ -164,7 +257,7 @@ MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) 
 
     materialGltf.name = material.name;
 
-    // Parse base color factor
+    // Base Color Factor
     auto colorIt = material.values.find("baseColorFactor");
     if (colorIt != material.values.end()) {
         materialGltf.baseColorFactor = glm::vec4(
@@ -175,25 +268,78 @@ MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex) 
         );
     }
 
-    // Parse base color texture
-    auto texIt = material.values.find("baseColorTexture");
-    if (texIt != material.values.end()) {
-        int textureIndex = texIt->second.TextureIndex();
-        const tinygltf::Texture& texture = model.textures[textureIndex];
-        const tinygltf::Image& image = model.images[texture.source];
-        //I assume the texture is in the same folder as the loaded .gltf file
-        //blender unfortunately does not correctly export the path, so i have no way of recovering the full path of the resource image
-        std::string imagePath = BASE_DATASET_FOLDER + image.name + "." + image.mimeType.substr(image.mimeType.find("/") + 1);
+    //Remember that it should be: R=ambient occlusion G=roughness B=metallic for the AO_Roughness_Metallic texture map
 
-        materialGltf.baseColorTexture.path = imagePath;
-        materialGltf.baseColorTexture.texCoordIndex = texIt->second.TextureTexCoord();
-        
-        //TODO: here I should actually load and save the images instead of just doing this, update it!
-        materialGltf.baseColorTexture.width = std::min(MAX_TEXTURE_SIZE, image.width);
-        materialGltf.baseColorTexture.height = std::min(MAX_TEXTURE_SIZE, image.height);
-
+    // Base Color Texture
+    auto baseColorTexIt = material.values.find("baseColorTexture");
+    if (baseColorTexIt != material.values.end()) {
+        materialGltf.baseColorTexture = parseTextureInfo(model, baseColorTexIt->second);
     }
-    
+    else {
+        materialGltf.baseColorTexture.path = EMPTY_TEXTURE;
+    }
+
+    // Normal Texture
+    auto normalTexIt = material.additionalValues.find("normalTexture");
+    if (normalTexIt != material.additionalValues.end()) {
+        materialGltf.normalTexture = parseTextureInfo(model, normalTexIt->second);
+
+        auto scaleIt = normalTexIt->second.json_double_value.find("scale");
+        if (scaleIt != normalTexIt->second.json_double_value.end()) {
+            materialGltf.normalScale = static_cast<float>(scaleIt->second);
+        }
+        else {
+            materialGltf.normalScale = 1.0f; // Default scale if not specified
+        }
+    }
+    else {
+        materialGltf.normalTexture.path = EMPTY_TEXTURE;
+    }
+
+    // Metallic-Roughness Texture
+    auto metalRoughTexIt = material.values.find("metallicRoughnessTexture");
+    if (metalRoughTexIt != material.values.end()) {
+        materialGltf.metallicRoughnessTexture = parseTextureInfo(model, metalRoughTexIt->second);
+    }
+
+    // Occlusion Texture
+    auto occlusionTexIt = material.additionalValues.find("occlusionTexture");
+    if (occlusionTexIt != material.additionalValues.end()) {
+        materialGltf.occlusionTexture = parseTextureInfo(model, occlusionTexIt->second);
+
+        auto scaleIt = occlusionTexIt->second.json_double_value.find("strength");
+        if (scaleIt != occlusionTexIt->second.json_double_value.end()) {
+            materialGltf.occlusionStrength = static_cast<float>(scaleIt->second);
+        }
+        else {
+            materialGltf.occlusionStrength = 1.0f; // Default scale if not specified
+        }
+    }
+    else {
+        materialGltf.occlusionTexture.path = EMPTY_TEXTURE;
+    }
+
+    // Emissive Texture
+    auto emissiveTexIt = material.additionalValues.find("emissiveTexture");
+    if (emissiveTexIt != material.additionalValues.end()) {
+        materialGltf.emissiveTexture = parseTextureInfo(model, emissiveTexIt->second);
+    }
+    else {
+        materialGltf.emissiveTexture.path = EMPTY_TEXTURE;
+    }
+
+
+    // Emissive Factor
+    auto emissiveFactorIt = material.values.find("emissiveFactor");
+    if (emissiveFactorIt != material.values.end()) {
+        materialGltf.emissiveFactor = glm::vec3(
+            static_cast<float>(emissiveFactorIt->second.number_array[0]),
+            static_cast<float>(emissiveFactorIt->second.number_array[1]),
+            static_cast<float>(emissiveFactorIt->second.number_array[2])
+        );
+    }
+
+    // Metallic and Roughness Factors
     materialGltf.metallicFactor = material.pbrMetallicRoughness.metallicFactor;
     materialGltf.roughnessFactor = material.pbrMetallicRoughness.roughnessFactor;
 
@@ -206,11 +352,13 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
     std::string err;
     std::string warn;
 
+    
     bool ret = loader.LoadBinaryFromFile(&model, &err, &warn, filename);
     if (!ret) {
         std::cerr << "Failed to load glTF: " << err << std::endl;
         return {};
     }
+    
 
     if (!warn.empty()) {
         std::cout << "glTF parse warning: " << warn << std::endl;
@@ -247,8 +395,15 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
             auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));         
             auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
 
+            const glm::vec4* tangents = NULL;
+            bool hasTangents = false;
+            if (primitive.attributes.find("TANGENT") != primitive.attributes.end())
+            {
+                tangents = getBufferData<glm::vec4>(model, primitive.attributes.at("TANGENT"));
+                hasTangents = true;
+            }
+            
             myMesh.material = parseGltfMaterial(model, primitive.material);
-            std::cout << "\nColor: " << glm::to_string(myMesh.material.baseColorFactor) << std::endl;
 
             //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
             myMesh.faces.resize(indices.size() / 3);
@@ -258,11 +413,32 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename) {
 
                 size_t index[3] = { indices[i], indices[i + 1], indices[i + 2] };
 
+                if (hasTangents)
+                {
+                    for (int e = 0; e < 3; e++) {
+                        dst->tangent[e] = tangents[index[e]];
+                    }
+                } else {
+                    //TODO: YOU SHOULD FK AVERAGE IT BETWEEN THE TANGENTS OF FACES THAT SHARE THIS VERTEX
+                    //but tbh just reimport it in Blender and export the damn tangents (there is a checkbox on the right of the exporter window under "data->mesh->Tangents")
+                    glm::vec3 dv1 = dst->pos[1] - dst->pos[0];
+                    glm::vec3 dv2 = dst->pos[2] - dst->pos[0];
+
+                    glm::vec2 duv1 = dst->uv[1] - dst->uv[0];
+                    glm::vec2 duv2 = dst->uv[2] - dst->uv[0];
+
+                    float r = 1.0f / (duv1.x * duv2.y - duv1.y * duv2.x);
+                    glm::vec4 tangent = glm::vec4((dv1 * duv2.y - dv2 * duv1.y) * r, 1.0f);
+                    dst->tangent[0] = tangent;
+                    dst->tangent[1] = tangent;
+                    dst->tangent[2] = tangent;
+                }
+
                 for (int e = 0; e < 3; e++)
                 {
                     dst->pos[e] = vertices[index[e]];
                     dst->uv[e] = uvs[index[e]];
-                    dst->normal[e] = normals[index[e]];
+                    dst->normal[e] = normals[index[e]];            
                 }
                     
             }

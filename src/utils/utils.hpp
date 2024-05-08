@@ -16,6 +16,7 @@
 #define EMPTY_TEXTURE "empty_texture"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <gtx/string_cast.hpp>
+#include "../thirdParty/poisson_disk_wrapper/utils_sampling.hpp"
 #include "params.hpp"
 
 struct Material {
@@ -41,25 +42,38 @@ struct TextureInfo {
 
 struct MaterialGltf {
     std::string name;
-    glm::vec4 baseColorFactor; // Default: white
-    TextureInfo baseColorTexture; // Texture for the base color
-    TextureInfo normalTexture; // Normal map
-    float metallicFactor; // Metallic-Roughness map
-    float roughnessFactor; // Metallic-Roughness map
+    glm::vec4 baseColorFactor;              // Name of material, default is white
+    TextureInfo baseColorTexture;           // Texture for the base color
+    TextureInfo normalTexture;              // Normal map
+    TextureInfo metallicRoughnessTexture;   // Contains the metalness value in the "blue" color channel, and the roughness value in the "green" color channel
+    TextureInfo occlusionTexture;           // Texture for occlusion mapping
+    TextureInfo emissiveTexture;            // Texture for emissive mapping
+    float metallicFactor;                   // Metallic-Roughness map
+    float roughnessFactor;                  // Metallic-Roughness map
+    float occlusionStrength;                // Strength of occlusion effect
+    float normalScale;                      // Scale of normal map
+    glm::vec3 emissiveFactor;               // Emissive color factor
 
     MaterialGltf() : name("Default"), baseColorFactor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)),
-        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicFactor(0.0f), roughnessFactor(0.0f) {}
+        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicRoughnessTexture(TextureInfo()),
+        occlusionTexture(TextureInfo()), emissiveTexture(TextureInfo()),
+        metallicFactor(1.0f), roughnessFactor(1.0f), occlusionStrength(1.0f), normalScale(1.0f), emissiveFactor(glm::vec3(0.0f, 0.0f, 0.0f)) {}
 
-    MaterialGltf(const std::string name, const glm::vec4 baseColorFactor) : 
-        name(name), baseColorFactor(baseColorFactor), 
-        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicFactor(0.0f), roughnessFactor(0.0f) {}
+    MaterialGltf(const std::string& name, const glm::vec4& baseColorFactor) :
+        name(name), baseColorFactor(baseColorFactor),
+        baseColorTexture(TextureInfo()), normalTexture(TextureInfo()), metallicRoughnessTexture(TextureInfo()),
+        occlusionTexture(TextureInfo()), emissiveTexture(TextureInfo()),
+        metallicFactor(1.0f), roughnessFactor(1.0f), occlusionStrength(1.0f), normalScale(1.0f), emissiveFactor(glm::vec3(0.0f, 0.0f, 0.0f)) {}
 
-    MaterialGltf(const std::string& name, const glm::vec4& baseColorFactor, const TextureInfo& baseColorTexture = TextureInfo(),
-        const TextureInfo& normalTexture = TextureInfo(), const float metallicFactor = 0.0f, const float roughnessFactor = 0.0f)
-        : name(name), baseColorFactor(baseColorFactor), baseColorTexture(baseColorTexture),
-        normalTexture(normalTexture), metallicFactor(metallicFactor), roughnessFactor(roughnessFactor) {}
-
+    MaterialGltf(const std::string& name, const glm::vec4& baseColorFactor, const TextureInfo& baseColorTexture,
+        const TextureInfo& normalTexture, const TextureInfo& metallicRoughnessTexture, const TextureInfo& occlusionTexture,
+        const TextureInfo& emissiveTexture, float metallicFactor, float roughnessFactor, float occlusionStrength, float normalScale,
+        glm::vec3 emissiveFactor) : name(name), baseColorFactor(baseColorFactor), baseColorTexture(baseColorTexture),
+        normalTexture(normalTexture), metallicRoughnessTexture(metallicRoughnessTexture), occlusionTexture(occlusionTexture),
+        emissiveTexture(emissiveTexture), metallicFactor(metallicFactor), roughnessFactor(roughnessFactor), occlusionStrength(occlusionStrength),
+        normalScale(normalScale), emissiveFactor(emissiveFactor) {}
 };
+
 
 struct Gaussian3D {
     Gaussian3D(glm::vec3 position, glm::vec3 normal, glm::vec3 scale, glm::vec4 rotation, glm::vec3 RGB, float opacity, MaterialGltf material)
@@ -78,6 +92,7 @@ struct Face {
     glm::vec3 pos[3];
     glm::vec2 uv[3];
     glm::vec3 normal[3];
+    glm::vec4 tangent[3];
 };
 
 class Mesh { //TODO: 
@@ -123,3 +138,5 @@ float computeTriangleAreaUV(const glm::vec2& uv1, const glm::vec2& uv2, const gl
 void convert_xyz_to_cube_uv(float x, float y, float z, int* index, float* u, float* v);
 
 void convert_cube_uv_to_xyz(int index, float u, float v, float* x, float* y, float* z);
+
+void computeAndLoadTextureInformation(std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap, MaterialGltf& material, const int x, const int y, glm::vec4& rgba, float& metallicFactor, float& roughnessFactor, glm::vec3& normal, glm::vec4& tangent, glm::mat3& rotation);
