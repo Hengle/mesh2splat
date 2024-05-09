@@ -15,7 +15,7 @@
 #define EMISSIVE_TEXTURE "emissiveTexture"
 
 
-#define OBJ_NAME					"fireExt"
+#define OBJ_NAME					"chair"
 #define OBJ_FORMAT					".glb"
 #define OUTPUT_GAUSSIAN_FORMAT		".ply"
 #define DEFAULT_MATERIAL_NAME		"mm_default_material"

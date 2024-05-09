@@ -180,9 +180,12 @@ int main() {
     }
     
     printf("\nStarted writing to file\n");
-
+#ifdef GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1
     writeBinaryPLY(GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1, gaussians_3D_list);
+#endif
+#ifdef GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2
     writeBinaryPLY(GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2, gaussians_3D_list); 
+#endif
     
     printf("\nFinished writing to file\n");
 
