@@ -28,7 +28,7 @@ The (current) core concept behind Mesh2Splat is quite simple:
 
 ## Results
 Example of result 3DGS .ply file obtained by converting a 3D mesh. The results are rendered with a PBR shader in Halcyon. 
-3D mesh viewed in Blender
+3D mesh viewed in Blender<br>
 ![](res/referenceChair.png)
 Resulting .ply rendered in [Halcyon](https://gitlab.ea.com/seed/ray-machine/halcyon)
 ![](res/results.mov)
