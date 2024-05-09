@@ -13,6 +13,7 @@ The (current) core concept behind Mesh2Splat is quite simple:
 - Initially "rasterize" a series of 3D Gaussians in 2D UV space, with isotropic scaling in 2D space.
 - Use the UV mapping to place the 3D gaussians back in 3D space
 - As previous work suggests [1, 2], flatten the Gaussians along the normal making them anisotropic helps to better approximate the surface of the mesh.
+- The `.ply` file format was modified in order to account for roughness and metallic properties
 - Retrieve the material information from the model and embed this information into the 3DGS .ply file.
 
 ## Features
@@ -26,6 +27,10 @@ The (current) core concept behind Mesh2Splat is quite simple:
 - **Relightability**: Compared to 3DGS scenes which are already lit, the 3DGS models obtained from this method have consistent normal information and are totally unlit.
 
 ## Results
+Example of result 3DGS .ply file obtained by converting a 3D mesh. The results are rendered with a PBR shader in Halcyon. 
+3D mesh viewed in Blender
+![](res/referenceChair.png)
+Resulting .ply rendered in [Halcyon](https://gitlab.ea.com/seed/ray-machine/halcyon)
 ![](res/results.mov)
 
 ## Usage
