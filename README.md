@@ -18,32 +18,48 @@ The (current) core concept behind Mesh2Splat is quite simple:
 ## Features
 
 - **Direct 3D Model Processing**: Directly obtain a 3DGS model from a 3D mesh.
+- **Texture map support**: For now, Mesh2Splat supports the following texture maps:
+    - Diffuse
+    - MetallicRoughness
+    - Normal
 - **Enhanced Performance**: Significantly reduce the time needed to transform a 3D mesh into a 3DGS.
 - **Relightability**: Compared to 3DGS scenes which are already lit, the 3DGS models obtained from this method have consistent normal information and are totally unlit.
 
 ## Usage
 Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all the different parameters in ```src/utils/params.hpp```:
-- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only .glTF format is supported.
-- Modifying how this is handled is simple, but at the moment the code expects the following folder structure:<br>
-**dataset/**<br>
-├─ **object_x/**<br>
-│  ├─ object_x.glb<br>
-│  ├─ object_x.png<br>
-├─ **object_y/**<br>
-│  ├─ object_y.glb<br>
-│  ├─ object_y.png<br>
+- ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only `.gltf/.glb` file format is supported. The name of the folder and model has to be the same (I know, I need to change this).
+- Modifying how this is handled is simple, but at the moment the code expects the following folder structure (do not nest your textures in subfolders):<br>
+```
+dataset/
+├─ object_x/
+│  ├─ object_x.<glb/gltf>
+│  ├─ texture_diffuse_x.<png/jpeg/etc.>
+│  ├─ texture_metallicRoughness_x.<png/jpeg/etc.>
+│  ├─ texture_normal_x.<png/jpeg/etc.>
+├─ object_y/
+│  ├─ object_y.<glb/gltf>
+│  ├─ texture_diffuse_y.<png/jpeg/etc.>
+│  ├─ texture_metallicRoughness_y.<png/jpeg/etc.>
+│  ├─ texture_normal_y.<png/jpeg/etc.>
+```
 - For the output, as I am working with Halcyon, I directly output the 3DGS model into ```/halcyon/Content/GaussianSplatting/```, in order to easily reload them from the selection menu.
-- In ```src/utils/params.hpp``` also specify the texture format
+- Modify in ```src/utils/params.hpp``` the `GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1`. If you do not need a second output folder, just remove `GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2`.
 
 
 ## Current Limitations and Next Steps
 
-- **View-Dependent Accuracy**: Mesh2Splat is not yet capable of capturing view-dependant lighting effects.
-- **Material information**: Currently not yet able to load all material information, just Albedo.
+- **View-Dependent Accuracy**: Mesh2Splat is not capable of capturing view-dependant lighting effects. The main goal is to enable relighting. But embedding view-dependant effects in an efficient way without requiring the optimizer wants to be explored.
+- **Material information**: Currently not all texture maps are supported, even if .gltf does. 
 - **Textures still WIP for .glTF**: I am currently in the process of changing how I read the data from ```.obj``` to ```.glTF```, and how texture information is read is not too robust yet.
 
 ## Known issues
-- **jpg format**: if using Blender and UV mapping with a ```.jpg``` texture, it will save it's mimetype as ```.jpeg```, invalidating some preliminary code I wrote. Just save it as ```.jpeg```, as it is equivalent to ```.jpg```
+- **jpg format**: if using Blender and UV mapping with a ```.jpg``` texture, it will save it's `mimetype` as ```.jpeg```, invalidating some preliminary code I wrote. Just save it as ```.jpeg```, as it is equivalent to ```.jpg```
+
+
+## Roadmap
+- **GPU rasterization / GPU tesselation**: even though this approach is orders of magnitude faster than current ones which require the optimization stages, it is a full CPU implementation. The goal is to re-write it in order to perform most operation on the GPU. 
+- **Make code more easily usable**: right now this is not a tool yet, it is code I wrote just for myself and was not expecting to be used by others. My goal is to make it a bit more user-friendly.
+- **Explore better sampling strategies**: I want to improve an explore better sampling strategies in order to maximize gaussian coverage while also limiting wasted details. 
 
 ## References
 
