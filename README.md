@@ -25,6 +25,9 @@ The (current) core concept behind Mesh2Splat is quite simple:
 - **Enhanced Performance**: Significantly reduce the time needed to transform a 3D mesh into a 3DGS.
 - **Relightability**: Compared to 3DGS scenes which are already lit, the 3DGS models obtained from this method have consistent normal information and are totally unlit.
 
+## Results
+![](res/results.mov)
+
 ## Usage
 Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all the different parameters in ```src/utils/params.hpp```:
 - ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only `.gltf/.glb` file format is supported. The name of the folder and model has to be the same (I know, I need to change this).
