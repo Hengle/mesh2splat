@@ -33,10 +33,10 @@ Example of result 3DGS .ply file obtained by converting a 3D mesh. The results a
 <table>
 <tr>
 <td>
-<img src="res/referenceChair.png" alt="3D mesh viewed in Blender" width="400"/>
+<img src="res/referenceChair.png" alt="3D mesh viewed in Blender" width="380"/>
 </td>
 <td>
-<video width="400" controls>
+<video width="460" controls>
   <source src="res/results.mov" type="video/mp4">
   Your browser does not support the video tag.
 </video>
