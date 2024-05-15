@@ -5,7 +5,7 @@
 #include <glm.hpp>
 #include <set>
 #include <stdint.h>
-
+#include <chrono>
 
 #include "parsers.hpp"
 #include "utils/gaussianShapesUtilities.hpp"
@@ -14,7 +14,7 @@
 
 #define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
 #define PBWIDTH 60
-#define GPU_IMPL 0
+#define GPU_IMPL 1
 
 //https://stackoverflow.com/a/36315819
 void printProgressBar(float percentage)
@@ -51,8 +51,8 @@ int main() {
     // Load shaders and meshes
     GLuint shaderProgram = createShaderProgram();
     std::vector<Mesh> meshes = parseGltfFileToMesh(OUTPUT_FILENAME);
-    float minTriangleArea, maxTriangleArea, medianArea;
-    std::vector<GLMesh> glMeshes = uploadMeshesToOpenGL(meshes, minTriangleArea, maxTriangleArea, medianArea);
+    float minTriangleArea, maxTriangleArea, medianArea, medianEdgeLength, medianPerimeter;
+    std::vector<GLMesh> glMeshes = uploadMeshesToOpenGL(meshes, minTriangleArea, maxTriangleArea, medianArea, medianEdgeLength, medianPerimeter);
 
     // Setup Transform Feedback (assuming each mesh could be expanded up to 10 times its original size)
     GLuint feedbackBuffer, feedbackVAO, acBuffer;
@@ -70,7 +70,10 @@ int main() {
     for (const auto& glMesh : glMeshes) {
         GLuint numberOfTessellatedTriangles = 0;
         printf("MinTri: %f    MaxTri: %f\n", minTriangleArea, maxTriangleArea);
-        performTessellationAndCapture(shaderProgram, glMesh.vao, glMesh.vertexCount, numberOfTessellatedTriangles, acBuffer, minTriangleArea, maxTriangleArea, medianArea);
+        auto started = std::chrono::high_resolution_clock::now();
+        performTessellationAndCapture(shaderProgram, glMesh.vao, glMesh.vertexCount, numberOfTessellatedTriangles, acBuffer, minTriangleArea, maxTriangleArea, medianArea, medianEdgeLength, medianPerimeter);
+        auto done = std::chrono::high_resolution_clock::now();
+        std::cout << "Tesselation execution time: " << std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count() << "ms\n" << std::endl;
         // Download the tessellated mesh data for each mesh
         downloadMeshFromGPU(feedbackBuffer, numberOfTessellatedTriangles);  // Assuming 10x vertices after tessellation
     }

@@ -78,12 +78,27 @@ float calcTriangleArea(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
     return sqrt(p * (p - a) * (p - b) * (p - c));
 }
 
-std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float& minTriangleArea, float& maxTriangleArea, float& medianArea) {
+void findMedianFromFloatVector(std::vector<float>& vec, float& result)
+{
+    std::sort(vec.begin(), vec.end());
+
+    size_t size = vec.size();
+    if (size % 2 == 0) {
+        result = (vec[size / 2 - 1] + vec[size / 2]) / 2;
+    }
+    else {
+        result = vec[size / 2];
+    }
+}
+
+std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float& minTriangleArea, float& maxTriangleArea, float& medianArea, float& medianEdgeLength, float& medianPerimeter) {
     std::vector<GLMesh> glMeshes;
     glMeshes.reserve(meshes.size());
     minTriangleArea = std::numeric_limits<float>::max();
     maxTriangleArea = std::numeric_limits<float>::min();
     std::vector<float> areas;
+    std::vector<float> edgeLengths;
+    std::vector<float> perimeters;
     for (auto& mesh : meshes) {
         GLMesh glMesh;
         std::vector<float> vertices;  // Buffer to hold all vertex data
@@ -97,6 +112,15 @@ std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float&
             }
             float area = calcTriangleArea(face.pos[0], face.pos[1], face.pos[2]);
             areas.push_back(area);
+            
+            float edge1_length = glm::length(face.pos[1] - face.pos[0]);
+            float edge2_length = glm::length(face.pos[2] - face.pos[0]);
+            float edge3_length = glm::length(face.pos[2] - face.pos[1]);
+            edgeLengths.push_back(edge1_length);
+            edgeLengths.push_back(edge2_length);
+            edgeLengths.push_back(edge3_length);
+            perimeters.push_back(edge1_length + edge2_length + edge3_length);
+
             if (area > maxTriangleArea) maxTriangleArea = area;
             else if (area < minTriangleArea) minTriangleArea = area;
         }
@@ -123,15 +147,9 @@ std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float&
         glMeshes.push_back(glMesh);
     }
 
-    std::sort(areas.begin(), areas.end());
-
-    size_t size = areas.size();
-    if (size % 2 == 0) {
-        medianArea = (areas[size / 2 - 1] + areas[size / 2]) / 2;
-    }
-    else {
-        medianArea = areas[size / 2];
-    }
+    findMedianFromFloatVector(areas, medianArea);
+    findMedianFromFloatVector(edgeLengths, medianEdgeLength);
+    findMedianFromFloatVector(perimeters, medianPerimeter);
 
     return glMeshes;
 }
@@ -168,37 +186,27 @@ void setupTransformFeedbackAndAtomicCounter(size_t bufferSize, GLuint& feedbackB
     */
 }
 
-void performTessellationAndCapture(GLuint shaderProgram, GLuint vao, size_t vertexCount, GLuint& numTessellatedTriangles, GLuint& acBuffer, float minTriangleArea, float maxTriangleArea, float medianTriangleArea) {
+void setUniform1f(GLuint shaderProgram, std::string uniformName, float uniformValue)
+{
+    GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+    if (uniformLocation == -1) {
+        std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+    }
+
+    glUniform1f(uniformLocation, uniformValue);
+}
+
+void performTessellationAndCapture(GLuint shaderProgram, GLuint vao, size_t vertexCount, GLuint& numTessellatedTriangles, GLuint& acBuffer, float minTriangleArea, float maxTriangleArea, float medianTriangleArea, float medianEdgeLength, float medianPerimeter) {
     // Use shader program and perform tessellation
     glUseProgram(shaderProgram);
 
-    //-------------------------------SET UNIFORMS-------------------------------
-    //MIN
-    GLint minTriangleAreaLocation = glGetUniformLocation(shaderProgram, "minTriangleArea");
-
-    if (minTriangleAreaLocation == -1) {
-        std::cerr << "Could not find uniform 'minTriangleArea'." << std::endl;
-    }
-
-    glUniform1f(minTriangleAreaLocation, minTriangleArea);
-    
-    //MAX
-    GLint maxTriangleAreaLocation = glGetUniformLocation(shaderProgram, "maxTriangleArea");
-
-    if (maxTriangleAreaLocation == -1) {
-        std::cerr << "Could not find uniform 'maxTriangleArea'." << std::endl;
-    }
-
-    glUniform1f(maxTriangleAreaLocation, maxTriangleArea);
-    
-    //MEDIAN
-    GLint medianTriangleAreaLocation = glGetUniformLocation(shaderProgram, "medianTriangleArea");
-
-    if (medianTriangleAreaLocation == -1) {
-        std::cerr << "Could not find uniform 'medianTriangleArea'." << std::endl;
-    }
-
-    glUniform1f(medianTriangleAreaLocation, medianTriangleArea);
+    //-------------------------------SET UNIFORMS-------------------------------   
+    setUniform1f(shaderProgram, "minTriangleArea", minTriangleArea);
+    setUniform1f(shaderProgram, "maxTriangleArea", maxTriangleArea);
+    setUniform1f(shaderProgram, "medianTriangleArea", medianTriangleArea);
+    setUniform1f(shaderProgram, "medianEdgeLength", medianEdgeLength);
+    setUniform1f(shaderProgram, "medianPerimeter", medianPerimeter);
     //--------------------------------------------------------------------------
 
     // Prepare to capture the number of tessellated triangles
