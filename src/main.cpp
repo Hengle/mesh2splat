@@ -13,21 +13,6 @@
 #include "utils/shaderUtils.hpp"
 #include "utils/normalizedUvUnwrapping.hpp"
 
-#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-#define PBWIDTH 60
-
-
-//https://stackoverflow.com/a/36315819
-void printProgressBar(float percentage)
-{
-    int val = (int)(percentage * 100);
-    int lpad = (int)(percentage * PBWIDTH);
-    int rpad = PBWIDTH - lpad;
-    printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
-    fflush(stdout);
-}
-
-
 #if GPU_IMPL
 int main() {
     // Initialize GLFW and create a window...
@@ -69,7 +54,7 @@ int main() {
     float Sd_x = PIXEL_SIZE_GAUSSIAN_RADIUS / (float)uvSpaceWidth;
     float Sd_y = PIXEL_SIZE_GAUSSIAN_RADIUS / (float)uvSpaceHeight;
 
-    printf("Computing 3DGS scale per triangle face\n");
+    printf("Computing 3DGS scale per triangle face (CPU)\n");
     for (auto& mesh : meshes)
     {
         for (auto& face : mesh.faces)
@@ -108,17 +93,14 @@ int main() {
                 uvSpaceWidth, uvSpaceHeight, textureTypeMap
             );
 
-            // Download the tessellated mesh data for each mesh
             retrieveMeshFromFrameBuffer(gaussians_3D_list, framebuffer, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE); 
         }
     }
 
     //Write to file
-    std::cout << "Writing ply to ->  " << GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1 << std::endl;
-
+    std::cout << "Writing ply to                ->  " << GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1 << std::endl;
     writeBinaryPLY(GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1, gaussians_3D_list);
-
-    std::cout << "Data successfully written to ->  " << GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1 << std::endl;
+    std::cout << "Data successfully written to  ->  " << GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1 << std::endl;
 
     // Cleanup
     glfwTerminate();
@@ -131,6 +113,21 @@ int main() {
 }
 
 #else
+
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+
+//https://stackoverflow.com/a/36315819
+void printProgressBar(float percentage)
+{
+    int val = (int)(percentage * 100);
+    int lpad = (int)(percentage * PBWIDTH);
+    int rpad = PBWIDTH - lpad;
+    printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+    fflush(stdout);
+}
+
 int main() {
 
     printf("Parsing input mesh\n");

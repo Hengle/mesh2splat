@@ -3,7 +3,7 @@
 
 
 //-------------------- TEXTURE AND COLORS -------------------------------------------------------------------------------------------------------
-#define MAX_TEXTURE_SIZE						2048 * 2
+#define MAX_TEXTURE_SIZE						2048
 #define METALLIC_ROUGHNESS_TEXTURE				"metallicRoughnessTexture"
 #define BASE_COLOR_TEXTURE						"baseColorTexture"
 #define NORMAL_TEXTURE							"normalTexture"
