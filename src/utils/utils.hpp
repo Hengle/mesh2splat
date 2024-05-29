@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <glm.hpp>
+#include <gtc/type_ptr.hpp>
 #include <map>
 #include <iostream>
 #include <algorithm>

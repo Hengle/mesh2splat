@@ -27,6 +27,40 @@ void printProgressBar(float percentage)
     fflush(stdout);
 }
 
+glm::vec3 minVec3(const glm::vec3& a, const glm::vec3& b) {
+    return glm::vec3(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));
+}
+
+glm::vec3 maxVec3(const glm::vec3& a, const glm::vec3& b) {
+    return glm::vec3(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));
+}
+
+void computeBoundingBox(const std::vector<Mesh>& meshes, glm::vec3& outMin, glm::vec3& outMax) {
+    // Initialize min and max with extreme values
+    glm::vec3 minPoint(std::numeric_limits<float>::max());
+    glm::vec3 maxPoint(std::numeric_limits<float>::lowest());
+
+    // Iterate through each mesh
+    for (const auto& mesh : meshes) {
+        // Iterate through each face in the mesh
+        for (const auto& face : mesh.faces) {
+            // Iterate through each vertex in the face
+            for (int i = 0; i < 3; ++i) {
+                minPoint = minVec3(minPoint, face.pos[i]);
+                maxPoint = maxVec3(maxPoint, face.pos[i]);
+            }
+        }
+    }
+
+    // Output the computed bounding box
+    outMin = minPoint;
+    outMax = maxPoint;
+}
+
+glm::mat4 createOrthographicMatrix(const glm::vec3& min, const glm::vec3& max) {
+    return glm::ortho(min.x, max.x, min.y, max.y, min.z, max.z);
+}
+
 #if GPU_IMPL
 int main() {
     // Initialize GLFW and create a window...
@@ -49,6 +83,8 @@ int main() {
         return -1;
     }
 
+    glViewport(0, 0, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
+
     // Load shaders and meshes
     unsigned int transformFeedbackVertexStride;
     printf("Creating shader program\n");
@@ -56,6 +92,10 @@ int main() {
     printf("Parsing gltf mesh file\n");
 
     std::vector<Mesh> meshes = parseGltfFileToMesh(OUTPUT_FILENAME);
+    glm::vec3 minBB, maxBB;
+    computeBoundingBox(meshes, minBB, maxBB);
+    glm::mat4 orthoMatrix = createOrthographicMatrix(minBB, maxBB);
+
     printf("Parsed gltf mesh file\n");
 
     int uvSpaceWidth, uvSpaceHeight;
@@ -74,9 +114,8 @@ int main() {
         }
     }
 
-    float medianArea, medianEdgeLength, medianPerimeter, meshSurfaceArea;
     printf("Loading mesh into OPENGL buffers\n");
-    std::vector<GLMesh> glMeshes = uploadMeshesToOpenGL(meshes, medianArea, medianEdgeLength, medianPerimeter, meshSurfaceArea);
+    std::vector<GLMesh> glMeshes = uploadMeshesToOpenGL(meshes);
 
     //I will need to do more than one draw call
     std::map<std::string, std::pair<unsigned char*, int>> textureTypeMap;
@@ -102,7 +141,7 @@ int main() {
             shaderProgram, glMesh.vao, 
             framebuffer, glMesh.vertexCount, 
             numberOfTessellatedTriangles, acBuffer, 
-            uvSpaceWidth, uvSpaceHeight, textureTypeMap
+            uvSpaceWidth, uvSpaceHeight, textureTypeMap, orthoMatrix
         );
 
         // Download the tessellated mesh data for each mesh

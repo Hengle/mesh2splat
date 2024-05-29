@@ -17,7 +17,7 @@ GLuint createShaderProgram(unsigned int& transformFeedbackVertexStride);
 
 void uploadTextures(std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap, MaterialGltf material);
 
-std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float& medianArea, float& medianEdgeLength, float& medianPerimeter, float& meshSurfaceArea);
+std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes);
 
 void setupTransformFeedback(size_t bufferSize, GLuint& feedbackBuffer, GLuint& feedbackVAO, GLuint& acBuffer, unsigned int totalStride);
 
@@ -30,7 +30,7 @@ void performTessellationAndCapture(
     GLuint framebuffer, size_t vertexCount,
     GLuint& numGaussiansGenerated, GLuint& acBuffer,
     int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
-    const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap
+    const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap, glm::mat4 ortho
 );
 
 void downloadMeshFromGPU(GLuint& framebuffer, unsigned int width, unsigned int height);

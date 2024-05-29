@@ -5,12 +5,14 @@ layout(triangle_strip, max_vertices = 3) out;
 
 uniform vec2 metallicRoughnessFactors;
 uniform vec3 inScale;
+uniform mat4 orthoMatrix;
 
 in TES_OUT {
     vec3 position;
     vec3 normal;
     vec4 tangent;
     vec2 uv;
+    vec2 normalizedUv;
     vec3 scale;
 } gs_in[];
 
@@ -110,7 +112,7 @@ mat3 inverse(mat3 m)
 mat2 inverse(mat2 m)
 {
 	float a = m[0][0], b = m[0][1], c = m[1][0], d = m[1][1];
-	return (1.0 / (a*d - b*c))*mat2(d, -b, -c, a);
+	return (1.0 / (a*d - b*c)) * mat2(d, -b, -c, a);
 }
 
 vec3 interpolateWithBaryCoord(vec3 barycentric, vec3 v1, vec3 v2, vec3 v3) {
@@ -165,7 +167,7 @@ void main() {
         UV                      = gs_in[i].uv;
         Quaternion              = quaternion;
 
-        gl_Position             = vec4(gs_in[i].uv * 2.0 - 1.0, 0.0, 1.0);
+        gl_Position             = vec4(gs_in[i].normalizedUv * 2.0 - 1.0, 0.0, 1.0);
         EmitVertex();
 
     }

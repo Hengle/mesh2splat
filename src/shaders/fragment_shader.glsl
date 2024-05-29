@@ -1,5 +1,6 @@
 #version 430 core
 
+//change layout and use different outs
 layout(location = 0) out vec4 FragColor0;
 layout(location = 1) out vec4 FragColor1;
 layout(location = 2) out vec4 FragColor2;

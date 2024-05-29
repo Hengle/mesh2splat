@@ -1,9 +1,6 @@
 #version 460 core
 layout(vertices = 3) out;
 
-uniform float medianTriangleArea;
-uniform float medianEdgeLength;
-uniform float medianPerimeter;
 uniform int tesselationFactorMultiplier;
 
 in VS_OUT {
@@ -11,6 +8,7 @@ in VS_OUT {
     vec3 normal;
     vec4 tangent;
     vec2 uv;
+    vec2 normalizedUv;
     vec3 scale;
 } tcs_in[];
 
@@ -19,6 +17,7 @@ out TCS_OUT {
     vec3 normal;
     vec4 tangent;
     vec2 uv;
+    vec2 normalizedUv;
     vec3 scale;
 } tcs_out[];
 
@@ -45,5 +44,6 @@ void main() {
     tcs_out[gl_InvocationID].normal = tcs_in[gl_InvocationID].normal;
     tcs_out[gl_InvocationID].tangent = tcs_in[gl_InvocationID].tangent;
     tcs_out[gl_InvocationID].uv = tcs_in[gl_InvocationID].uv;
+    tcs_out[gl_InvocationID].normalizedUv = tcs_in[gl_InvocationID].normalizedUv;
     tcs_out[gl_InvocationID].scale = tcs_in[gl_InvocationID].scale;
 }

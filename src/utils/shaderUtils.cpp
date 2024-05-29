@@ -202,13 +202,11 @@ void uploadTextures(std::map<std::string, std::pair<unsigned char*, int>>& textu
 }
 
 
-std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float& medianArea, float& medianEdgeLength, float& medianPerimeter, float& meshSurfaceArea) {
+std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes) {
     
     std::vector<GLMesh> glMeshes;
     glMeshes.reserve(meshes.size());
-    std::vector<float> areas;
-    std::vector<float> edgeLengths;
-    std::vector<float> perimeters;
+
     for (auto& mesh : meshes) {
         GLMesh glMesh;
         std::vector<float> vertices;  // Buffer to hold all vertex data
@@ -236,29 +234,23 @@ std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float&
                 vertices.push_back(face.uv[i].x);
                 vertices.push_back(face.uv[i].y);
 
+                // NORMALIZED UV
+                vertices.push_back(face.normalizedUvs[i].x);
+                vertices.push_back(face.normalizedUvs[i].y);
+
                 // Scale
                 vertices.push_back(face.scale.x);
                 vertices.push_back(face.scale.y);
                 vertices.push_back(face.scale.z);
 
             }
-            float area = calcTriangleArea(face.normalizedUvs[0], face.normalizedUvs[1], face.normalizedUvs[2]);
-            areas.push_back(area);
             
-            float edge1_length = glm::length(face.pos[1] - face.pos[0]);
-            float edge2_length = glm::length(face.pos[2] - face.pos[0]);
-            float edge3_length = glm::length(face.pos[2] - face.pos[1]);
-            
-            edgeLengths.push_back(edge1_length);
-            edgeLengths.push_back(edge2_length);
-            edgeLengths.push_back(edge3_length);
-            perimeters.push_back(edge1_length + edge2_length + edge3_length);
         }
 
         glMesh.vertexCount = vertices.size() / 3; // Number of vertices
 
-        // 3 position, 3 normal, 4 tangent, 2 UV, 3 scale = 15
-        size_t vertexStride = 15 * sizeof(float);
+        // 3 position, 3 normal, 4 tangent, 2 UV, 2 NORMALIZED UVs, 3 scale = 17
+        size_t vertexStride = 17 * sizeof(float);
 
         // Generate and bind VAO
         glGenVertexArrays(1, &glMesh.vao);
@@ -282,9 +274,12 @@ std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float&
         // UV attribute
         glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexStride, (void*)(10 * sizeof(float)));
         glEnableVertexAttribArray(3);
-        // Scale attribute
-        glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, vertexStride, (void*)(12 * sizeof(float)));
+        // UV attribute
+        glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, vertexStride, (void*)(12 * sizeof(float)));
         glEnableVertexAttribArray(4);
+        // Scale attribute
+        glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, vertexStride, (void*)(14 * sizeof(float)));
+        glEnableVertexAttribArray(5);
 
         //Should use array indices for per face data such as rotation and scale or directly compute it in the shader, should actually do it in a compute shader and be done
 
@@ -293,15 +288,6 @@ std::vector<GLMesh> uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, float&
 
         // Add to list of GLMeshes
         glMeshes.push_back(glMesh);
-    }
-
-    findMedianFromFloatVector(areas, medianArea);
-    findMedianFromFloatVector(edgeLengths, medianEdgeLength);
-    findMedianFromFloatVector(perimeters, medianPerimeter);
-    meshSurfaceArea = 0.0f;
-    for (const auto& area : areas)
-    {
-        meshSurfaceArea += area;
     }
 
     return glMeshes;
@@ -416,6 +402,18 @@ static void setUniform2f(GLuint shaderProgram, std::string uniformName, glm::vec
     glUniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
 }
 
+
+static void setUniformMat4(GLuint shaderProgram, std::string uniformName, glm::mat4 matrix)
+{
+    GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+    if (uniformLocation == -1) {
+        std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+    }
+
+    glUniform4fv(uniformLocation, 1, glm::value_ptr(matrix));
+}
+
 static void setTexture(GLuint shaderProgram, std::string textureUniformName, GLuint texture, unsigned int textureUnitNumber)
 {
     GLint uniformLocation = glGetUniformLocation(shaderProgram, textureUniformName.c_str());
@@ -434,14 +432,15 @@ void performTessellationAndCapture(
     GLuint framebuffer, size_t vertexCount,
     GLuint& numGaussiansGenerated, GLuint& acBuffer,
     int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
-    const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap
+    const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap, glm::mat4 ortho
 ) {
     // Use shader program and perform tessellation
     glUseProgram(shaderProgram);
 
     //-------------------------------SET UNIFORMS-------------------------------   
     setUniform1i(shaderProgram, "tesselationFactorMultiplier", TESSELATION_LEVEL_FACTOR_MULTIPLIER);
-    
+    setUniformMat4(shaderProgram, "orthoMatrix", ortho);
+
     //Textures
     if (textureTypeMap.find(BASE_COLOR_TEXTURE) != textureTypeMap.end())
     {

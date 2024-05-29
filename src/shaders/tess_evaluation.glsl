@@ -7,6 +7,7 @@ in TCS_OUT {
     vec3 normal;
     vec4 tangent;
     vec2 uv;
+    vec2 normalizedUv;
     vec3 scale;
 } tes_in[];
 
@@ -16,6 +17,7 @@ out TES_OUT {
     vec3 normal;
     vec4 tangent;
     vec2 uv;
+    vec2 normalizedUv;
     vec3 scale;
 } tes_out;
 
@@ -42,6 +44,7 @@ void main() {
 
     // Interpolate UV
     tes_out.uv = u * tes_in[0].uv + v * tes_in[1].uv + w * tes_in[2].uv;
+    tes_out.normalizedUv = u * tes_in[0].normalizedUv + v * tes_in[1].normalizedUv + w * tes_in[2].normalizedUv;
 
     tes_out.scale = tes_in[0].scale;
 
