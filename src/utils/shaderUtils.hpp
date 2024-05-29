@@ -25,14 +25,13 @@ void setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int heig
 
 
 //Make arguments into a struct its too many parameters to pass and not readable...
-void performTessellationAndCapture(
+void performGpuConversion(
     GLuint shaderProgram, GLuint vao,
     GLuint framebuffer, size_t vertexCount,
-    GLuint& numGaussiansGenerated, GLuint& acBuffer,
     int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
     const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap
 );
 
-void downloadMeshFromGPU(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height);
+void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height);
 
 std::string readShaderFile(const char* filePath);

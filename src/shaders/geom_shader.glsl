@@ -78,54 +78,10 @@ vec4 quat_cast(mat3 m) {
     return q;
 }
 
-//Taken from Frostbite
-mat3 inverse(mat3 m)
-{
-	float n11 = m[0][0], n12 = m[0][1], n13 = m[0][2];
-	float n21 = m[1][0], n22 = m[1][1], n23 = m[1][2];
-	float n31 = m[2][0], n32 = m[2][1], n33 = m[2][2];
-
-	float t11 = n22 * n33 - n23 * n32;
-	float t12 = n23 * n31 - n21 * n33;
-	float t13 = n21 * n32 - n22 * n31;
-
-	float det = n11 * t11 + n12 * t12 + n13 * t13;
-	float idet = 1.0f / det;
-
-	mat3 ret;
-
-	ret[0][0] = t11 * idet;
-	ret[0][1] = (n13 * n32 - n12 * n33) * idet;
-	ret[0][2] = (n12 * n23 - n13 * n22) * idet;
-	ret[1][0] = t12 * idet;
-	ret[1][1] = (n11 * n33 - n13 * n31) * idet;
-	ret[1][2] = (n13 * n21 - n11 * n23) * idet;
-	ret[2][0] = t13 * idet;
-	ret[2][1] = (n12 * n31 - n11 * n32) * idet;
-	ret[2][2] = (n11 * n22 - n12 * n21) * idet;
-
-	return ret;
-}
-
-//Also taken from Frostbite
-mat2 inverse(mat2 m)
-{
-	float a = m[0][0], b = m[0][1], c = m[1][0], d = m[1][1];
-	return (1.0 / (a*d - b*c)) * mat2(d, -b, -c, a);
-}
-
-vec3 interpolateWithBaryCoord(vec3 barycentric, vec3 v1, vec3 v2, vec3 v3) {
-    return barycentric.x * v1 + barycentric.y * v2 + barycentric.z * v3;
-}
-
 vec3 project(vec3 v, vec3 u)
 {
     float scalar = dot(v, u) / dot(u, u);
     return scalar * u;
-}
-
-float sign(vec2 p1, vec2 p2, vec2 p3) {
-    return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
 }
 
 void main() {

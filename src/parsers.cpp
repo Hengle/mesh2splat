@@ -126,7 +126,7 @@ std::vector<glm::vec2> projectMeshVertices(const std::vector<glm::vec3>& vertice
     return projectedVertices;
 }
 
-
+//TODO: unused
 std::map<std::string, Material> parseMtlFile(const std::string& filename) {
     std::map<std::string, Material> materials;
     std::ifstream file(filename);

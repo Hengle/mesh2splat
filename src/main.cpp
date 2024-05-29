@@ -94,7 +94,6 @@ int main() {
         printf("Loading textures into OPENGL texture buffers\n");
 
         uploadTextures(textureTypeMap, mesh.material);
-        // Setup Transform Feedback (assuming each mesh could be expanded up to 10 times its original size)
         GLuint acBuffer;
 
         printf("Setting up framebuffer and textures\n");
@@ -102,12 +101,10 @@ int main() {
         setupFrameBuffer(framebuffer, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
 
         for (const auto& glMesh : glMeshes) {
-            GLuint numberOfTessellatedTriangles = 0;
 
             performGpuConversion(
                 shaderProgram, glMesh.vao,
                 framebuffer, glMesh.vertexCount,
-                numberOfTessellatedTriangles, acBuffer,
                 uvSpaceWidth, uvSpaceHeight, textureTypeMap
             );
 

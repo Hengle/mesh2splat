@@ -427,10 +427,9 @@ static void setTexture(GLuint shaderProgram, std::string textureUniformName, GLu
     glUniform1i(uniformLocation, textureUnitNumber);
 }
 
-void performTessellationAndCapture(
+void performGpuConversion(
     GLuint shaderProgram, GLuint vao,
     GLuint framebuffer, size_t vertexCount,
-    GLuint& numGaussiansGenerated, GLuint& acBuffer,
     int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
     const std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap
 ) {
@@ -551,7 +550,7 @@ void readAndSaveToPly(const float* feedbackData, GLuint numberOfGeneratedGaussia
     std::cout << "Data successfully written to " << filename << std::endl;
 }
 
-void downloadMeshFromGPU(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height) {
+void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height) {
     glFinish();  // Ensure all OpenGL commands are finished
     unsigned int frameBufferStride = 4;
 
