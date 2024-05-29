@@ -6,7 +6,6 @@
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #include "../thirdParty/stb_image_resize.h"
 
-
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
 std::pair<unsigned char*, int> loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
 {
@@ -32,7 +31,7 @@ std::pair<unsigned char*, int> loadImageAndBpp(std::string texturePath, int& tex
         int new_width = MAX_TEXTURE_SIZE;
         int new_height = static_cast<int>(new_width * aspect_ratio);
 
-        // Allocate memory for the resized image
+        // Allocate memory for the resized image, use new not malloc
         unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bpp);
 
         // Resize the image
@@ -43,7 +42,7 @@ std::pair<unsigned char*, int> loadImageAndBpp(std::string texturePath, int& tex
         // Save the resized image
         //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
         stbi_image_free(image);
-        std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " " << bpp << std::endl;
+        std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
 
         return std::make_pair(resized_data, bpp);
        
@@ -54,7 +53,6 @@ std::pair<unsigned char*, int> loadImageAndBpp(std::string texturePath, int& tex
 
 void loadAllTexturesIntoMap(MaterialGltf& material, std::map<std::string, std::pair<unsigned char*, int>>& textureTypeMap)
 {
-    //TODO: THIS IS NOT NICE CODE, IT CAN BE GENERALIZED TO AVOID REPEATING BY SIMPLY PASSING the TextureInfo
     
     //BASECOLOR ALBEDO TEXTURE LOAD
     if (material.baseColorTexture.path != EMPTY_TEXTURE)

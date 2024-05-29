@@ -85,46 +85,28 @@ int main() {
     //TODO: just doing it for the first mesh for now and for only ALBEDO
     loadAllTexturesIntoMap(meshes[0].material, textureTypeMap);
     printf("Loading textures into OPENGL texture buffers\n");
+
     uploadTextures(textureTypeMap, meshes[0].material);
     // Setup Transform Feedback (assuming each mesh could be expanded up to 10 times its original size)
-    GLuint feedbackBuffer, feedbackVAO, acBuffer;
+    GLuint acBuffer;
 
-    size_t estimatedMaxVertices = 0;
-
-    for (const auto& glMesh : glMeshes)
-    {
-        estimatedMaxVertices += glMesh.vertexCount * EXPECTED_MAX_VERTICES_PER_PATCH;
-    }
-
-    size_t bufferSize = estimatedMaxVertices * 5 * sizeof(float);
-    setupTransformFeedback(bufferSize, feedbackBuffer, feedbackVAO, acBuffer, transformFeedbackVertexStride);  // 3 floats per vertex
+    printf("Setting up framebuffer and textures\n");
+    GLuint framebuffer;
+    setupFrameBuffer(framebuffer, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);
 
     // Perform tessellation and capture the output
     for (const auto& glMesh : glMeshes) {
         GLuint numberOfTessellatedTriangles = 0;
-        auto started = std::chrono::high_resolution_clock::now();
         
         performTessellationAndCapture(
-            shaderProgram, 
-            glMesh.vao, 
-            glMesh.vertexCount, 
-            numberOfTessellatedTriangles, 
-            acBuffer, 
-            medianArea, 
-            medianEdgeLength, 
-            medianPerimeter,
-            uvSpaceWidth,
-            meshSurfaceArea,
-            meshes[0].faces[0].scale, //TODO: will get better results if I do not use a global scale but set it for each face in a buffer
-            uvSpaceWidth, 
-            uvSpaceHeight,
-            glm::vec2(meshes[0].material.metallicFactor, meshes[0].material.roughnessFactor)
+            shaderProgram, glMesh.vao, 
+            framebuffer, glMesh.vertexCount, 
+            numberOfTessellatedTriangles, acBuffer, 
+            uvSpaceWidth, uvSpaceHeight, textureTypeMap
         );
 
-        auto done = std::chrono::high_resolution_clock::now();
-        std::cout << "Tesselation execution time: " << std::chrono::duration_cast<std::chrono::milliseconds>(done - started).count() << "ms\n" << std::endl;
         // Download the tessellated mesh data for each mesh
-        downloadMeshFromGPU(feedbackBuffer, numberOfTessellatedTriangles, transformFeedbackVertexStride);  // Assuming 10x vertices after tessellation
+        downloadMeshFromGPU(framebuffer, MAX_TEXTURE_SIZE, MAX_TEXTURE_SIZE);  // Assuming 10x vertices after tessellation
     }
 
     // Cleanup
