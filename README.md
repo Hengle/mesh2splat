@@ -23,8 +23,8 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
     - Now, in order to compute the 3D Covariance Matrix we do: $`{\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}`$
     - At this point, what we are interested from our 3D Covariance Matrix is not the rotation matrix made up of the eigenvectors, but just the eigenvalues. In order to compute the eigenvalues, we apply a matrix diagonalization method.
     - The packed scale values will be: 
-        - packedScale_x = packedScale_y = log(max(...eigenvalues))
-        - packedScale_z = log(1e-7)
+        - $`packedScale_x = packedScale_y = log(max(...eigenvalues))`$
+        - $`packedScale_z = log(1e-7)`$
     
 
 - Now that we have the **Scale** and **Rotation** for a *3D Gaussian* part of a triangle, what we do is to emit one 3D Gaussian for each vertex of this triangle, setting their respective 3D position to the 3D position of the vertex while setting ```gl_Position = vec4(gs_in[i].normalizedUv * 2.0 - 1.0, 0.0, 1.0);```. This means that the rasterizer will interpolate these values and generate one 3D Gaussian per fragment.
