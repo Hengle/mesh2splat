@@ -69,41 +69,44 @@ Following are some other 3D meshes converted into 3DGS format.
     <img src="res/katana.png" alt="Image Description 2" style="width: 200;"> 
 </div>
 
+## Performance
+Accurate benchmarking and comparison has not been yet performed.<br>
+For now, Mesh2Splat is able to convert a 3D mesh into a 3DGS on average in **<10ms**.
+<br>
+If compared to current SOTA pipelines, to converta any synthetic data it takes between **15mins and 1h**. 
+
 ## Usage
-Currently, in order to convert a 3D mesh into a 3DGS, you need to specify all the different parameters in ```src/utils/params.hpp```:
+Currently, in order to convert a 3D mesh into a 3DGS, you can either specify all the different parameters in ```src/utils/params.hpp```, or run the executable and pass the following arguments:
+- **-r**: resolution target (avoid larger than 2048), higher the resolution target, higher the quality
+- **-f**: file location of the 3D mesh in ```.gltf/.glb```  format to convert.
+- **-o**: output destination where to save ```.ply```.
+- **-p**: to modify the default ```1.0f``` standard deviation value for the 2d Gaussians.
+Otherwise, you can directly modify the value in the ```.../params.hpp``` file.
 - ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only `.gltf/.glb` file format is supported. The name of the folder and model has to be the same (I know, I need to change this).
-- Modifying how this is handled is simple, but at the moment the code expects the following folder structure (do not nest your textures in subfolders):<br>
+<br><br>**NOTE**:<br>
+If you want Mesh2Spat to work, if, for example you run the following command from the *terminal*:
+```Converter.exe -f <yourPath>\robot\robot.glb -r 2048 -o <yourPath>\robot\``` <br>
+Then, for the moment, the code expects the following folder structure (do not nest your textures in subfolders):<br>
 ```
-dataset/
-├─ object_x/
-│  ├─ object_x.<glb/gltf>
+robot/
+│  ├─ robot.<glb/gltf>
 │  ├─ texture_diffuse_x.<png/jpeg/etc.>
 │  ├─ texture_metallicRoughness_x.<png/jpeg/etc.>
 │  ├─ texture_normal_x.<png/jpeg/etc.>
-├─ object_y/
-│  ├─ object_y.<glb/gltf>
-│  ├─ texture_diffuse_y.<png/jpeg/etc.>
-│  ├─ texture_metallicRoughness_y.<png/jpeg/etc.>
-│  ├─ texture_normal_y.<png/jpeg/etc.>
+│
 ```
-- For the output, as I am working with Halcyon, I directly output the 3DGS model into ```/halcyon/Content/GaussianSplatting/```, in order to easily reload them from the selection menu.
-- Modify in ```src/utils/params.hpp``` the `GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1`. If you do not need a second output folder, just remove `GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2`.
+Naming of the textures is not important, but make sure they are in the same folder as the `.gltf/.glb` 3D model.
 
-
-## Current Limitations and Next Steps
-
-- **View-Dependent Accuracy**: Mesh2Splat is not capable of capturing view-dependant lighting effects. The main goal is to enable relighting. But embedding view-dependant effects in an efficient way without requiring the optimizer wants to be explored.
-- **Material information**: Currently not all texture maps are supported, even if .gltf does. 
-- **Textures still WIP for .glTF**: I am currently in the process of changing how I read the data from ```.obj``` to ```.glTF```, and how texture information is read is not too robust yet.
 
 ## Known issues
 - **jpg format**: if using Blender and UV mapping with a ```.jpg``` texture, it will save it's `mimetype` as ```.jpeg```, invalidating some preliminary code I wrote. Just save it as ```.jpeg```, as it is equivalent to ```.jpg```
 
 
 ## Roadmap
-- **GPU rasterization / GPU tesselation**: even though this approach is orders of magnitude faster than current ones which require the optimization stages, it is a full CPU implementation. The goal is to re-write it in order to perform most operation on the GPU. 
-- **Make code more easily usable**: right now this is not a tool yet, it is code I wrote just for myself and was not expecting to be used by others. My goal is to make it a bit more user-friendly.
+- **GPU rasterization / GPU tesselation**: DONE 
 - **Explore better sampling strategies**: I want to improve an explore better sampling strategies in order to maximize gaussian coverage while also limiting wasted details. 
+- **View-Dependent Accuracy**: Mesh2Splat is not capable of capturing view-dependant lighting effects. The main goal is to enable relighting. But embedding view-dependant effects in an efficient way without requiring the optimizer wants to be explored.
+- **LODs**: Currently, by adjusting the target resolution, lower quality 3DGSs will be produced. These are generated due to lower interpolation in the rasterizer, but an idea is to compute lower LODs directly from the higher quality 3DGSs via Gaussian Mixture Models.
 
 ## References
 
