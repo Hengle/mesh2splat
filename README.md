@@ -16,12 +16,12 @@ This methodology sidesteps the need for greater interoperability between classic
 The (current) core concept behind **Mesh2Splat** is rather simple:
 - Auto-unwrap 3D mesh in **normalized UV space** (should respects relative dimensions)
 - Initialize a 2D covariance matrix for our 2D Gaussians as: <br>
-${\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bmatrix}$ where: ${\sigma_{x}}\sim {\sigma_{y}}\sim 0.5$ and ${\rho} = 0$
+$`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bmatrix}`$ where: ${\sigma_{x}}\sim {\sigma_{y}}\sim 0.5$ and ${\rho} = 0$
 <br>
 - Then, for each triangle primitive in the Geometry Shader stage, we do the following:
     - Gram-Schmidt orthonormalization to compute the rotation matrix (and quaternion).
     - Compute Jacobian matrix from *normalized UV space* to *3D space* for each triangle.
-    - Now, in order to compute the 3D Covariance Matrix we do: ${\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}$
+    - Now, in order to compute the 3D Covariance Matrix we do: $`{\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}`$
     - At this point, what we are interested from our 3D Covariance Matrix is not the rotation matrix made up of the eigenvectors, but just the eigenvalues. In order to compute the eigenvalues, we apply a matrix diagonalization method.
     - The packed scale values will be: 
         - packedScale_x = packedScale_y = log(max(...eigenvalues))
