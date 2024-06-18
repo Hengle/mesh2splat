@@ -16,21 +16,17 @@ This methodology sidesteps the need for greater interoperability between classic
 The (current) core concept behind **Mesh2Splat** is rather simple:
 - Auto-unwrap 3D mesh in **normalized UV space** (should respects relative dimensions)
 - Initialize a 2D covariance matrix for our 2D Gaussians as: <br>
-$\\
-{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bmatrix}
-\\$
-where:
-$\\
-{\sigma_{x}}\sim {\sigma_{y}}\sim 0.5\\$
-and $\\{\rho} = 0\\$
+${\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bmatrix}$ where: ${\sigma_{x}}\sim {\sigma_{y}}\sim 0.5$ and ${\rho} = 0$
 <br>
 - Then, for each triangle primitive in the Geometry Shader stage, we do the following:
     - Gram-Schmidt orthonormalization to compute the rotation matrix (and quaternion).
     - Compute Jacobian matrix from *normalized UV space* to *3D space* for each triangle.
-    - Now, in order to compute the 3D Covariance Matrix we do: $\\{\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}  \\$
+    - Now, in order to compute the 3D Covariance Matrix we do: ${\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}$
     - At this point, what we are interested from our 3D Covariance Matrix is not the rotation matrix made up of the eigenvectors, but just the eigenvalues. In order to compute the eigenvalues, we apply a matrix diagonalization method.
-    - The packed scale values will be: $\\{packedScale_x} = {packedScale_y} = log(max(...eigenvalues))\\$ while instead $\\{packedScale_z} = log(1e-7)\\$
-    <br>
+    - The packed scale values will be: 
+        - packedScale_x = packedScale_y = log(max(...eigenvalues))
+        - packedScale_z = log(1e-7)
+    
 
 - Now that we have the **Scale** and **Rotation** for a *3D Gaussian* part of a triangle, what we do is to emit one 3D Gaussian for each vertex of this triangle, setting their respective 3D position to the 3D position of the vertex while setting ``` gl_Position             = vec4(gs_in[i].normalizedUv * 2.0 - 1.0, 0.0, 1.0); ```. This means that the rasterizer will interpolate these values and generate one 3D Gaussian per fragment.
 - In the Fragment/Pixel Shader we can do all our texture fetches and set information regarding Metallic, Roughness, Normals, etc...
