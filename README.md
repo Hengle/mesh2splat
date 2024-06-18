@@ -84,7 +84,7 @@ Currently, in order to convert a 3D mesh into a 3DGS, you can either specify all
 Otherwise, you can directly modify the value in the ```.../params.hpp``` file.
 - ```OBJ_NAME```: the name of the object (will reflect both on the folder name and the .glb and texture name). Currently only `.gltf/.glb` file format is supported. The name of the folder and model has to be the same (I know, I need to change this).
 <br><br>**NOTE**:<br>
-If you want Mesh2Spat to work, if, for example you run the following command from the *terminal*:
+If you want Mesh2Spat to work, if, for example you run the following command from the *terminal*:<br>
 ```Converter.exe -f <yourPath>\robot\robot.glb -r 2048 -o <yourPath>\robot\``` <br>
 Then, for the moment, the code expects the following folder structure (do not nest your textures in subfolders):<br>
 ```
