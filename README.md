@@ -13,7 +13,7 @@ This methodology sidesteps the need for greater interoperability between classic
 
 
 ## Method
-The pipeline of Mesh2Splat looks as follows:
+The **pipeline** of Mesh2Splat looks as follows:
 <div align="center"> 
     <img src="res/Pipeline.jpg" alt="Current mesh2splat pipeline" style="width: 100%;">
 </div><br>
