@@ -12,7 +12,7 @@ What if we want to represent a synthetic object (3D model) in 3DGS format rather
 This methodology sidesteps the need for greater interoperability between classical 3D mesh representation and the novel 3DGS format.<br>
 
 
-## Concept
+## Method
 The pipeline of Mesh2Splat looks as follows:
 <div align="center"> 
     <img src="res/Pipeline.jpg" alt="Current mesh2splat pipeline" style="width: 100%;">
