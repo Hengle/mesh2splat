@@ -61,19 +61,16 @@ Here You can see the FIRST IMAGE represents the true normals extracted from the 
     <td style="border: none;"><img src="res/scifiMaskPreview.png" alt="final output " width="400"/></td>
   </tr>
 </table>
-<div style="display:flex;"> 
-    <img src="res/normalFromRotMatrix.png" alt="Image Description 1" style="width: 25%;">
-    <img src="res/embeddedNormal.png" alt="Image Description 2" style="width: 25%;"> 
-    <img src="res/scifiMaskPreview.png" alt="Image Description 2" style="width: 25%;"> 
-</div>
 
 <br>
 Following are some other 3D meshes converted into 3DGS format.
-<div style="display:flex;"> 
-    <img src="res/mayan.png" alt="Image Description 1" style="width: 200;">
-    <img src="res/robot.png" alt="Image Description 2" style="width: 200;"> 
-    <img src="res/katana.png" alt="Image Description 2" style="width: 200;"> 
-</div>
+<table style="border-collapse: collapse; border: none;">
+  <tr style="border: none;">
+    <td style="border: none;"><img src="res/mayan.png" alt="axis normal" width="400"/></td>
+    <td style="border: none;"><img src="res/robot.png" alt="normal normals" width="400"/></td>
+    <td style="border: none;"><img src="res/katana.png" alt="final output " width="400"/></td>
+  </tr>
+</table>
 
 ## Performance
 Accurate benchmarking and comparison has not been yet performed.<br>
