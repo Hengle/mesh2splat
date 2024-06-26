@@ -156,6 +156,7 @@ int main(int argc, char** argv) {
         );
 
         /*
+        * Unfortunately the SSBO for some reason is not filled fully and is missing a certain amount of splats
         GLuint ssbo;
         generateSSBO(ssbo);
 
@@ -215,7 +216,11 @@ int main(int argc, char** argv) {
 
     //Write to file
     std::cout << "Writing ply to                ->  " << OUTPUT_FILE_LOCATION << std::endl;
+#if STANDARD_PLY_FORMAT
+    writeBinaryPLY_standard_format(OUTPUT_FILE_LOCATION, gaussians_3D_list);
+#else
     writeBinaryPLY(OUTPUT_FILE_LOCATION, gaussians_3D_list);
+#endif
     std::cout << "Data successfully written to  ->  " << OUTPUT_FILE_LOCATION << std::endl;
 
     // Cleanup

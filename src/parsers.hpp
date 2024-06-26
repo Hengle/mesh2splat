@@ -10,3 +10,6 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename, std::string b
 
 void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
 
+void writeBinaryPLY_standard_format(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
+
+

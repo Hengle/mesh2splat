@@ -366,12 +366,12 @@ vec4 gramSchmidtOrthonormalization()
 }
 
 float polynomial(float x) {
-    return 0.524948 +
-        0.0050501 * x -
-        0.0000406078 * pow(x, 2.0) +
-        1.61708e-7 * pow(x, 3.0) -
-        2.59824e-10 * pow(x, 4.0) +
-        1.33165e-13 * pow(x, 5.0);
+    return  0.524948        +
+            0.0050501       * x -
+            0.0000406078    * pow(x, 2.0) +
+            1.61708e-7      * pow(x, 3.0) -
+            2.59824e-10     * pow(x, 4.0) +
+            1.33165e-13     * pow(x, 5.0);
 }
 
 void main() {
@@ -418,12 +418,15 @@ void main() {
     float s_x = sqrt(sortedEigenvalues[0]);
     float s_y = sqrt(sortedEigenvalues[0]);
 
+    //This is a wip
+    
     float descale_factor = 1.0f;
+    
     if (target_resolution < 1024)
     {
         descale_factor = polynomial(target_resolution);
     }
-
+    
     float packed_s_x    = log(s_x * descale_factor);
     float packed_s_y    = log(s_y * descale_factor);
     float packed_s_z    = log(1e-7);
@@ -437,7 +440,7 @@ void main() {
         Normal                  = gs_in[i].normal;
         UV                      = gs_in[i].uv;
         Quaternion              = quaternion;
-        //-------------------------------------------------------------------------
+        //-------
         gl_Position             = vec4(gs_in[i].normalizedUv * 2.0 - 1.0, 0.0, 1.0);
         EmitVertex();
     }

@@ -608,6 +608,83 @@ void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& 
         file.write(reinterpret_cast<const char*>(&gaussian.rotation.z), sizeof(gaussian.rotation.z));
         file.write(reinterpret_cast<const char*>(&gaussian.rotation.w), sizeof(gaussian.rotation.w));
     }
+    file.close();
+}
+
+void writeBinaryPLY_standard_format(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
+    std::ofstream file(filename, std::ios::binary | std::ios::out);
+
+    // Write header in ASCII
+    file << "ply\n";
+    file << "format binary_little_endian 1.0\n";
+    file << "element vertex " << gaussians.size() << "\n";
+
+    file << "property float x\n";       // 0
+    file << "property float y\n";       // 1
+    file << "property float z\n";       // 2
+
+    file << "property float nx\n";      // 3
+    file << "property float ny\n";      // 4
+    file << "property float nz\n";      // 5
+
+    file << "property float f_dc_0\n";  // 6
+    file << "property float f_dc_1\n";  // 7
+    file << "property float f_dc_2\n";  // 8
+
+    for (int i = 0; i <= 44; ++i) {
+        file << "property float f_rest_" << i << "\n"; // f_rest_0 to f_rest_44
+    }
+
+    file << "property float opacity\n"; // 45
+
+    file << "property float scale_0\n"; // 46
+    file << "property float scale_1\n"; // 47
+    file << "property float scale_2\n"; // 48
+
+    file << "property float rot_0\n";   // 49
+    file << "property float rot_1\n";   // 50
+    file << "property float rot_2\n";   // 51
+    file << "property float rot_3\n";   // 52
+
+    file << "end_header\n";
+
+    // Write vertex data in binary
+    for (const auto& gaussian : gaussians) {
+        // Mean
+        file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.position.z), sizeof(gaussian.position.z));
+
+        // Normal
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.x), sizeof(gaussian.normal.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
+
+        // RGB
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
+
+        // Fill f_rest_0 to f_rest_44 with zeros
+        float zero = 0.0f;
+        for (int i = 0; i <= 44; ++i) {
+            file.write(reinterpret_cast<const char*>(&zero), sizeof(zero));
+        }
+
+        // Opacity
+        file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
+
+        // Scale
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.y), sizeof(gaussian.scale.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.scale.z), sizeof(gaussian.scale.z));
+
+        // Rotation
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.x), sizeof(gaussian.rotation.x));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.y), sizeof(gaussian.rotation.y));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.z), sizeof(gaussian.rotation.z));
+        file.write(reinterpret_cast<const char*>(&gaussian.rotation.w), sizeof(gaussian.rotation.w));
+    }
 
     file.close();
 }

@@ -581,13 +581,13 @@ void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLu
     glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels4.data());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    int index = 0;
     for (int i = 0; i < width * height; ++i) {
         // Extract data from the first texture
         float GaussianPosition_x    = pixels0[frameBufferStride * i + 0];
         float GaussianPosition_y    = pixels0[frameBufferStride * i + 1];
         float GaussianPosition_z    = pixels0[frameBufferStride * i + 2];
-        float Scale_x              = pixels0[frameBufferStride * i + 3];
+        float Scale_x               = pixels0[frameBufferStride * i + 3];
         if (check && (isnan(GaussianPosition_x) || isnan(GaussianPosition_y) || isnan(GaussianPosition_z)) )
         {
             printf("! Warning !  Pos has nan values\n EXITING...");
@@ -642,20 +642,17 @@ void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLu
         float roughness = pixels4[frameBufferStride * i + 1];
         float Scale_y   = pixels4[frameBufferStride * i + 2];
 
-        //std::cout << metallic << " " << roughness << " " << std::endl;
-
         if (check && (isnan(metallic) || isnan(roughness)))
         {
             printf("! Warning !  MetallicRoughness has nan values\n EXITING...");
             continue;//exit(1);
         }
 
-        //if(std::abs(Scale_xy) >= 5) std::cout << Scale_xy << std::endl;
         if ((GaussianPosition_x == 0.0f && GaussianPosition_y == 0.0f && GaussianPosition_z == 0.0f) || (Scale_x == 0.0f))
         {
             continue;
         }
-        
+        index++;
         Gaussian3D gauss;
 
         gauss.material.metallicFactor = metallic;
@@ -668,6 +665,7 @@ void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLu
         gauss.sh0 = getColor(glm::vec3(Rgba_r, Rgba_g, Rgba_b));
         gaussians_3D_list.push_back(gauss);
     }
+    std::cout << "TOT num gaussians: " << index << std::endl;
 }
 
 void setupAtomicCounter(GLuint& counterBuffer)
