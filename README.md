@@ -79,6 +79,7 @@ For now, Mesh2Splat is able to convert a 3D mesh into a 3DGS on average in **<10
 If compared to current SOTA pipelines, to convert any synthetic data it takes between **15mins and 1h**. 
 
 ## Usage
+ATTENTION: this section is not up to date. I am currently working on an ImGui version with 3DGS rendering to preview the converted meshes into splats and tweak a set of parameters in real-time. Updated infor to come. <br>
 Currently, in order to convert a 3D mesh into a 3DGS, you can either specify all the different parameters in ```src/utils/params.hpp```, or run the executable and pass the following arguments:
 - **-r**: resolution target (avoid larger than 2048), higher the resolution target, higher the quality
 - **-f**: file location of the 3D mesh in ```.gltf/.glb```  format to convert.
