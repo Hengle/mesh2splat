@@ -601,17 +601,10 @@ void setupSsboForComputeShader(unsigned int width, unsigned int height, GLuint* 
 {
     glGenBuffers(1, &(*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*gaussianBuffer));
-    glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(glm::vec4) * 2, nullptr, GL_STATIC_DRAW);
-    unsigned int bindingPos = 2; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
+    glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(glm::vec4) * 5, nullptr, GL_STATIC_DRAW);
+    unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-}
-
-static void resetSsboAtomicCounter(GLuint& counterBuffer)
-{
-    GLuint zero = 0;
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, counterBuffer);
-    glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(GLuint), &zero);
 }
 
 GLuint createRendererShaderProgram()
@@ -622,7 +615,6 @@ GLuint createRendererShaderProgram()
 
     GLuint vertexShader         = compileShader(vertexShaderSource.c_str(),         GL_VERTEX_SHADER);
     GLuint fragmentShader       = compileShader(fragmentShaderSource.c_str(),       GL_FRAGMENT_SHADER);
-
 
     GLuint program = glCreateProgram();
     glAttachShader(program, vertexShader);

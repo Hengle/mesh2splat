@@ -122,19 +122,30 @@ GLuint compute_shader_dispatch(GLuint computeShaderProgram, GLuint* drawBuffers,
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, drawBuffers[0]);
-    glUniform1i(glGetUniformLocation(computeShaderProgram, "texPosition"), 0);
+    glUniform1i(glGetUniformLocation(computeShaderProgram, "texPositionAndScaleX"), 0);
 
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, drawBuffers[3]);
-    glUniform1i(glGetUniformLocation(computeShaderProgram, "texColor"), 1);
+    glBindTexture(GL_TEXTURE_2D, drawBuffers[1]);
+    glUniform1i(glGetUniformLocation(computeShaderProgram, "scaleZAndNormal"), 1);
 
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, drawBuffers[2]);
+    glUniform1i(glGetUniformLocation(computeShaderProgram, "rotationAsQuat"), 2);
+
+    glActiveTexture(GL_TEXTURE3);
+    glBindTexture(GL_TEXTURE_2D, drawBuffers[3]);
+    glUniform1i(glGetUniformLocation(computeShaderProgram, "texColor"), 3);
+
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, drawBuffers[4]);
+    glUniform1i(glGetUniformLocation(computeShaderProgram, "pbrAndScaleY"), 4);
 
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, gaussianBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, gaussianBuffer);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, drawIndirectBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, drawIndirectBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, drawIndirectBuffer);
 
     // Dispatch compute work groups
     GLuint groupsX = (GLuint)ceil(resolutionTarget / 16.0);
@@ -165,6 +176,7 @@ void render_point_cloud(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuf
     glFinish();
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
+
     float fov = 45.0f;
     float closePlane = 0.1f;
     float farPlane = 500.0f;
@@ -197,10 +209,18 @@ void render_point_cloud(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuf
     glBindVertexArray(pointsVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4) * 5, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float)*4));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4) * 5, (void*)(sizeof(float)*4));
     glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float)*4));
+    //glEnableVertexAttribArray(1);
+    //glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
+    //glEnableVertexAttribArray(0);
+    //glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float)*4));
+    //glEnableVertexAttribArray(1);
 
     glBindVertexArray(pointsVAO);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);

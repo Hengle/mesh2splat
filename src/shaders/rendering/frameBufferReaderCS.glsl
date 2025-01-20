@@ -1,18 +1,25 @@
 #version 460 core
 
-layout(binding = 0) uniform sampler2D texPosition;  
-layout(binding = 1) uniform sampler2D texColor;
+layout(binding = 0) uniform sampler2D texPositionAndScaleX;  
+layout(binding = 1) uniform sampler2D scaleZAndNormal;
+layout(binding = 2) uniform sampler2D rotationAsQuat;
+layout(binding = 3) uniform sampler2D texColor;
+layout(binding = 4) uniform sampler2D pbrAndScaleY;
+
 
 struct GaussianVertex {
     vec4 position;
     vec4 color;
+    vec4 scale;
+    vec4 rotation;
+    vec4 pbr;
 };
 
-layout(std430, binding = 2) buffer GaussianBuffer {
+layout(std430, binding = 5) buffer GaussianBuffer {
     GaussianVertex vertices[];
 } gaussianBuffer;
 
-layout(std430, binding = 3) buffer DrawCommand {
+layout(std430, binding = 6) buffer DrawCommand {
     uint count;
     uint primCount;
     uint first;
@@ -30,13 +37,28 @@ void main() {
     }
     memoryBarrierShared();
 
-    uint index = atomicAdd(drawCommand.count, 1);
-    //ivec2 texSize   = textureSize(texPosition, 0); TODO: use it to check bounds but should be ok anyway
+    uint index      = atomicAdd(drawCommand.count, 1);
     ivec2 pix       = ivec2(gl_GlobalInvocationID.xy);
 
-    vec4 posData    = texelFetch(texPosition, pix, 0);
-    vec4 colorData  = texelFetch(texColor, pix, 0);
+    //should change ordering and leave scale as first components, otherwise confusing
+    vec4 posAndScaleXData       = texelFetch(texPositionAndScaleX, pix, 0);
+    vec4 position               = vec4(posAndScaleXData.xyz, 1);
 
-    gaussianBuffer.vertices[index].position    = vec4(posData.xyz, 0);
-    gaussianBuffer.vertices[index].color       = vec4(colorData.rgb, 1); 
+    vec4 scaleZAndNormalData    = texelFetch(scaleZAndNormal, pix, 0);
+    vec4 normal                 = vec4(scaleZAndNormalData.yzw, 0);
+
+    vec4 quaternion             = texelFetch(rotationAsQuat, pix, 0);
+
+    vec4 colorData              = texelFetch(texColor, pix, 0);
+    vec4 pbrAndScaleY           = texelFetch(pbrAndScaleY, pix, 0);
+
+    vec4 scale                  = vec4(posAndScaleXData.w, pbrAndScaleY.z, scaleZAndNormalData.x, 1.0);
+
+    gaussianBuffer.vertices[index].position     = position;
+    gaussianBuffer.vertices[index].color        = colorData; 
+    gaussianBuffer.vertices[index].scale        = scale; 
+    gaussianBuffer.vertices[index].rotation     = quaternion; 
+    gaussianBuffer.vertices[index].pbr          = vec4(pbrAndScaleY.xy, 0 ,0); 
+
+
 }
