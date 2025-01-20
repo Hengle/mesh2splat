@@ -1,4 +1,4 @@
-J# Mesh2Splat
+# Mesh2Splat
 
 ## Introduction
 Welcome to **Mesh2Splat**, a novel approach to convert 3D meshes into 3DGS (3D Gaussian Splatting) models.<br>
