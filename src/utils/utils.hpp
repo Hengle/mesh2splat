@@ -23,6 +23,11 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <gtx/string_cast.hpp>
 #include "params.hpp"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+
 
 struct Material {
     glm::vec3 ambient;       // Ka
@@ -133,7 +138,9 @@ bool pointInTriangle(const glm::vec2& pt, const glm::vec2& v1, const glm::vec2& 
 
 bool computeBarycentricCoords(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b, const glm::vec2& c, float& u, float& v, float& w);
 
-glm::vec3 getColor(glm::vec3 color);
+glm::vec3 getShFromColor(glm::vec3 color);
+
+glm::vec3 getColorFromSh(glm::vec3 sh);
 
 glm::vec3 floatToVec3(const float val);
 
@@ -148,8 +155,12 @@ std::pair<glm::vec2, glm::vec2> computeUVBoundingBox(const glm::vec2* triangleUV
 //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
 float linear_to_srgb_float(float x); //Assumes 0,...,1 range 
 
+glm::vec3 linear_to_srgb_float(glm::vec3 rgb);
+
 //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
 float srgb_to_linear_float(float x); //Assumes 0,...,1 range 
+
+glm::vec3 srgb_to_linear_float(glm::vec3 rgb);
 
 glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image, const int bpp);
 

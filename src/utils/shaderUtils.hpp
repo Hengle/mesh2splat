@@ -14,17 +14,21 @@
 #define VOLUMETRIC_SURFACE_FRAGMENT_SHADER_LOCATION "./src/shaders/volumetric/volumetric_fragment_shader.glsl" 
 #define VOLUMETRIC_SURFACE_COMPUTE_SHADER_LOCATION "./src/shaders/volumetric/compute_shader.glsl" 
 
+#define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
+#define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
+
+#define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
 
 
 GLuint compileShader(const char* source, GLenum type);
 
 GLuint createConverterShaderProgram();
 
-GLuint createVolumetricSurfaceShaderProgram();
+GLuint createRendererShaderProgram();
 
-GLuint createVolumetricSurfaceShaderProgram();
+GLuint createComputeShaderProgram();
 
-void uploadTextures(std::map<std::string, TextureDataGl>& textureTypeMap, MaterialGltf material);
+void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap);
 
 void uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh);
 
@@ -41,32 +45,13 @@ void performGpuConversion(
     MaterialGltf material, unsigned int referenceResolution, float GAUSSIAN_STD
 );
 
-void generateVolumetricSurface(
-    GLuint shaderProgram, GLuint vao,
-    glm::mat4* modelMatrices, GLuint ssbo, GLuint counterBuffer,
-    size_t vertexCount, const unsigned int numberOfMicroMeshes,
-    int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
-    const std::map<std::string, TextureDataGl>& textureTypeMap, MaterialGltf material
-);
 
 void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height, bool print, bool check);
 
+GLuint setupSsboForComputeShader(unsigned int width, unsigned int height);
+
 std::string readShaderFile(const char* filePath);
 
-void setupAtomicCounter(GLuint& counterBuffer);
-
-struct Gaussian3D_ssbo {
-    float GaussianPosition[3];
-    float Scale[3];
-    float UV[2];
-    float Normal[3];
-    float Quaternion[4];
-    float Rgba[4];
-};
-
-// Generate and allocate the SSBO
-GLuint generateSSBO(GLuint& ssbo);
-
-void readBackSSBO(std::vector<Gaussian3D>& gaussians, GLuint ssbo, GLuint counterBuffer);
+void setupSsboAtomicCounter(GLuint& counterBuffer);
 
 GLuint readAtomicCounterValue(GLuint counterBuffer);

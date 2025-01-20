@@ -37,9 +37,15 @@ bool computeBarycentricCoords(const glm::vec2& p, const glm::vec2& a, const glm:
     return true; // Successful computation
 }
 
-glm::vec3 getColor(glm::vec3 color)
+glm::vec3 getShFromColor(glm::vec3 color)
 {
-    glm::vec3 col = color - glm::vec3(0.5f) / SH_COEFF0;
+    glm::vec3 sh = color - glm::vec3(0.5f) / SH_COEFF0;
+    return glm::vec3(sh.x, sh.y, sh.z);
+}
+
+glm::vec3 getColorFromSh(glm::vec3 sh)
+{
+    glm::vec3 col = sh + glm::vec3(0.5f) / SH_COEFF0;
     return glm::vec3(col.x, col.y, col.z);
 }
 
@@ -115,6 +121,9 @@ float linear_to_srgb_float(float x) {
         return powf(x, 1.0f / 2.4f) * 1.055f - 0.055f;
 }
 
+glm::vec3 linear_to_srgb_float(glm::vec3 rgb) {
+    return glm::vec3(linear_to_srgb_float(rgb.r), linear_to_srgb_float(rgb.g), linear_to_srgb_float(rgb.b));
+}
 
 //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
 //Assumes 0,...,1 range 
@@ -128,6 +137,11 @@ float srgb_to_linear_float(float x) {
     else
         return powf((x + 0.055f) / 1.055f, 2.4f);
 }
+
+glm::vec3 srgb_to_linear_float(glm::vec3 rgb) {
+    return glm::vec3(srgb_to_linear_float(rgb.r), srgb_to_linear_float(rgb.g), srgb_to_linear_float(rgb.b));
+}
+
 
 
 glm::vec4 rgbaAtPos(const int width, int X, int Y, unsigned char* rgb_image, const int bpp) {
@@ -337,12 +351,12 @@ void computeAndLoadTextureInformation(std::map<std::string, std::pair<unsigned c
 
     }
 
-    if (textureTypeMap.find(OCCLUSION_TEXTURE) != textureTypeMap.end())
+    if (textureTypeMap.find(AO_TEXTURE) != textureTypeMap.end())
     {
         glm::vec3 aoVecFactor(rgbaAtPos(
             material.occlusionTexture.width,
             x, y,
-            textureTypeMap[OCCLUSION_TEXTURE].first, textureTypeMap[OCCLUSION_TEXTURE].second
+            textureTypeMap[AO_TEXTURE].first, textureTypeMap[AO_TEXTURE].second
         ));
 
         if (aoVecFactor.r == 1.0f && aoVecFactor.g == 1.0f && aoVecFactor.b == 1.0f)

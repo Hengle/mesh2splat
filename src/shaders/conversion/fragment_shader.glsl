@@ -47,14 +47,13 @@ void main() {
     }
 
     //NORMAL MAP
-    //Should compute this in geometry shader
+    //Should compute the TBN in geometry shader
     vec3 out_Normal;
     if (hasNormalMap == 1)
     {
         vec3 normalMap_normal = texture(normalTexture, UV).xyz;
         //https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#_material_normaltextureinfo_scale
         vec3 retrievedNormal = normalize(normalMap_normal.xyz * 2.0f - 1.0f); //TODO: * vec3(material.normalScale, material.normalScale, 1.0f)); 
-
         vec3 bitangent = normalize(cross(Normal, Tangent.xyz)) * Tangent.w; //tangent.w is the bitangent sign
         mat3 TBN = mat3(Tangent.xyz, bitangent, Normal);
 
@@ -63,7 +62,6 @@ void main() {
     else {
         out_Normal = Normal;
     }
-
 
     //METALLIC-ROUGHNESS MAP
     vec2 MetallicRoughness;

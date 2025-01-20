@@ -6,7 +6,6 @@ layout(triangle_strip, max_vertices = 3) out;
 uniform vec2 metallicRoughnessFactors;
 uniform float sigma_x;
 uniform float sigma_y;
-uniform int target_resolution;
 
 // Match this struct with the VS_OUT struct from the vertex shader
 in VS_OUT{
@@ -414,86 +413,28 @@ void main() {
     vec4 quaternion = vec4(q.w, q.x, q.y, q.z);
 
     //This matrix can be constructed on CPU 
-    mat2 cov2d = construct2DCovMatrix(sigma_x, sigma_y);
+    //mat2 cov2d = construct2DCovMatrix(sigma_x, sigma_y);
 
     mat2x3 J;
-    if (false) //Trying out some different approaches for mapping
-    {
-        vec2 trianglePixel2D[3];
-        trianglePixel2D[0] = vec2(0.0f, 0.0f);
-        trianglePixel2D[1] = vec2(sigma_x, 0.0f);
-        trianglePixel2D[2] = vec2(0.0f, sigma_y);
 
-        vec3 pixel3DTriangle[3];
-        for (int i = 0; i < 3; i++)
-        {
-            vec3 barycentricCoords = computeBarycentric2D(trianglePixel2D[i], gs_in[0].normalizedUv, gs_in[1].normalizedUv, gs_in[2].normalizedUv);
-            pixel3DTriangle[i] = barycentricCoords.x * gs_in[0].position + barycentricCoords.y * gs_in[1].position + barycentricCoords.z * gs_in[2].position;
-        }
+    vec3 true_vertices3D[3] = { gs_in[0].position, gs_in[1].position, gs_in[2].position };
+    vec2 true_normalized_vertices2D[3] = { gs_in[0].normalizedUv, gs_in[1].normalizedUv, gs_in[2].normalizedUv };
 
-        J = computeUv3DJacobian(pixel3DTriangle, trianglePixel2D);
-    }
-    else
-    {
-        vec3 true_vertices3D[3] = { gs_in[0].position, gs_in[1].position, gs_in[2].position };
-        vec2 true_normalied_vertices2D[3] = { gs_in[0].normalizedUv, gs_in[1].normalizedUv, gs_in[2].normalizedUv };
-
-        J = computeUv3DJacobian(true_vertices3D, true_normalied_vertices2D);
-    }
-  
+    J = computeUv3DJacobian(true_vertices3D, true_normalized_vertices2D);
+      
     mat3x2 J_T;
     transpose2x3(J, J_T);
-    mat3 cov3d = multiplyMat2x3WithMat3x2(J, multiplyMat2x2WithMat3x2(cov2d, J_T));
-    float det3D = determinant(cov3d);
+    //mat3 cov3d = multiplyMat2x3WithMat3x2(J, multiplyMat2x2WithMat3x2(cov2d, J_T));
 
-    vec3 diagonalizedCov3d_diagonal;
-    Diagonalizer(cov3d, diagonalizedCov3d_diagonal);
+    vec3 Ju = vec3(J_T[0][0], J_T[1][0], J_T[2][0]); 
+    vec3 Jv = vec3(J_T[0][1], J_T[1][1], J_T[2][1]); 
 
-    //Not entirely sure about the sorting part
-    vec3 sortedEigenvalues = sortDescending(diagonalizedCov3d_diagonal);
-    float s_x = sqrt(sortedEigenvalues[0]);
-    float s_y = sqrt(sortedEigenvalues[0]);
-    /*
-    mat2 M = mat2
-        (1.0, 0.0,
-        0.0, 1.0);
-    
+    float gaussian_scale_x = length(Ju) * sigma_x;
+    float gaussian_scale_y = length(Jv) * sigma_y;
 
-    float V = 0.75;
-    vec3 J0 = vec3(J[0][0], J[0][1], J[0][2]); // First column
-    vec3 J1 = vec3(J[1][0], J[1][1], J[1][2]); // Second column
-    //vec3 areaVector = cross(J0, J1);
-    float scale = sqrt(det3D);
-    
 
-    // Transform the 2D identity rotation matrix M using the Jacobian
-    /*
-    mat2x3 M_3D;
-    M_3D[0] = vec3( J_T[0][0] * M[0][0] + J_T[0][1] * M[1][0],
-                    J_T[1][0] * M[0][0] + J_T[1][1] * M[1][0],
-                    J_T[2][0] * M[0][0] + J_T[2][1] * M[1][0]);
-
-    M_3D[1] = vec3( J_T[0][0] * M[0][1] + J_T[0][1] * M[1][1],
-                    J_T[1][0] * M[0][1] + J_T[1][1] * M[1][1],
-                    J_T[2][0] * M[0][1] + J_T[2][1] * M[1][1]);
-
-    M_3D[0] = normalize(M_3D[0]);
-    M_3D[1] = normalize(M_3D[1]);
-
-    // Compute the third orthonormal vector to complete the 3D rotation matrix
-    vec3 orthoZ = cross(M_3D[0], M_3D[1]);
-
-    // Construct the final 3D rotation matrix
-    mat3 rotationMatrix;
-    rotationMatrix[0] = M_3D[0];
-    rotationMatrix[1] = M_3D[1];
-    rotationMatrix[2] = orthoZ;
-
-    vec4 q = quat_cast(rotationMatrix);
-    vec4 quaternion = vec4(q.w, q.x, q.y, q.z);
-    */
-    float packed_s_x    = log(s_x);
-    float packed_s_y    = log(s_y);
+    float packed_s_x    = log(gaussian_scale_x);
+    float packed_s_y    = log(gaussian_scale_y);
     float packed_s_z    = log(1e-7);
 
     Scale = vec3(packed_s_x, packed_s_y, packed_s_z);

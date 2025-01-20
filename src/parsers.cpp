@@ -7,7 +7,7 @@
 #include "../thirdParty/stb_image_resize.h"
 
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
-TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) //TODO: structs structs!
+TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) 
 {
     size_t pos = texturePath.rfind('.');
     std::string image_format = texturePath.substr(pos + 1);
@@ -24,29 +24,28 @@ TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& t
     std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + texturePath + "." + image_format;
     float aspect_ratio = (float)textureHeight / (float)textureWidth;
 
-    if (textureWidth > RESOLUTION_TARGET)
-    {
-        // Specify new width and height
-
-        int new_width = RESOLUTION_TARGET;
-        int new_height = static_cast<int>(new_width * aspect_ratio);
-
-        // Allocate memory for the resized image, use new not malloc
-        unsigned char* resized_data = (unsigned char*)malloc(new_width * new_height * bpp);
-
-        // Resize the image
-        stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
-        textureWidth = new_width;
-        textureHeight = new_height;
-
-        // Save the resized image
-        //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
-        stbi_image_free(image);
-        std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
-
-        return TextureDataGl(resized_data, bpp);
-       
-    }
+    //if (textureWidth > RESOLUTION_TARGET)
+    //{
+    //    // Specify new width and height
+    //    int new_width = RESOLUTION_TARGET;
+    //    int new_height = static_cast<int>(new_width * aspect_ratio);
+    //
+    //    // Allocate memory for the resized image, use new not malloc
+    //    unsigned char* resized_data = new unsigned char[new_width * new_height * bpp];
+    //
+    //    // Resize the image
+    //    stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
+    //    textureWidth = new_width;
+    //    textureHeight = new_height;
+    //
+    //    // Save the resized image
+    //    //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
+    //    stbi_image_free(image);
+    //    std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
+    //
+    //    return TextureDataGl(resized_data, bpp);
+    //   
+    //}
 
     return TextureDataGl(image, bpp);
 }
@@ -196,7 +195,7 @@ bool extractImageNames(const std::string& combinedName, std::string& path, std::
     return true;
 }
 
-void loadAllTexturesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap)
+void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap)
 {
     
     //BASECOLOR ALBEDO TEXTURE LOAD
@@ -242,7 +241,7 @@ void loadAllTexturesIntoMap(MaterialGltf& material, std::map<std::string, Textur
     //OCCLUSION TEXTURE LOAD
     if (material.occlusionTexture.path != EMPTY_TEXTURE)
     {
-        textureTypeMap.emplace(OCCLUSION_TEXTURE, loadImageAndBpp(material.occlusionTexture.path, material.occlusionTexture.width, material.occlusionTexture.height));
+        textureTypeMap.emplace(AO_TEXTURE, loadImageAndBpp(material.occlusionTexture.path, material.occlusionTexture.width, material.occlusionTexture.height));
     }
     else {
         material.occlusionTexture.width = RESOLUTION_TARGET;
@@ -538,7 +537,7 @@ std::vector<Mesh> parseGltfFileToMesh(const std::string& filename, std::string b
     return meshes; //TODO: struct struct struct!
 }
 
-void writeBinaryPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
+void writePbrPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
     std::ofstream file(filename, std::ios::binary | std::ios::out);
 
     // Write header in ASCII

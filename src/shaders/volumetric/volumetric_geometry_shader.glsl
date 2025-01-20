@@ -24,7 +24,7 @@ out vec3 Normal;
 flat out vec4 Quaternion;
 uniform mat4 instanceMatrices[2];
 
-//Copied from GLM
+//taken from GLM
 vec4 quat_cast(mat3 m) {
     float fourXSquaredMinus1 = m[0][0] - m[1][1] - m[2][2];
     float fourYSquaredMinus1 = m[1][1] - m[0][0] - m[2][2];

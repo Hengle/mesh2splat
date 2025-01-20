@@ -1,7 +1,5 @@
 #version 460 core
 
-layout(local_size_x = 16, local_size_y = 16) in;
-
 layout(rgba32f, binding = 0) uniform image2D mainPositionMap;
 layout(rgba32f, binding = 1) uniform image2D mainNormalMap;
 layout(rgba32f, binding = 2) uniform image2D mainQuaternionMap;
@@ -26,6 +24,7 @@ uniform sampler2D distributionMap;
 uniform int numMicromeshInstances;
 uniform vec3 meshScale;
 
+layout(local_size_x = 16, local_size_y = 16) in;
 void main() {
     uint index = gl_GlobalInvocationID.x + gl_GlobalInvocationID.y * gl_NumWorkGroups.x;
 

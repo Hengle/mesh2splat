@@ -19,7 +19,7 @@ std::vector<Gaussian3D> drawLine(glm::vec3 initialPos, glm::vec3 finalPos, glm::
                 glm::vec3(0.0f, 0.0f, 1.0f), //Not used anyway
                 log(glm::vec3(isotropicScale, isotropicScale, isotropicScale)),
                 glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), //Gaussian is isotropic so not used
-                getColor(color),
+                getShFromColor(color),
                 1.0f,
                 MaterialGltf()
             )

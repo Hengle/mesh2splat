@@ -1,14 +1,13 @@
 #pragma once
 #define _USE_MATH_DEFINES
 
-
 //-------------------- TEXTURE AND COLORS -------------------------------------------------------------------------------------------------------
 #define RESOLUTION_TARGET						512
 #define RESOLUTION_TARGET_STR					"_512"
 #define METALLIC_ROUGHNESS_TEXTURE				"metallicRoughnessTexture"
 #define BASE_COLOR_TEXTURE						"baseColorTexture"
 #define NORMAL_TEXTURE							"normalTexture"
-#define OCCLUSION_TEXTURE						"occlusionTexture"
+#define AO_TEXTURE								"occlusionTexture"
 #define EMISSIVE_TEXTURE						"emissiveTexture"
 #define DEFAULT_PURPLE							glm::vec3(102.0f/255.0f, 51.0f/255.0f, 153.0f/255.0f) //RGB - 0 , ... , 255
 #define SH_COEFF0								0.28209479177387814f
@@ -22,7 +21,7 @@
 #define PLY_FORMAT								2
 
 //-------------------- INPUT DATA ---------------------------------------------------------------------------------------------------------------
-#define OBJ_NAME								"sphere2"
+#define OBJ_NAME								"scifiHelmet"
 #define MICROMESH_NAME							"microMesh6"
 #define OBJ_FORMAT								".glb"
 
@@ -44,8 +43,8 @@
 #define BASE_DATASET_FOLDER						"C:/Users/sscolari/Desktop/dataset/"  OBJ_NAME  "/"				
 
 #define OUTPUT_GAUSSIAN_FORMAT					".ply"
-#define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1		"C:/Users/sscolari/Desktop/halcyonUpdate/halcyon/Content/Halcyon/PlyTestAssets/" OBJ_NAME RESOLUTION_TARGET_STR OUTPUT_GAUSSIAN_FORMAT
-#define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2		"C:/Users/sscolari/Desktop/outputGaussians/" OBJ_NAME OUTPUT_GAUSSIAN_FORMAT
+#define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_1		"C:/Users/sscolari/Desktop/halcyonUpdate/halcyon/Content/Halcyon/PlyTestAssets/PBR_" OBJ_NAME RESOLUTION_TARGET_STR OUTPUT_GAUSSIAN_FORMAT
+#define GAUSSIAN_OUTPUT_MODEL_DEST_FOLDER_2		"C:/Users/sscolari/Desktop/outputGaussians/PBR_" OBJ_NAME OUTPUT_GAUSSIAN_FORMAT
 
 #define INPUT_MESH_FILENAME						BASE_DATASET_FOLDER OBJ_NAME OBJ_FORMAT
 #define INPUT_MICROMESH_FILENAME				BASE_MICROMESH_FOLDER MICROMESH_NAME OBJ_FORMAT
