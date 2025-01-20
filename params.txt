@@ -1,6 +1,0 @@
-RESOLUTION: 512
-MESH_FILE_LOCATION: C:/Users/sscolari/Desktop/dataset/scifiHelmet/scifiHelmet.glb
-OUTPUT_FILE_LOCATION: C:/Users/sscolari/Desktop/halcyonUpdate/halcyon/Content/Halcyon/PlyTestAssets/PBR_scifiHelmet_512.ply
-BASE_FOLDER: C:/Users/sscolari/Desktop/dataset/scifiHelmet/
-GAUSSIAN_STD: 1
-FORMAT: 2
