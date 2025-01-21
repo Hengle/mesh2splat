@@ -66,14 +66,14 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     float fov = 45.0f;
     float closePlane = 0.1f;
-    float farPlane = 500.0f;
+    float farPlane = 200.0f;
     glm::mat4 projection = glm::perspective(glm::radians(fov),
                                             (float)width / (float)height,
                                             closePlane, farPlane);
 
     glViewport(0, 0, width, height);
 
-    //TODO: refactor, should not be here. Create a separate transformations class
+    //TODO: refactor, should not be here. Create a separate transformations/camera class
     glm::vec3 cameraPos = computeCameraPosition(yaw, pitch, distance);
     glm::vec3 target(0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -81,6 +81,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glm::mat4 model = glm::mat4(1.0);
     glm::mat4 MVP = projection * view * model;
 
+    //Probably better with indexing, may save some performance
     std::vector<float> quadVertices = {
         // Tr1
         -1.0f, -1.0f, 0.0f,
@@ -138,7 +139,7 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 {
     //Yeah not greates setup, the logic itself should not probably reside in the gui, but good enough like this.
     //Should implement the concept of a render pass rather than having a specialized class handle one type of pass
-    //TODO: make render passes and logic handling more modular
+    //TODO: make render passes and logic handling more modular, this is very fixed and wobbly
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 

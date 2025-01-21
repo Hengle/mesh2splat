@@ -66,13 +66,13 @@ vec3 computeConic(mat4 objectToWorld, mat4 worldToView, mat4 viewToClip, vec2 re
 	vec3 vsCenterPos	= vsCenterPosHom.xyz;
 
 	// covariance Matrix in world space, symmetric, can be optimized
-	mat3 wsBigSigma = transpose(mat3(objectToWorld) * (mat3(objectToWorld)));
+	mat3 wsBigSigma = (mat3(objectToWorld)) * transpose(mat3(objectToWorld));
 	//float3x3 wsBigSigma = mul((float3x3) objectToWorld, transpose((float3x3) objectToWorld));
 
 	// covariance Matrix in view space, symmetric, can be optimized
 	mat3 W = mat3(worldToView);
 
-	mat3 vsBigSigma = transpose(W) * wsBigSigma * W;
+	mat3 vsBigSigma = W * wsBigSigma * transpose(W);
 
 	//mat3 vsBigSigma = mul(W, mul(wsBigSigma, transpose(W)));
 
@@ -137,8 +137,8 @@ vec2 computeCorner(vec2 xy, vec3 conic, vec2 resolution)
 	vec2 k = vec2(a - c, 2.0f * b);
 
 	// if splat gets thinner than a pixel, keep it pixel size for antialiasing, this works with aspectRatio
-//	rx = max(rx, 1.0f / resolution.y);
-//	ry = max(ry, 1.0f / resolution.x);
+	rx = max(rx, 1.0f / resolution.y);
+	ry = max(ry, 1.0f / resolution.x);
 
 	// half vector, should be faster than atan()
 	vec2 axis0 = normalize(k + vec2(length(k), 0));
@@ -191,7 +191,7 @@ void main() {
 
 	float alphaScale;
 
-	vec3 param  = computeConic(splatToWorld, u_worldToView, u_viewToClip, u_resolution, alphaScale);
+	vec3 param  = computeConic(splatToWorld, transpose(u_worldToView), transpose(u_viewToClip), u_resolution, alphaScale);
 	vec2 corner = computeCorner(offset, param, u_resolution);
 	corner /= 2.0;
 	vec4 splatClipPos = u_MVP * vec4(splatMeanWs, 1.0f);
