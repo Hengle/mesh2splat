@@ -1,4 +1,4 @@
-J# Mesh2Splat
+# Mesh2Splat
 
 ## Introduction
 Welcome to **Mesh2Splat**, a novel approach to convert 3D meshes into 3DGS (3D Gaussian Splatting) models.<br>
@@ -23,12 +23,12 @@ The (current) core concept behind **Mesh2Splat** is rather simple:
 - Initialize a 2D covariance matrix for our 2D Gaussians as: <br>
 $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bmatrix}`$ <br><br> where: $`{\sigma_{x}}\sim {\sigma_{y}}\sim 0.5`$ <br>and $`{\rho} = 0`$
 - Then, for each triangle primitive in the Geometry Shader stage, we do the following:
-    - Gram-Schmidt orthonormalization to compute the rotation matrix (and quaternion).
-    - Compute Jacobian matrix from *normalized UV space* to *3D space* for each triangle.
-    - Now, in order to compute the 3D Covariance Matrix we do: $`{\Sigma_{3D}} = J * \Sigma_{2D} * J^{T}`$
-    - At this point, what we are interested from our 3D Covariance Matrix is not the rotation matrix made up of the eigenvectors, but just the eigenvalues. In order to compute the eigenvalues, we apply a matrix diagonalization method.
+    - Compute Jacobian matrix from *normalized UV space* to *3D space* for each triangle:  $`J = V \cdot (UV)^{-1} `$.
+    - Derives the 3D directions corresponding to texture axes $`u`$ and $`v`$, and calculate the magnitudes of the 3D derivative vectors.
+    - Multiply the fouind lengths for by the 2D Gaussian´s standard deviation and we found our scaling factors along the directions aligned with the surface in 3D space.
     - The packed scale values will be: 
-        - $`packedScale_x = packedScale_y = log(max(...eigenvalues))`$
+        - $`packedScale_x = log(length(Ju) * sigma_x)`$
+        - $`packedScale_y = log(length(Jv) * sigma_y)`$
         - $`packedScale_z = log(1e-7)`$
     
 
@@ -79,6 +79,7 @@ For now, Mesh2Splat is able to convert a 3D mesh into a 3DGS on average in **<10
 If compared to current SOTA pipelines, to convert any synthetic data it takes between **15mins and 1h**. 
 
 ## Usage
+ATTENTION: this section is not up to date. I am currently working on an ImGui version with 3DGS rendering to preview the converted meshes into splats and tweak a set of parameters in real-time. Updated infor to come. <br>
 Currently, in order to convert a 3D mesh into a 3DGS, you can either specify all the different parameters in ```src/utils/params.hpp```, or run the executable and pass the following arguments:
 - **-r**: resolution target (avoid larger than 2048), higher the resolution target, higher the quality
 - **-f**: file location of the 3D mesh in ```.gltf/.glb```  format to convert.
