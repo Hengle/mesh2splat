@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 
 //-------------------- TEXTURE AND COLORS -------------------------------------------------------------------------------------------------------
-#define RESOLUTION_TARGET						512
+#define MAX_RESOLUTION_TARGET						2048
 #define RESOLUTION_TARGET_STR					"_512"
 #define METALLIC_ROUGHNESS_TEXTURE				"metallicRoughnessTexture"
 #define BASE_COLOR_TEXTURE						"baseColorTexture"

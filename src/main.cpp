@@ -98,12 +98,14 @@ static void runConversion(const std::string& meshFilePath, const std::string& ba
         if (gaussianBuffer != 0) {
             glDeleteBuffers(1, &gaussianBuffer);
         }
-
-        setupSsboForComputeShader(resolution, resolution, &gaussianBuffer);
+        setupSsbo(resolution, resolution, &gaussianBuffer);
         
         if (drawIndirectBuffer != 0) {
             glDeleteBuffers(1, &drawIndirectBuffer);
         }
+        //TODO: ideally this should not be necessary, and we should directly atomically append into the SSBO from the fragment shader
+        // not doing so results in wasted work, but need to handle fragment syncronization. For now this is ok.
+        //TODO: refactor, pass drawIndirectBuffer as argument not return
         drawIndirectBuffer = compute_shader_dispatch(computeShaderProgram, drawBuffers, gaussianBuffer, resolution);
 
         // Cleanup framebuffer and drawbuffers
@@ -188,9 +190,6 @@ int main(int argc, char** argv) {
     GLuint gaussianBuffer           = -1;
     GLuint drawIndirectBuffer       = -1;
 
-    // Enable depth testing
-    //glEnable(GL_DEPTH_TEST);
-
     static int resolutionIndex              = 3;  // Start with the highest resolution index (e.g., 2048)
     const int resolutionOptions[]           = { 256, 512, 1000, 2048 };
     const char* resolutionLabels[]          = { "256", "512", "1024", "2048" };
@@ -206,7 +205,7 @@ int main(int argc, char** argv) {
     static char filePathBuffer[256]         = "C:\\Users\\sscolari\\Desktop\\dataset\\scifiHelmet\\scifiHelmet.glb"; //TODO: just for debug, remove this
     static float gaussian_std = 1.0f;  
 
-    //-------RENDER LOOP--------
+    //-------RENDER LOOP-------- TODO: integrate in renderer, make it oop
     while (!glfwWindowShouldClose(window)) {
 
         glfwPollEvents();
@@ -223,7 +222,6 @@ int main(int argc, char** argv) {
         {
             static char destinationFilePathBuffer[256] = "";
 
-                
             const float  minStd = 0.1f;             
             const float  maxStd = 10.0f;  
             
@@ -261,7 +259,6 @@ int main(int argc, char** argv) {
                 runConversionFlag = true;
             };
 
-
             ImGui::InputText("Save .PLY destination", destinationFilePathBuffer, sizeof(destinationFilePathBuffer));
             if (ImGui::Button("Save splat"))
             {
@@ -291,6 +288,20 @@ int main(int argc, char** argv) {
                         loadAllTextureMapImagesIntoMap(meshData.material, textureTypeMap);
                         generateTextures( meshData.material, textureTypeMap );
                     }
+
+                    std::string meshFilePath(filePathBuffer);
+                    if (!meshFilePath.empty()) {
+                        resolutionTarget = static_cast<int>(minRes + quality * (maxRes - minRes));
+                        //Entry point for conversion code
+                        runConversion(
+                            meshFilePath, parent_folder,
+                            resolutionTarget, gaussian_std,
+                            converterShaderProgram, computeShaderProgram,
+                            dataMeshAndGlMesh, normalizedUvSpaceWidth, normalizedUvSpaceHeight,
+                            textureTypeMap, gaussianBuffer, drawIndirectBuffer
+                        );
+                    }
+
                     stillNeedtoLoadFirstMesh = false;
                 }
                 loadNewMesh = false;  
@@ -324,14 +335,8 @@ int main(int argc, char** argv) {
         }
 
         ImGui::Render();
-
-        if (gaussianBuffer != static_cast<GLuint>(-1) && 
-            drawIndirectBuffer != static_cast<GLuint>(-1) && 
-            pointsVAO != 0 && 
-            renderShaderProgram != 0) 
-        {
-            render_point_cloud(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gaussian_std);
-        }
+        
+        render_point_cloud(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gaussian_std);
 
         // Render ImGui on top
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

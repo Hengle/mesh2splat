@@ -24,28 +24,28 @@ TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& t
     std::string resized_texture_name_location = BASE_DATASET_FOLDER + std::string("resized_texture") + texturePath + "." + image_format;
     float aspect_ratio = (float)textureHeight / (float)textureWidth;
 
-    //if (textureWidth > RESOLUTION_TARGET)
-    //{
-    //    // Specify new width and height
-    //    int new_width = RESOLUTION_TARGET;
-    //    int new_height = static_cast<int>(new_width * aspect_ratio);
-    //
-    //    // Allocate memory for the resized image, use new not malloc
-    //    unsigned char* resized_data = new unsigned char[new_width * new_height * bpp];
-    //
-    //    // Resize the image
-    //    stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
-    //    textureWidth = new_width;
-    //    textureHeight = new_height;
-    //
-    //    // Save the resized image
-    //    //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
-    //    stbi_image_free(image);
-    //    std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
-    //
-    //    return TextureDataGl(resized_data, bpp);
-    //   
-    //}
+    if (textureWidth > MAX_RESOLUTION_TARGET)
+    {
+        // Specify new width and height
+        int new_width = MAX_RESOLUTION_TARGET;
+        int new_height = static_cast<int>(new_width * aspect_ratio);
+    
+        // Allocate memory for the resized image, use new not malloc
+        unsigned char* resized_data = new unsigned char[new_width * new_height * bpp];
+    
+        // Resize the image
+        stbir_resize_uint8(image, textureWidth, textureHeight, 0, resized_data, new_width, new_height, 0, bpp);
+        textureWidth = new_width;
+        textureHeight = new_height;
+    
+        // Save the resized image
+        //stbi_write_png(resized_texture_name_location.c_str(), new_width, new_height, bpp, resized_data, new_width * bpp);
+        stbi_image_free(image);
+        std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
+    
+        return TextureDataGl(resized_data, bpp);
+       
+    }
 
     return TextureDataGl(image, bpp);
 }
@@ -204,8 +204,8 @@ void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string
         textureTypeMap.emplace(BASE_COLOR_TEXTURE, loadImageAndBpp(material.baseColorTexture.path, material.baseColorTexture.width, material.baseColorTexture.height));
     }
     else {
-        material.baseColorTexture.width = RESOLUTION_TARGET;
-        material.baseColorTexture.height = RESOLUTION_TARGET;
+        material.baseColorTexture.width = MAX_RESOLUTION_TARGET;
+        material.baseColorTexture.height = MAX_RESOLUTION_TARGET;
     }
 
     //METALLIC-ROUGHNESS TEXTURE LOAD
@@ -224,8 +224,8 @@ void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string
         }
     }
     else {
-        material.metallicRoughnessTexture.width = RESOLUTION_TARGET;
-        material.metallicRoughnessTexture.height = RESOLUTION_TARGET;
+        material.metallicRoughnessTexture.width = MAX_RESOLUTION_TARGET;
+        material.metallicRoughnessTexture.height = MAX_RESOLUTION_TARGET;
     }
 
     //NORMAL TEXTURE LOAD
@@ -234,8 +234,8 @@ void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string
         textureTypeMap.emplace(NORMAL_TEXTURE, loadImageAndBpp(material.normalTexture.path, material.normalTexture.width, material.normalTexture.height));
     }
     else {
-        material.normalTexture.width = RESOLUTION_TARGET;
-        material.normalTexture.height = RESOLUTION_TARGET;
+        material.normalTexture.width = MAX_RESOLUTION_TARGET;
+        material.normalTexture.height = MAX_RESOLUTION_TARGET;
     }
 
     //OCCLUSION TEXTURE LOAD
@@ -244,8 +244,8 @@ void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string
         textureTypeMap.emplace(AO_TEXTURE, loadImageAndBpp(material.occlusionTexture.path, material.occlusionTexture.width, material.occlusionTexture.height));
     }
     else {
-        material.occlusionTexture.width = RESOLUTION_TARGET;
-        material.occlusionTexture.height = RESOLUTION_TARGET;
+        material.occlusionTexture.width = MAX_RESOLUTION_TARGET;
+        material.occlusionTexture.height = MAX_RESOLUTION_TARGET;
     }
 
     //EMISSIVE TEXTURE LOAD
@@ -254,8 +254,8 @@ void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string
         textureTypeMap.emplace(EMISSIVE_TEXTURE, loadImageAndBpp(material.emissiveTexture.path, material.emissiveTexture.width, material.emissiveTexture.height));
     }
     else {
-        material.emissiveTexture.width = RESOLUTION_TARGET;
-        material.emissiveTexture.height = RESOLUTION_TARGET;
+        material.emissiveTexture.width = MAX_RESOLUTION_TARGET;
+        material.emissiveTexture.height = MAX_RESOLUTION_TARGET;
     }
 }
 

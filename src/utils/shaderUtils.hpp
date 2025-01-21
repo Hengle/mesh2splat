@@ -47,6 +47,6 @@ void performGpuConversion(
 
 void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height, bool print, bool check);
 
-void setupSsboForComputeShader(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
+void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
 
 std::string readShaderFile(const char* filePath);

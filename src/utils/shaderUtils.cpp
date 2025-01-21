@@ -72,7 +72,7 @@ GLuint createConverterShaderProgram() {
 //TODO: must return the ID for each texture
 void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap)
 {
-
+    //TODO: at second loading is not updating the textures
     std::map<std::string, GLenum> textureUnits = {
         { BASE_COLOR_TEXTURE,           GL_TEXTURE0 },
         { NORMAL_TEXTURE,               GL_TEXTURE1 },
@@ -157,7 +157,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
             //TODO: this is trash, oh mamma mia this is really bad. Change it sooner than later.
             //Before the assignment it was the Bpp and now it is the textureID...
             textureTypeMapEntry.second.glTextureID = texture;
-
+            glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
 }
@@ -165,6 +165,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
 
 void uploadMeshesToOpenGL(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh) {
     
+    DataMeshAndGlMesh.clear();
     DataMeshAndGlMesh.reserve(meshes.size());
 
     for (auto& mesh : meshes) {
@@ -597,7 +598,7 @@ void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLu
     std::cout << "TOT num gaussians: " << index << std::endl;
 }
 
-void setupSsboForComputeShader(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
+void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
 {
     glGenBuffers(1, &(*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*gaussianBuffer));

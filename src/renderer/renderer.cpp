@@ -173,6 +173,11 @@ unsigned int getSplatBufferCount(GLuint counterBuffer)
 
 void render_point_cloud(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss)
 {
+    if (gaussianBuffer == static_cast<GLuint>(-1) ||
+        drawIndirectBuffer == static_cast<GLuint>(-1) ||
+        pointsVAO == 0 ||
+        renderShaderProgram == 0) return;
+
     glFinish();
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -188,7 +193,7 @@ void render_point_cloud(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuf
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, width, height);
 
-    // --- Existing camera and point rendering code----
+    // --- Existing camera and point rendering code---- TODO: refactor, should not be here
     glm::vec3 cameraPos = computeCameraPosition();
     glm::vec3 target(0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
@@ -209,23 +214,22 @@ void render_point_cloud(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuf
     glBindVertexArray(pointsVAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4) * 5, (void*)0);
+    unsigned int stride = sizeof(glm::vec4) * 5;
+    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4) * 5, (void*)(sizeof(float)*4));
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float)*4));
     glEnableVertexAttribArray(1);
-    //glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float)*4));
-    //glEnableVertexAttribArray(1);
-    //glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
-    //glEnableVertexAttribArray(0);
-    //glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float)*4));
-    //glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float)*8));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float)*12));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float)*16));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(float)*20));
+    glEnableVertexAttribArray(5);
 
-    glBindVertexArray(pointsVAO);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
     glDrawArraysIndirect(GL_POINTS, 0);
 
-    //glDrawArrays(GL_POINTS, 0, getSplatBufferCount(counterBuffer)); //Find way to track number of generated gaussians in ssbo
     glBindVertexArray(0);
 }
