@@ -104,7 +104,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     setUniformMat4(renderShaderProgram, "u_worldToView", view);
     setUniformMat4(renderShaderProgram, "u_objectToWorld", model);
     setUniformMat4(renderShaderProgram, "u_viewToClip", projection);
-    setUniform2f(renderShaderProgram, "u_resolution", glm::ivec2(width, height));
+    setUniform2f(renderShaderProgram,   "u_resolution", glm::ivec2(width, height));
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
@@ -133,6 +133,7 @@ void Renderer::clearingPrePass()
     glEnable(GL_DEPTH_TEST);
 }
 
+//TODO: implement shader hot-reloading
 void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 {
     //Yeah not greates setup, the logic itself should not probably reside in the gui, but good enough like this.
