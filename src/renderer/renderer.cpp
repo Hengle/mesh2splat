@@ -122,8 +122,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     }
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
-    glDrawArraysIndirect(GL_TRIANGLE_STRIP, 0);
-    //glDrawArraysIndirect(GL_TRIANGLES, 0);
+    glDrawArraysIndirect(GL_TRIANGLE_STRIP, 0); //instance parameters set in framBufferReaderCS.glsl
 
     glBindVertexArray(0);
 }
