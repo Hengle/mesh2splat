@@ -367,6 +367,17 @@ void setUniform2f(GLuint shaderProgram, std::string uniformName, glm::vec2 unifo
     glUniform2f(uniformLocation, uniformValue[0], uniformValue[1]);
 }
 
+void setUniform2i(GLuint shaderProgram, std::string uniformName, glm::vec2 uniformValue)
+{
+    GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+    if (uniformLocation == -1) {
+        std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+    }
+
+    glUniform2i(uniformLocation, uniformValue[0], uniformValue[1]);
+}
+
 
 void setUniformMat4(GLuint shaderProgram, std::string uniformName, glm::mat4 matrix)
 {

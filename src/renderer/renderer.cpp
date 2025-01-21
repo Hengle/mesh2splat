@@ -26,6 +26,7 @@ Renderer::~Renderer()
     glDeleteProgram(computeShaderProgram);
 }
 
+//TODO: kinda bad that I pass parameters to this function that are global variables (in )
 glm::vec3 Renderer::computeCameraPosition(float yaw, float pitch, float distance) {
     // Convert angles to radians
     float yawRadians   = glm::radians(yaw);
@@ -82,13 +83,13 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     std::vector<float> quadVertices = {
         // Tr1
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.5f,  0.5f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
+         01.0f, -1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
         // Tr2 
-         0.5f,  0.5f, 0.0f,
-        -0.5f,  0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+        -1.0f, -1.0f, 0.0f,
     };
 
     glBindVertexArray(pointsVAO);
@@ -98,10 +99,12 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), quadVertices.data(), GL_STATIC_DRAW);
 
-    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "MVP"),            1,  GL_FALSE, glm::value_ptr(MVP));
-    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "worldToView"),    1,  GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "objectToWorld"),  1,  GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "viewToClip"),     1,  GL_FALSE, glm::value_ptr(projection));
+    //TODO: should name all uniforms with this convention for clarity
+    setUniformMat4(renderShaderProgram, "u_MVP", MVP);
+    setUniformMat4(renderShaderProgram, "u_worldToView", view);
+    setUniformMat4(renderShaderProgram, "u_objectToWorld", model);
+    setUniformMat4(renderShaderProgram, "u_viewToClip", projection);
+    setUniform2f(renderShaderProgram, "u_resolution", glm::ivec2(width, height));
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
