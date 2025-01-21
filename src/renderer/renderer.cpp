@@ -98,7 +98,10 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), quadVertices.data(), GL_STATIC_DRAW);
 
-    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "MVP"), 1, GL_FALSE, glm::value_ptr(MVP));
+    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "MVP"),            1,  GL_FALSE, glm::value_ptr(MVP));
+    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "worldToView"),    1,  GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "objectToWorld"),  1,  GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(glGetUniformLocation(renderShaderProgram, "viewToClip"),     1,  GL_FALSE, glm::value_ptr(projection));
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);

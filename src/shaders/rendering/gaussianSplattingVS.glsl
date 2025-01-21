@@ -1,5 +1,8 @@
 #version 460 core
 
+#define ALPHA_CUTOFF (1.0f/256.0f)
+#define GAUSSIAN_CUTOFF_SCALE (sqrt(log(1.0f / ALPHA_CUTOFF)))
+
 // Static quad vertex position per-vertex
 layout(location = 0) in vec3 vertexPos;
 
@@ -14,6 +17,10 @@ layout(location = 5) in vec4 gaussianPbr;
 out vec3 out_color;
 
 uniform mat4 MVP;
+uniform mat4 worldToView;	
+uniform mat4 viewToClip;	
+uniform mat4 objectToWorld; 
+
 
 mat3 mat3_cast(vec4 q) {
    mat3 rotMat;
@@ -50,42 +57,53 @@ mat3 mat3_cast(vec4 q) {
 }
 
 
-//float4x4 calcMatrixFromRotationScaleTranslation(vec3 translation, vec4 rot, vec3 scale)
-//{
-//	float3x3 scaleMatrix = float3x3(
-//		float3(scale.x, 0, 0),
-//		float3(0, scale.y, 0),
-//		float3(0, 0, scale.z));
-//
-//	float3x3 rotMatrix = matrixFromQuaternion(rot);
-//
-//	float3x3 wsRotMulScale = scaleMatrix * rotMatrix;
-//
-//	float4x4 rot4x4 =
-//	{
-//		float4(wsRotMulScale[0], 0),
-//		float4(wsRotMulScale[1], 0),
-//		float4(wsRotMulScale[2], 0),
-//		float4(0, 0, 0, 1)
-//	};
-//
-//	float4x4 tr = transpose(float4x4(
-//		float4(1, 0, 0, 0),
-//		float4(0, 1, 0, 0),
-//		float4(0, 0, 1, 0),
-//		float4(translation, 1)
-//	));
-//
-//	return mul(tr, rot4x4);
-//}
+mat4 calcMatrixFromRotationScaleTranslation(vec3 translation, vec4 rot, vec3 scale)
+{
+	mat3 scaleMatrix = mat3(
+		vec3(scale.x, 0, 0),
+		vec3(0, scale.y, 0),
+		vec3(0, 0, scale.z)
+	);
+
+	mat3 rotMatrix = mat3_cast(rot);
+
+	mat3 wsRotMulScale = scaleMatrix * rotMatrix;
+
+	mat4 rot4x4 =
+	{
+		vec4(wsRotMulScale[0], 0),
+		vec4(wsRotMulScale[1], 0),
+		vec4(wsRotMulScale[2], 0),
+		vec4(0, 0, 0, 1)
+	}; //invariant to hlsl -> glsl translation
+
+	mat4 tr = transpose(mat4(
+		vec4(1, 0, 0, 0),
+		vec4(0, 1, 0, 0),
+		vec4(0, 0, 1, 0),
+		vec4(translation, 1)
+	));
+
+	return rot4x4 * tr;
+}
 
 
 void main() {
     // Combine static vertex position with per-instance offset
     vec2 offset = vertexPos.xy;
-    vec4 worldPosition = vec4(vertexPos.xyz * 0.1f + gaussianPosition_ms.xyz, 1.0);
+    vec4 worldPosition = vec4(vertexPos.xyz * exp(gaussianPackedScale.xyz) * GAUSSIAN_CUTOFF_SCALE + gaussianPosition_ms.xyz, 1.0);
+    mat4 splatToLocal = calcMatrixFromRotationScaleTranslation(gaussianPosition_ms.xyz, gaussianQuaternion, exp(gaussianPackedScale.xyz) * GAUSSIAN_CUTOFF_SCALE);
     
-    // Transform the vertex position to clip space
+	mat4 splatToWorld = splatToLocal * objectToWorld;
+	vec3 splatMeanWs = (vec4(gaussianPosition_ms.xyz, 1.0) * splatToWorld).xyz;
+
+	float alphaScale;
+	vec2 resolution = vec2(1080, 720); //!!! TODO: pass as uniform
+
+	//vec3 param = computeConic(splatToWorld, transpose(worldToView), transpose(viewToClip), resolution, alphaScale);
+	//vec2 corner = computeCorner(offset, param, resolution);
+	
+	// Transform the vertex position to clip space
     gl_Position = MVP * worldPosition;
     
     // Pass instance color to fragment shader

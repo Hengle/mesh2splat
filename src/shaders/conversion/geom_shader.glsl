@@ -27,7 +27,7 @@ out vec4 Tangent;
 out vec3 Normal;
 flat out vec4 Quaternion;
 
-
+//not sure why transpose does not work automatically, as it should: https://registry.khronos.org/OpenGL-Refpages/gl4/html/transpose.xhtml
 void transpose2x3(in mat2x3 m, out mat3x2 outputMat) {
     outputMat[0][0] = m[0][0];
     outputMat[1][0] = m[0][1];
