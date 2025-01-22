@@ -4,6 +4,7 @@
 #include "../imGuiUi/ImGuiUi.hpp"
 #include "mesh2SplatHandler.hpp"
 #include "../parsers.hpp"
+#include "../utils/shaderUtils.hpp"
 
 class Renderer
 {
@@ -17,6 +18,7 @@ public:
 	void renderLoop(GLFWwindow* window, ImGuiUI& gui);
 	//For now not using this, will implement a simil scene graph setup later
 	void recordRenderPass();
+	bool updateShadersIfNeeded();
 private:
 	void clearingPrePass(glm::vec4 clearColor);
 	unsigned int getSplatBufferCount(GLuint counterBuffer);
@@ -33,5 +35,10 @@ private:
 	GLuint gaussianBuffer;
 	GLuint drawIndirectBuffer;
 
+	std::unordered_map<std::string, ShaderFileInfo> shaderFiles;
+	std::vector<std::pair<std::string, GLenum>> converterShadersInfo;
+	std::vector<std::pair<std::string, GLenum>> computeShadersInfo;
+	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
+	double lastShaderCheckTime;
 };
 

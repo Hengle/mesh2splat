@@ -1,3 +1,4 @@
+#pragma once
 #include "utils.hpp"
 #include "../parsers.hpp"
 
@@ -41,6 +42,26 @@ void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gauss
 void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
 
 std::string readShaderFile(const char* filePath);
+
+namespace fs = std::experimental::filesystem;
+
+struct ShaderFileInfo {
+    fs::file_time_type lastWriteTime;
+    std::string filePath;
+};
+
+void initializeShaderFileMonitoring(
+    std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
+    std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo
+);
+
+bool shaderFileChanged(const ShaderFileInfo& info);
+
+GLuint reloadShaderProgram(
+    const std::vector<std::pair<std::string, GLenum>>& shaderInfos,
+    GLuint oldProgram);
 
 //Make template function for this and make these one generic
 void setUniform1f(GLuint shaderProgram, std::string uniformName, float uniformValue);

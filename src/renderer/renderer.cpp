@@ -12,9 +12,10 @@ Renderer::Renderer()
     drawIndirectBuffer       = -1;
     normalizedUvSpaceWidth   = 0;
     normalizedUvSpaceHeight  = 0;
+
+    lastShaderCheckTime     = glfwGetTime();
+    initializeShaderFileMonitoring(shaderFiles, converterShadersInfo, computeShadersInfo, rendering3dgsShadersInfo);
 }
-
-
 
 Renderer::~Renderer()
 {
@@ -159,6 +160,23 @@ void Renderer::clearingPrePass(glm::vec4 clearColor)
     glEnable(GL_DEPTH_TEST);
 }
 
+bool Renderer::updateShadersIfNeeded() {
+    for (auto& entry : shaderFiles) {
+        ShaderFileInfo info = entry.second;
+        if (shaderFileChanged(info)) {
+            // Update timestamp
+            info.lastWriteTime = fs::last_write_time(info.filePath);
+
+            this->renderShaderProgram   = reloadShaderProgram(converterShadersInfo,     this->renderShaderProgram);
+            this->computeShaderProgram  = reloadShaderProgram(computeShadersInfo,       this->computeShaderProgram);
+            this->renderShaderProgram   = reloadShaderProgram(rendering3dgsShadersInfo, this->renderShaderProgram);
+
+            return true; //TODO: ideally it should just reload the programs for which that shader is included, need dependency for that
+        }
+    }
+    return false;
+}
+
 //TODO: implement shader hot-reloading
 void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 {
@@ -168,6 +186,12 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        double currentTime = glfwGetTime();
+        if (currentTime - lastShaderCheckTime > 1.0) {
+            gui.setRunConversion(updateShadersIfNeeded());
+            lastShaderCheckTime = currentTime;
+        }
 
         clearingPrePass(gui.getSceneBackgroundColor());
 
@@ -198,6 +222,7 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 
                 gui.setLoadNewMesh(false);
             }
+
 
             if (gui.shouldRunConversion()) {
                 std::string meshFilePath(gui.getFilePath());

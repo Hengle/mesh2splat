@@ -1,5 +1,4 @@
 #pragma once
-
 #include "utils/utils.hpp"
 
 TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight);

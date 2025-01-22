@@ -67,6 +67,96 @@ GLuint createConverterShaderProgram() {
     return program;
 }
 
+//TODO: probably could find way to better generalize this
+void initializeShaderFileMonitoring(
+    std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
+    std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo) {
+
+    shaderFiles["converterVert"]        = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
+    shaderFiles["converterGeom"]        = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
+    shaderFiles["converterFrag"]        = { fs::last_write_time(CONVERTER_FRAG_SHADER_LOCATION),   CONVERTER_FRAG_SHADER_LOCATION };
+    shaderFiles["readerCompute"]        = { fs::last_write_time(TRANSFORM_COMPUTE_SHADER_LOCATION),   TRANSFORM_COMPUTE_SHADER_LOCATION };
+    shaderFiles["renderer3dgsVert"]     = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
+    shaderFiles["renderer3dgsVert"]     = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
+
+    converterShadersInfo = {
+        { CONVERTER_VERTEX_SHADER_LOCATION,     GL_VERTEX_SHADER   },
+        { CONVERTER_GEOM_SHADER_LOCATION,       GL_GEOMETRY_SHADER },
+        { CONVERTER_FRAG_SHADER_LOCATION,       GL_FRAGMENT_SHADER }
+    };
+
+    computeShadersInfo = {
+        { TRANSFORM_COMPUTE_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+    };
+
+    rendering3dgsShadersInfo = {
+        { RENDERER_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
+        { RENDERER_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
+    };
+}
+
+bool shaderFileChanged(const ShaderFileInfo& info) {
+    auto currentWriteTime = fs::last_write_time(info.filePath);
+    return (currentWriteTime != info.lastWriteTime);
+}
+
+GLuint reloadShaderProgram(
+    const std::vector<std::pair<std::string, GLenum>>& shaderInfos,
+    GLuint oldProgram)
+{
+    GLuint newProgram = glCreateProgram();
+    std::vector<GLuint> shaderIDs;
+    shaderIDs.reserve(shaderInfos.size());
+
+    // Compile each shader and attach to the program
+    for (auto& pair : shaderInfos) {
+        std::string filePath = pair.first;
+        GLenum shaderType = pair.second;
+        std::string shaderSource = readShaderFile(filePath.c_str());
+        GLuint shaderID = compileShader(shaderSource.c_str(), shaderType);
+        
+        // If shader compilation failed, clean up and return old program
+        if (!shaderID) {
+            std::cerr << "Failed to compile shader: " << filePath << std::endl;
+            for (GLuint id : shaderIDs) {
+                glDeleteShader(id);
+            }
+            glDeleteProgram(newProgram);
+            return oldProgram;
+        }
+
+        glAttachShader(newProgram, shaderID);
+        shaderIDs.push_back(shaderID);
+    }
+
+    glLinkProgram(newProgram);
+
+    GLint success;
+    glGetProgramiv(newProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        GLchar infoLog[512];
+        glGetProgramInfoLog(newProgram, sizeof(infoLog), nullptr, infoLog);
+        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+
+        for (GLuint shaderID : shaderIDs) {
+            glDeleteShader(shaderID);
+        }
+        glDeleteProgram(newProgram);
+        return oldProgram;
+    }
+
+    for (GLuint shaderID : shaderIDs) {
+        glDeleteShader(shaderID);
+    }
+
+    if (oldProgram != 0) {
+        glDeleteProgram(oldProgram);
+    }
+
+    return newProgram;
+}
 
 
 //TODO: must return the ID for each texture
