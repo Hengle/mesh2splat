@@ -20,6 +20,7 @@ public:
     bool shouldSavePly();
     std::string getFilePath();
     std::string getFilePathParentFolder();
+    std::string getFullFilePathDestination();
     float getGaussianStd();
     int getResolutionTarget();
     int getFormatOption();
@@ -27,6 +28,8 @@ public:
 
     void setLoadNewMesh(bool shouldLoadNewMesh);
     void setRunConversion(bool shouldRunConversionFlag);
+    void setShouldSavePly(bool shouldSavePly);
+
 
 private:
     int resolutionIndex;

@@ -11,6 +11,7 @@ struct GaussianVertex {
     vec4 position;
     vec4 color;
     vec4 scale;
+    vec4 normal;
     vec4 rotation;
     vec4 pbr;
 };
@@ -61,9 +62,11 @@ void main() {
 
     vec4 scale                  = vec4(posAndScaleXData.w, pbrAndScaleY.z, scaleZAndNormalData.x, 1.0);
 
+    //TODO: I could save at least one vec4 by packing the pbr properties in the .w of position and .w of color
     gaussianBuffer.vertices[index].position     = position;
     gaussianBuffer.vertices[index].color        = colorData; 
     gaussianBuffer.vertices[index].scale        = scale; 
+    gaussianBuffer.vertices[index].normal       = normal; 
     gaussianBuffer.vertices[index].rotation     = quaternion; 
-    gaussianBuffer.vertices[index].pbr          = vec4(pbrAndScaleY.xy, 0 ,0); 
+    gaussianBuffer.vertices[index].pbr          = vec4(pbrAndScaleY.xy, 0 , 1); //last one is the validity flag
 }

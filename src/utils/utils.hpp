@@ -116,6 +116,15 @@ struct Gaussian3D {
     MaterialGltf material;
 };
 
+struct GaussianDataSSBO {
+    glm::vec4 position;
+    glm::vec4 color;
+    glm::vec4 scale;
+    glm::vec4 normal;
+    glm::vec4 rotation;
+    glm::vec4 pbr;
+};
+
 struct Face {
     glm::vec3 pos[3];
     glm::vec2 uv[3];
@@ -197,3 +206,5 @@ void computeAndLoadTextureInformation(
     float& metallicFactor, float& roughnessFactor,
     glm::vec3& interpolatedNormal, glm::vec3& outputNormal, glm::vec4& interpolatedTangent
 );
+
+bool shouldSkip(const GaussianDataSSBO& g);

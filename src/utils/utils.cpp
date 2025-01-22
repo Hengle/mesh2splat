@@ -377,4 +377,20 @@ void computeAndLoadTextureInformation(std::map<std::string, std::pair<unsigned c
 
 }
 
-
+bool shouldSkip(const GaussianDataSSBO& g) {
+    bool skip = false;
+    skip |= glm::any(glm::isnan(g.position)) || glm::any(glm::isinf(g.position));
+    skip |= glm::any(glm::isnan(g.color))    || glm::any(glm::isinf(g.color));
+    skip |= glm::any(glm::isnan(g.scale))    || glm::any(glm::isinf(g.scale));
+    skip |= glm::any(glm::isnan(g.normal))   || glm::any(glm::isinf(g.normal));
+    skip |= glm::any(glm::isnan(g.rotation)) || glm::any(glm::isinf(g.rotation));
+    skip |= glm::any(glm::isnan(g.pbr))      || glm::any(glm::isinf(g.pbr));
+    if (skip) return true;
+    
+    return (g.position == glm::vec4(0.0f) &&
+            g.color    == glm::vec4(0.0f) &&
+            g.scale    == glm::vec4(0.0f) &&
+            g.normal   == glm::vec4(0.0f) &&
+            g.rotation == glm::vec4(0.0f) &&
+            g.pbr      == glm::vec4(0.0f));
+}

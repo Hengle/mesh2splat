@@ -1,7 +1,7 @@
 #version 460 core
 
 in vec3 out_color;
-in vec2 uv;
+in vec2 out_uv;
 out vec4 FragColor;
 
 float splatAlpha(vec2 pos)
@@ -13,5 +13,5 @@ float splatAlpha(vec2 pos)
 }
 
 void main() {
-    FragColor = vec4(out_color, 1.0) * splatAlpha(uv);  // Orange color for points
+    FragColor = vec4(out_color, 1.0) * splatAlpha(out_uv);  // Orange color for points
 }

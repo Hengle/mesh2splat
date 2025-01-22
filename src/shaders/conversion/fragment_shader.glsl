@@ -67,7 +67,7 @@ void main() {
         MetallicRoughness = vec2(metalRough.x, metalRough.y);
     }
     else {
-        MetallicRoughness = vec2(0.2f, 0.5f); //Set these defaults from uniforms
+        MetallicRoughness = vec2(0.1f, 0.5f); //Set these defaults from uniforms
     }
 
     vec3 pos = V1 * Barycentric.x + V2 * Barycentric.y + V3 * Barycentric.z;

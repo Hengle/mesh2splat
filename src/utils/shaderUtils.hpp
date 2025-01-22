@@ -36,9 +36,7 @@ void setupTransformFeedback(size_t bufferSize, GLuint& feedbackBuffer, GLuint& f
 
 GLuint* setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int height);
 
-//Make arguments into a struct its too many parameters to pass and not readable...
-
-void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height, bool print, bool check);
+void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
 
 void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
 

@@ -417,135 +417,44 @@ static void writeAttachmentToPNG(const std::vector<float>& pixels, int width, in
     stbi_write_png(filename.c_str(), width, height, channels, imageData.data(), width * channels);
 }
 
+void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount)
+{
+    glFinish();
+    //TODO: Should read this structs from where they are declared initally or common file, not repeating it like this
+    struct DrawArraysIndirectCommand {
+        GLuint count;        
+        GLuint instanceCount;    
+        GLuint first;        
+        GLuint baseInstance;
+    };
 
-void retrieveMeshFromFrameBuffer(std::vector<Gaussian3D>& gaussians_3D_list, GLuint& framebuffer, unsigned int width, unsigned int height, bool print, bool check) {
-    glFinish();  // Ensure all OpenGL commands are finished 
-    unsigned int frameBufferStride = 4;
-
-    std::vector<float> pixels0(width * height * frameBufferStride); // For RGBA32F
-    std::vector<float> pixels1(width * height * frameBufferStride); // For RGBA32F
-    std::vector<float> pixels2(width * height * frameBufferStride); // For RGBA32F
-    std::vector<float> pixels3(width * height * frameBufferStride); // For RGBA32F
-    std::vector<float> pixels4(width * height * frameBufferStride); // For RGBA32F
-
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels0.data());
-
-    glReadBuffer(GL_COLOR_ATTACHMENT1);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels1.data());
-
-    glReadBuffer(GL_COLOR_ATTACHMENT2);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels2.data());
-
-    glReadBuffer(GL_COLOR_ATTACHMENT3);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels3.data());
-
-    glReadBuffer(GL_COLOR_ATTACHMENT4);
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels4.data());
-
-    writeAttachmentToPNG(pixels0, width, height, "attachment0.png");
-    writeAttachmentToPNG(pixels1, width, height, "attachment1.png");
-    writeAttachmentToPNG(pixels2, width, height, "attachment2.png");
-    writeAttachmentToPNG(pixels3, width, height, "attachment3.png");
-    writeAttachmentToPNG(pixels4, width, height, "attachment4.png");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    int index = 0;
-    for (int i = 0; i < width * height; ++i) {
-        // Extract data from the first texture
-        float GaussianPosition_x    = pixels0[frameBufferStride * i + 0];
-        float GaussianPosition_y    = pixels0[frameBufferStride * i + 1];
-        float GaussianPosition_z    = pixels0[frameBufferStride * i + 2];
-        float Scale_x               = pixels0[frameBufferStride * i + 3];
-        //std::cout << GaussianPosition_x << " " << GaussianPosition_y << " " << GaussianPosition_z << std::endl;
-        if (check && (isnan(GaussianPosition_x) || isnan(GaussianPosition_y) || isnan(GaussianPosition_z)) )
-        {
-            //printf("! Warning !  Pos has nan values\n EXITING...");
-            continue;//exit(1);
-        }
-
-        // Extract data from the second texture
-        float Scale_z   = pixels1[frameBufferStride * i + 0];
-        if (print)
-        {
-            std::cout << Scale_x << " " << Scale_z << std::endl;
-        }
-        if (check && (isnan(Scale_x) || isnan(Scale_z)))
-        {
-            //printf("! Warning !  Scale has nan values\n EXITING...");
-            continue;//exit(1);
-        }
-
-        float Normal_x  = pixels1[frameBufferStride * i + 1];
-        float Normal_y  = pixels1[frameBufferStride * i + 2];
-        float Normal_z  = pixels1[frameBufferStride * i + 3];
-        
-        if (check && (isnan(Normal_x) || isnan(Normal_y) || isnan(Normal_z)))
-        {
-            //printf("! Warning !  Normal has nan values\nMake sure the 3D mesh was exported including also the tangent of each vertex normal\nEXITING...");
-            continue;//exit(1);
-        }
-        
-        // Extract data from the third texture
-        float Quaternion_x  = pixels2[frameBufferStride * i + 0];
-        float Quaternion_y  = pixels2[frameBufferStride * i + 1];
-        float Quaternion_z  = pixels2[frameBufferStride * i + 2];
-        float Quaternion_w  = pixels2[frameBufferStride * i + 3];
-
-        if (check && (isnan(Quaternion_x) || isnan(Quaternion_y) || isnan(Quaternion_z) || isnan(Quaternion_w)))
-        {
-            //printf("! Warning !  Quaternion has nan values\n EXITING...");
-            continue;//exit(1);
-        }
-        
-
-        float Rgba_r = pixels3[frameBufferStride * i + 0];
-        float Rgba_g = pixels3[frameBufferStride * i + 1];
-        float Rgba_b = pixels3[frameBufferStride * i + 2];
-        float Rgba_a = pixels3[frameBufferStride * i + 3];
-        if (check && (isnan(Rgba_r) || isnan(Rgba_g) || isnan(Rgba_b) || isnan(Rgba_a)))
-        {
-            //printf("! Warning !  Color has nan values\n EXITING...");
-            continue;//exit(1);
-        }
-
-        float metallic  = pixels4[frameBufferStride * i + 0];
-        float roughness = pixels4[frameBufferStride * i + 1];
-        float Scale_y   = pixels4[frameBufferStride * i + 2];
-
-        if (check && (isnan(metallic) || isnan(roughness)))
-        {
-            //printf("! Warning !  MetallicRoughness has nan values\n EXITING...");
-            continue;//exit(1);
-        }
-
-        if ((GaussianPosition_x == 0.0f && GaussianPosition_y == 0.0f && GaussianPosition_z == 0.0f) || (Scale_x == 0.0f))
-        {
-            continue;
-        }
-        index++;
-        Gaussian3D gauss;
-
-        gauss.material.metallicFactor = metallic;
-        gauss.material.roughnessFactor = roughness;
-        gauss.normal = glm::vec3(Normal_x, Normal_y, Normal_z);
-        gauss.opacity = Rgba_a;
-        gauss.position = glm::vec3(GaussianPosition_x, GaussianPosition_y, GaussianPosition_z);
-        gauss.rotation = glm::vec4(Quaternion_x, Quaternion_y, Quaternion_z, Quaternion_w); //Try swizzling these around, its always a mess....
-        gauss.scale = glm::vec3(Scale_x, Scale_y, Scale_z);
-        gauss.sh0 = getShFromColor(linear_to_srgb_float(glm::vec3(Rgba_r, Rgba_g, Rgba_b)));
-        gaussians_3D_list.push_back(gauss);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, indirectDrawCommandBuffer);
+    DrawArraysIndirectCommand* drawCmd = static_cast<DrawArraysIndirectCommand*>(
+        glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT)
+    );
+    if (!drawCmd) {
+        std::cerr << "Failed to map drawCommandBuffer." << std::endl;
+        return;
     }
-    std::cout << "TOT num gaussians: " << index << std::endl;
+    gaussianCount = drawCmd->instanceCount;
+    //glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+
+    // Bind and map the Gaussian buffer to read vertex data
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
+    size_t gaussianBufferSize = gaussianCount * sizeof(glm::vec4) * 6; //TODO: ISSUE6
+
+    gaussians = static_cast<GaussianDataSSBO*>(
+        glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, gaussianBufferSize, GL_MAP_READ_BIT));
+
 }
 
 void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
 {
     glGenBuffers(1, &(*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*gaussianBuffer));
-    glBufferData(GL_SHADER_STORAGE_BUFFER, width * height * sizeof(glm::vec4) * 5, nullptr, GL_STATIC_DRAW);
+    GLsizeiptr bufferSize = width * height * sizeof(glm::vec4) * 6;
+    //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
     unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -555,7 +464,6 @@ GLuint createRendererShaderProgram()
 {
     std::string vertexShaderSource          = readShaderFile(RENDERER_VERTEX_SHADER_LOCATION);
     std::string fragmentShaderSource        = readShaderFile(RENDERER_FRAGMENT_SHADER_LOCATION);
-
 
     GLuint vertexShader         = compileShader(vertexShaderSource.c_str(),         GL_VERTEX_SHADER);
     GLuint fragmentShader       = compileShader(fragmentShaderSource.c_str(),       GL_FRAGMENT_SHADER);
@@ -579,9 +487,9 @@ GLuint createRendererShaderProgram()
 
 GLuint createComputeShaderProgram()
 {
-    std::string computeShaderSource          = readShaderFile(TRANSFORM_COMPUTE_SHADER_LOCATION);
+    std::string computeShaderSource         = readShaderFile(TRANSFORM_COMPUTE_SHADER_LOCATION);
 
-    GLuint computeShader         = compileShader(computeShaderSource.c_str(),         GL_COMPUTE_SHADER);
+    GLuint computeShader                    = compileShader(computeShaderSource.c_str(),         GL_COMPUTE_SHADER);
 
     GLuint program = glCreateProgram();
     glAttachShader(program, computeShader);

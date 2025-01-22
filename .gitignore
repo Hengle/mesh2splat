@@ -405,3 +405,4 @@ FodyWeavers.xsd
 ./*.png
 *.zip
 *.tga
+*.ply

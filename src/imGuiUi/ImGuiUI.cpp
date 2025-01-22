@@ -95,9 +95,11 @@ bool ImGuiUI::shouldSavePly() { return savePly; };
 
 void ImGuiUI::setLoadNewMesh(bool shouldLoadNewMesh) { loadNewMesh = shouldLoadNewMesh; };
 void ImGuiUI::setRunConversion(bool shouldRunConversionFlag) { runConversionFlag = shouldRunConversionFlag; };
+void ImGuiUI::setShouldSavePly(bool shouldSavePly) { savePly = shouldSavePly; };
 
 std::string ImGuiUI::getFilePath() { return std::string(filePathBuffer); };
 std::string ImGuiUI::getFilePathParentFolder(){return parent_folder;};
+std::string ImGuiUI::getFullFilePathDestination() { return std::string(destinationFilePathBuffer); };
 int ImGuiUI::getFormatOption() { return formatOptions[formatIndex]; };
 glm::vec4 ImGuiUI::getSceneBackgroundColor() { return sceneBackgroundColor; };
 

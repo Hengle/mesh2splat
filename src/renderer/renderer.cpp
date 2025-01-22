@@ -78,9 +78,10 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     glUseProgram(renderShaderProgram);
 
-    //TODO: this will work once storting is working
-    //glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //TODO: this will work once sorting is working
+    glEnable(GL_BLEND);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendEquation(GL_FUNC_ADD);
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -134,9 +135,9 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, adn we need to free the data to avoid
     // memory leak. Could use a flag to check if the buffer was freed or not
-    unsigned int stride = sizeof(glm::vec4) * 5;
+    unsigned int stride = sizeof(glm::vec4) * 6; //TODO: ISSUE6 (check for it)
     
-    for (int i = 1; i <= 5; ++i) {
+    for (int i = 1; i <= 6; ++i) {
         glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec4) * (i - 1)));
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);
@@ -147,6 +148,8 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glDrawArraysIndirect(GL_TRIANGLES, 0); //instance parameters set in framBufferReaderCS.glsl
 
     glBindVertexArray(0);
+    glDisable(GL_BLEND);
+
 }
 	
 void Renderer::clearingPrePass(glm::vec4 clearColor)
@@ -162,6 +165,7 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
     //Yeah not greates setup, the logic itself should not probably reside in the gui, but good enough like this.
     //Should implement the concept of a render pass rather than having a specialized class handle one type of pass
     //TODO: make render passes and logic handling more modular, this is very fixed and wobbly
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -210,13 +214,18 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
                 gui.setRunConversion(false);
             }
 
-            if (gui.shouldSavePly() && gui.getFilePathParentFolder().size() > 0)
+            if (gui.shouldSavePly() && !gui.getFilePathParentFolder().empty())
             {
-                std::vector<Gaussian3D> gaussian_3d_list;
-                savePlyVector(std::string(gui.getFilePathParentFolder()), gaussian_3d_list, gui.getFormatOption());
+                GaussianDataSSBO* gaussianData = nullptr;
+                unsigned int gaussianCount;
+                read3dgsDataFromSsboBuffer(drawIndirectBuffer, gaussianBuffer, gaussianData, gaussianCount);
+                if (gaussianData) {
+                    writeBinaryPlyStandardFormatFromSSBO(gui.getFullFilePathDestination(), gaussianData, gaussianCount);
+                }
+                gui.setShouldSavePly(false);
             }
 
-            //TODO: scen graph related --> should have per render pass a vector of optional parameters and a simple blackboard
+            //TODO: should have per render passes class in renderer and a scene object + a vector of optional parameters and a blackboard
             run3dgsRenderingPass(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gui.getGaussianStd());
         }
 

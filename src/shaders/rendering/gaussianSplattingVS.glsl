@@ -7,16 +7,17 @@
 // Static quad vertex position per-vertex
 layout(location = 0) in vec3 vertexPos;
 
-// Per-instance attributes
+// Per-instance (quad) attributes
 layout(location = 1) in vec4 gaussianPosition_ms; //model space  
 layout(location = 2) in vec4 gaussianColor;
 layout(location = 3) in vec4 gaussianPackedScale;
-layout(location = 4) in vec4 gaussianQuaternion;
-layout(location = 5) in vec4 gaussianPbr;
+layout(location = 4) in vec4 gaussianNormal;
+layout(location = 5) in vec4 gaussianQuaternion;
+layout(location = 6) in vec4 gaussianPbr;
 
 // You can add more per-instance attributes at locations 3, 4, 5 as needed.
 out vec3 out_color;
-out vec2 uv;
+out vec2 out_uv;
 
 uniform mat4 u_MVP;
 uniform mat4 u_worldToView;	
@@ -193,14 +194,11 @@ void main() {
 
 	vec3 param  = computeConic(splatToWorld, transpose(u_worldToView), transpose(u_viewToClip), u_resolution, alphaScale);
 	vec2 corner = computeCorner(offset, param, u_resolution);
-	//corner /= 2.0;
+	corner /= 2.0;
 	vec4 splatClipPos = u_MVP * vec4(splatMeanWs, 1.0f);
 	gl_Position = splatClipPos + vec4(corner * splatClipPos.w * GAUSSIAN_CUTOFF_SCALE, 0, 0);
 
-	// Transform the vertex position to clip space
-    //gl_Position = MVP * worldPosition;
-    
-    // Pass instance color to fragment shader
+    // Pass instance color and uv to fragment shader
     out_color = gaussianColor.rgb;
-	uv = offset;
+	out_uv = offset;
 }

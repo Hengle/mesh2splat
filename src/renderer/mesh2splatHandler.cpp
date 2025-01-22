@@ -38,12 +38,13 @@ void Mesh2splatConverterHandler::runConversionPass(const std::string& meshFilePa
                    std::vector<std::pair<Mesh, GLMesh>>& dataMeshAndGlMesh,
                    int normalizedUvSpaceWidth, int normalizedUvSpaceHeight,
                    std::map<std::string, TextureDataGl>& textureTypeMap,
-                   GLuint& gaussianBuffer, GLuint &drawIndirectBuffer) 
+                   GLuint& gaussianBuffer, GLuint &drawIndirectBuffer)
 {
     //TODO: If model has many meshes this is probably not the most efficient approach.
     //For how the mesh2splat method currently works, we still need to generate a separate frame and drawbuffer per mesh, but the gpu conversion
     //could be done via batch rendering (I guess (?))
-
+    
+    //If we are running the conversion pass means the currently existing framebuffer with respective draw buffers should be deleted before the conversion passes
     for (auto& mesh : dataMeshAndGlMesh) {
         Mesh meshData = std::get<0>(mesh);
         GLMesh meshGl = std::get<1>(mesh);
@@ -75,10 +76,9 @@ void Mesh2splatConverterHandler::runConversionPass(const std::string& meshFilePa
         // not doing so results in wasted work (wherever texture map has no data), but need to handle fragment syncronization. For now this is ok.
         runComputePass(computeShaderProgram, drawBuffers, gaussianBuffer, drawIndirectBuffer, resolution);
 
-        // Cleanup framebuffer and drawbuffers
         const int numberOfTextures = 5;
         glDeleteTextures(numberOfTextures, drawBuffers); 
-        delete[] drawBuffers;                            
+        delete[] drawBuffers;  //TODO: honestly probably not necessary                          
         glDeleteFramebuffers(1, &framebuffer);
     }
 

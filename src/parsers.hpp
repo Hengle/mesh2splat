@@ -10,9 +10,10 @@ void parseGltfFileToMesh(const std::string& filename, std::string base_folder, s
 
 void writePbrPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
 
-void writeBinaryPLY_lit(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
+void writeBinaryPlyLit(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
 
-void writeBinaryPLY_standard_format(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
+void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
+void writeBinaryPlyStandardFormatFromSSBO(const std::string& filename, GaussianDataSSBO* gaussians, unsigned int gaussianCount);
 
 void savePlyVector(std::string outputFileLocation, std::vector<Gaussian3D> gaussians_3D_list, unsigned int format);
 
