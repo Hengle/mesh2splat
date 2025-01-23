@@ -112,39 +112,6 @@ void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }*/
 
-
-void printDrawArraysIndirectData(GLuint drawIndirectBuffer)
-{
-    // Bind the DRAW_INDIRECT_BUFFER
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
-    struct DrawArraysIndirectCommand {
-        GLuint count;        // Number of vertices to draw.
-        GLuint instanceCount;    // Number of instances.
-        GLuint first;        // Starting index in the vertex buffer.
-        GLuint baseInstance; // Base instance for instanced rendering.
-    };
-    // Map just enough space for one DrawArraysIndirectCommand
-    DrawArraysIndirectCommand* cmd = static_cast<DrawArraysIndirectCommand*>(
-        glMapBufferRange(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT)
-    );
-
-    if (!cmd) {
-        std::cerr << "Failed to map the indirect buffer." << std::endl;
-        return;
-    }
-
-    // Print out the fields
-    std::cout << "Indirect Draw Data:" << std::endl;
-    std::cout << "  count         = " << cmd->count         << std::endl;
-    std::cout << "  instanceCount = " << cmd->instanceCount << std::endl;
-    std::cout << "  first         = " << cmd->first         << std::endl;
-    std::cout << "  baseInstance  = " << cmd->baseInstance  << std::endl;
-
-    // Unmap the buffer when done
-    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
-    // You could optionally glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0) here, but it's not strictly necessary
-}
-
 void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss)
 {
     if (gaussianBuffer == static_cast<GLuint>(-1) ||
@@ -159,9 +126,8 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    //The correct one, from slide deck of Bernard K.
 	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
@@ -223,12 +189,23 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     
     GLint bufferSize = 0;
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-    size_t gaussianCount = bufferSize / sizeof(GaussianDataSSBO);
-    std::vector<GaussianDataSSBO> gaussians(gaussianCount);
-    glGetBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, gaussians.data());
-    // Insert a fence sync after buffer data retrieval
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
+    //TODO: should not need to re-define this buffer each time lol
+    struct DrawArraysIndirectCommand {
+        GLuint count;        // Number of vertices to draw.
+        GLuint instanceCount;    // Number of instances.
+        GLuint first;        // Starting index in the vertex buffer.
+        GLuint baseInstance; // Base instance for instanced rendering.
+    };
+    DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
+        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
+    );
+    unsigned int validCount = cmd->instanceCount;
+    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+    std::vector<GaussianDataSSBO> gaussians(validCount);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, validCount * sizeof(GaussianDataSSBO), gaussians.data());
 
-    //TODO: Sort the gaussian, will need to add a radix sort compute pass here
+    //TODO: JUST MISSING RADIX SORT COMPUTE PASSES
 
     // Transform Gaussian positions to view space
     auto viewSpaceDepth = [&](const GaussianDataSSBO& g) -> float {
@@ -246,10 +223,6 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
              gaussians.size() * sizeof(GaussianDataSSBO), 
              gaussians.data(), 
              GL_DYNAMIC_DRAW);
-
-    std::cout << "Count from sorted gaussians data: " << gaussians.size() << std::endl;
-    printDrawArraysIndirectData(drawIndirectBuffer);
-    std::cout << "----------------------------------------" << std::endl;
 
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, adn we need to free the data to avoid
