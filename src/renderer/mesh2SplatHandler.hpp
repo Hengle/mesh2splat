@@ -21,7 +21,7 @@ public:
 private:
     struct DrawArraysIndirectCommand {
         GLuint count;        // Number of vertices to draw.
-        GLuint primCount;    // Number of instances.
+        GLuint instanceCount;    // Number of instances.
         GLuint first;        // Starting index in the vertex buffer.
         GLuint baseInstance; // Base instance for instanced rendering.
     };

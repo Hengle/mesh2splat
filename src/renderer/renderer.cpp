@@ -68,6 +68,82 @@ unsigned int Renderer::getSplatBufferCount(GLuint counterBuffer)
     }
     return splatCount;
 }
+/*
+void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
+{
+    // 1. Bind the buffer
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
+
+    // 2. Determine how many bytes it holds
+    GLint bufferSize = 0;
+    glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+
+    // 3. Map the buffer range for reading
+    //    (You could also use GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT, etc. 
+    //     but here we’ll keep it simple.)
+    const GaussianDataSSBO* mapped = static_cast<const GaussianDataSSBO*>(
+        glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, bufferSize, GL_MAP_READ_BIT)
+    );
+    if (!mapped) {
+        std::cerr << "Failed to map Gaussian SSBO for reading.\n";
+        return;
+    }
+
+    // 4. Calculate how many Gaussians are actually in this buffer
+    size_t gaussianCount = bufferSize / sizeof(GaussianDataSSBO);
+
+    // 5. Print some or all of them
+    size_t printCount = std::min<size_t>(gaussianCount, maxPrintCount);
+    std::cout << "GaussianBuffer has " << gaussianCount << " entries. Printing first "
+              << printCount << ":\n";
+    
+    for (size_t i = 0; i < printCount; ++i) {
+        const GaussianDataSSBO& g = mapped[i];
+        std::cout << "Index " << i << ": "
+                  << "pos(" << g.position.x << ", " << g.position.y << ", " << g.position.z << ", " << g.position.w << "), "
+                  << "col(" << g.color.x << ", " << g.color.y << ", " << g.color.z << ", " << g.color.w << "), "
+                  << "scale(" << g.scale.x << ", " << g.scale.y << ", " << g.scale.z << ", " << g.scale.w << ")\n"
+                  << "normal(" << g.normal.x << ", " << g.normal.y << ", " << g.normal.z << ", " << g.normal.w << "), "
+                  << "rotation(" << g.rotation.x << ", " << g.rotation.y << ", " << g.rotation.z << ", " << g.rotation.w << "), "
+                  << "pbr(" << g.pbr.x << ", " << g.pbr.y << ", " << g.pbr.z << ", " << g.pbr.w << ")\n";
+    }
+
+    // 6. Unmap the buffer when done
+    glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+}*/
+
+
+void printDrawArraysIndirectData(GLuint drawIndirectBuffer)
+{
+    // Bind the DRAW_INDIRECT_BUFFER
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
+    struct DrawArraysIndirectCommand {
+        GLuint count;        // Number of vertices to draw.
+        GLuint instanceCount;    // Number of instances.
+        GLuint first;        // Starting index in the vertex buffer.
+        GLuint baseInstance; // Base instance for instanced rendering.
+    };
+    // Map just enough space for one DrawArraysIndirectCommand
+    DrawArraysIndirectCommand* cmd = static_cast<DrawArraysIndirectCommand*>(
+        glMapBufferRange(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT)
+    );
+
+    if (!cmd) {
+        std::cerr << "Failed to map the indirect buffer." << std::endl;
+        return;
+    }
+
+    // Print out the fields
+    std::cout << "Indirect Draw Data:" << std::endl;
+    std::cout << "  count         = " << cmd->count         << std::endl;
+    std::cout << "  instanceCount = " << cmd->instanceCount << std::endl;
+    std::cout << "  first         = " << cmd->first         << std::endl;
+    std::cout << "  baseInstance  = " << cmd->baseInstance  << std::endl;
+
+    // Unmap the buffer when done
+    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+    // You could optionally glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0) here, but it's not strictly necessary
+}
 
 void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss)
 {
@@ -171,7 +247,11 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
              gaussians.data(), 
              GL_DYNAMIC_DRAW);
 
-    
+    std::cout << "Count from sorted gaussians data: " << gaussians.size() << std::endl;
+    printDrawArraysIndirectData(drawIndirectBuffer);
+    std::cout << "----------------------------------------" << std::endl;
+
+
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, adn we need to free the data to avoid
     // memory leak. Could use a flag to check if the buffer was freed or not
     unsigned int stride = sizeof(glm::vec4) * 6; //TODO: ISSUE6 (check for it)
@@ -183,8 +263,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     }
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
-
-    glFinish();
+    
     glDrawArraysIndirect(GL_TRIANGLES, 0); //instance parameters set in framBufferReaderCS.glsl
 
     glBindVertexArray(0);

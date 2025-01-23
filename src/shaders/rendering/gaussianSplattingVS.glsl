@@ -75,12 +75,17 @@ void computeCov3D(vec4 quat, vec3 scales, out mat3 sigma3d) {
 };
 
 void main() {
-
+	//I store a validity flag here
+	if (gaussianPbr.w != 1) {
+		gl_Position = vec4(2, 2, 0, 1);
+		return;
+	}
+	
 	mat3 cov3d;
 
 	//vec3 gaussianWorld = u_objectToWorld * vec4(gaussianPosition_ms.xyz, 1);
 	//TODO: I am technically having to log and then exp the same scale values along the pipeline, but whatever
-	computeCov3D(gaussianQuaternion, vec3(exp(gaussianPackedScale.xy), max(exp(gaussianPackedScale.x), exp(gaussianPackedScale.y))), cov3d);
+	computeCov3D(gaussianQuaternion, exp(gaussianPackedScale.xyz), cov3d);
 	vec4 gaussian_vs = u_worldToView * vec4(gaussianPosition_ms.xyz, 1);
 
 	vec4 pos2dHom = u_viewToClip * gaussian_vs;
@@ -100,10 +105,10 @@ void main() {
 	float tx = min(limx, max(-limx, txtz)) * gaussian_vs.z;
 	float ty = min(limy, max(-limy, tytz)) * gaussian_vs.z; 
 
-	if (any(greaterThan(abs(pos2dHom.xyz), vec3(1.3)))) {
-		gl_Position = vec4(-100, -100, -100, 1);
-		return;	
-	}
+	//if (any(greaterThan(abs(pos2dHom.xyz), vec3(1.3)))) {
+	//	gl_Position = vec4(2, 2, 0, 1);
+	//	return;	
+	//}
 
 	//Jacobian of affine approximation of projective transformation
 	mat3 J = mat3(
@@ -121,11 +126,9 @@ void main() {
 
 	float det = determinant(mat2(cov2d));
 	if (det == 0.0f){
-		gl_Position = vec4(10000.f, 10000.f, 10000.f, 10000.f);
-		return;
+		gl_Position = vec4(2, 2, 0, 1);
 	}
 	float det_inv = 1.f / det;
-
 
 	vec2 quadwh_scr = vec2(3.f * sqrt(cov2d[0][0]), 3.f * sqrt(cov2d[1][1]));
 	vec2 quadwh_ndc = quadwh_scr / wh * 2; //HMM

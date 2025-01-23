@@ -21,7 +21,7 @@ layout(std430, binding = 5) buffer GaussianBuffer {
     GaussianVertex vertices[];
 } gaussianBuffer;
 
-layout(std430, binding = 6) buffer DrawCommand {
+layout(std430, binding = 6) writeonly buffer DrawCommand {
     uint count;
     uint instanceCount;
     uint first;
@@ -45,7 +45,7 @@ void main() {
 
     vec4 posAndScaleXData       = texelFetch(texPositionAndScaleX, pix, 0);
 
-    if (posAndScaleXData == vec4(0, 0, 0, 0)) return; //TOOD: naive check
+    if (posAndScaleXData == vec4(0, 0, 0, 0)) return; //TOOD: naive check, find better way
 
     uint index      = atomicAdd(drawElementsIndirectCommand.instanceCount, 1);
 
