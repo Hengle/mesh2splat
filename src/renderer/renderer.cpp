@@ -88,9 +88,9 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
-    float fov = 50.0f;
+    float fov = 90.0f;
     float closePlane = 0.01f;
-    float farPlane = 250.0f;
+    float farPlane = 100.0f;
     glm::mat4 projection = glm::perspective(glm::radians(fov),
                                             (float)width / (float)height,
                                             closePlane, farPlane);
@@ -179,6 +179,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
 
+    glFinish();
     glDrawArraysIndirect(GL_TRIANGLES, 0); //instance parameters set in framBufferReaderCS.glsl
 
     glBindVertexArray(0);
