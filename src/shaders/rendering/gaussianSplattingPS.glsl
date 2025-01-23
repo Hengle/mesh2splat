@@ -1,17 +1,20 @@
-#version 460 core
+#version 430 core
 
 in vec3 out_color;
+in float out_opacity;
+in vec3 out_conic;
 in vec2 out_uv;
+
 out vec4 FragColor;
 
 float splatAlpha(vec2 pos)
 {
-	float halcyonConstantCheckUpdatedCode = 5.55;
+    float halcyonConstant = 5.55;
 
-	float power = -(dot(pos, pos)) * halcyonConstantCheckUpdatedCode;
-	return clamp(exp(power), 0.0, 1.0);
+    float power = -0.5 * (dot(pos, pos)) * halcyonConstant;
+    return clamp(exp(power), 0.0, 1.0);
 }
 
-void main() {
-    FragColor = vec4(out_color, 1.0) * splatAlpha(out_uv);  // Orange color for points
+void main() {			
+    FragColor = vec4(out_color, 1.0) * splatAlpha(out_uv);
 }

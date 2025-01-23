@@ -1,5 +1,6 @@
 #version 460 core
 
+//TODO: change naming to u_
 layout(binding = 0) uniform sampler2D texPositionAndScaleX;  
 layout(binding = 1) uniform sampler2D scaleZAndNormal;
 layout(binding = 2) uniform sampler2D rotationAsQuat;

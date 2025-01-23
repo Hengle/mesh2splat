@@ -38,8 +38,7 @@ void Renderer::initializeOpenGLState() {
     //glBlendEquation(GL_FUNC_ADD);
 
     //glEnable(GL_CULL_FACE);
-    //glCullFace(GL_BACK);
-    //glFrontFace(GL_CCW);
+    //glCullFace(GL_FRONT);
 
     //glEnable(GL_MULTISAMPLE);
 }
@@ -80,16 +79,18 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glUseProgram(renderShaderProgram);
 
     //TODO: this will work once sorting is working
-    glEnable(GL_BLEND);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);
+	glEnable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+    //glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+    //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
-    float fov = 45.0f;
-    float closePlane = 0.1f;
-    float farPlane = 200.0f;
+    float fov = 50.0f;
+    float closePlane = 0.01f;
+    float farPlane = 250.0f;
     glm::mat4 projection = glm::perspective(glm::radians(fov),
                                             (float)width / (float)height,
                                             closePlane, farPlane);
@@ -104,16 +105,21 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glm::mat4 model = glm::mat4(1.0);
     glm::mat4 MVP = projection * view * model;
 
+    float htany = tan(glm::radians(fov) / 2);
+    float htanx = htany / height * width;
+    float focal_z = height / (2 * htany);
+    glm::vec3 hfov_focal = glm::vec3(htanx, htany, focal_z);
+
     //Probably better with indexing, may save some performance
     std::vector<float> quadVertices = {
         // Tr1
-        -1.0f, -1.0f, 0.0f,
-         -1.0f, 1.0f, 0.0f,
-         1.0f,  1.0f, 0.0f,
+        -1.0f, -1.0f,   0.0f,
+         -1.0f, 1.0f,   0.0f,
+         1.0f,  1.0f,   0.0f,
         // Tr2 
          -1.0f,  -1.0f, 0.0f,
-        1.0f,  1.0f, 0.0f,
-        1.0f, -1.0f, 0.0f,
+        1.0f,   1.0f,   0.0f,
+        1.0f,   -1.0f,  0.0f,
     };
 
     glBindVertexArray(pointsVAO);
@@ -129,11 +135,38 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     setUniformMat4(renderShaderProgram, "u_objectToWorld", model);
     setUniformMat4(renderShaderProgram, "u_viewToClip", projection);
     setUniform2f(renderShaderProgram,   "u_resolution", glm::ivec2(width, height));
+    setUniform3f(renderShaderProgram,   "u_hfov_focal", hfov_focal);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
+
+    GLint bufferSize = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+    size_t gaussianCount = bufferSize / sizeof(GaussianDataSSBO);
+    std::vector<GaussianDataSSBO> gaussians(gaussianCount);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, gaussians.data());
+    
+    //TODO: Sort the gaussian, will need to add a radix sort compute pass here
+
+    // Transform Gaussian positions to view space
+    auto viewSpaceDepth = [&](const GaussianDataSSBO& g) -> float {
+        glm::vec4 viewPos = view * glm::vec4(g.position.x,g.position.y, g.position.z, 1.0);
+        return viewPos.z; // Use z-value for depth sorting
+    };
+
+    std::sort(gaussians.begin(), gaussians.end(),
+              [&](const GaussianDataSSBO& a, const GaussianDataSSBO& b) {
+                  return viewSpaceDepth(a) > viewSpaceDepth(b);
+              });
+    
+    //glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
+    glBufferData(GL_ARRAY_BUFFER, 
+             gaussians.size() * sizeof(GaussianDataSSBO), 
+             gaussians.data(), 
+             GL_DYNAMIC_DRAW);
+
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, adn we need to free the data to avoid
     // memory leak. Could use a flag to check if the buffer was freed or not
     unsigned int stride = sizeof(glm::vec4) * 6; //TODO: ISSUE6 (check for it)
@@ -150,14 +183,13 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     glBindVertexArray(0);
     glDisable(GL_BLEND);
-
 }
 	
 void Renderer::clearingPrePass(glm::vec4 clearColor)
 {
-    glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 }
 
 bool Renderer::updateShadersIfNeeded() {

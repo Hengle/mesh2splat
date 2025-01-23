@@ -7,6 +7,8 @@
 #include <vector>
 #include <glm.hpp>
 #include <gtc/type_ptr.hpp>
+
+
 #include <map>
 #include <iostream>
 #include <unordered_map>
@@ -23,6 +25,7 @@
 #define EMPTY_TEXTURE "empty_texture"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <gtx/string_cast.hpp>
+#include <gtx/norm.hpp>
 #include "params.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
