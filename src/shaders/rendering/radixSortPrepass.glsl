@@ -1,7 +1,7 @@
 #version 460 core
 
 layout(std430, binding = 0) buffer GaussiansIn {
-    vec4 data[]; // data[ i*6 + 0 ] = position, data[ i*6 + 1 ] = color, ...
+    vec4 data[];
 };
 
 layout(std430, binding = 1) buffer Keys {

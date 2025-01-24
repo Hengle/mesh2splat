@@ -571,12 +571,12 @@ void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gauss
 void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
 {
     glGenBuffers(1, &(*gaussianBuffer));
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*gaussianBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, *gaussianBuffer);
     //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
     GLsizeiptr bufferSize = width * height * sizeof(glm::vec4) * 6;
     glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
     unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*gaussianBuffer));
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, *gaussianBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 

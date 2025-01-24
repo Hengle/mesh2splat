@@ -119,11 +119,11 @@ void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
     size_t gaussianCount = bufferSize / sizeof(GaussianDataSSBO);
 
     // 5. Print some or all of them
-    size_t printCount = std::min<size_t>(gaussianCount, maxPrintCount);
+    size_t printCount = std::min<size_t>(gaussianCount, gaussianCount);
     std::cout << "GaussianBuffer has " << gaussianCount << " entries. Printing first "
               << printCount << ":\n";
     
-    for (size_t i = 0; i < printCount; ++i) {
+    for (size_t i = 0; i < printCount; i+=1000) {
         const GaussianDataSSBO& g = mapped[i];
         std::cout << "Index " << i << ": "
                   << "pos(" << g.position.x << ", " << g.position.y << ", " << g.position.z << ", " << g.position.w << "), "
@@ -220,9 +220,11 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
         GLuint first;        // Starting index in the vertex buffer.
         GLuint baseInstance; // Base instance for instanced rendering.
     };
+
     DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
         GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
     );
+
     unsigned int validCount = cmd->instanceCount;
     glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 
@@ -231,7 +233,6 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gaussianBuffer);
-    //debugPrintGaussians(gaussianBuffer, 10000);
     setUniformMat4(radixSortPrepassProgram, "u_view", view);
     setUniform1ui(radixSortPrepassProgram, "u_count", validCount);
     setupKeysBufferSsbo(validCount, keysBuffer, 1);
@@ -242,7 +243,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, valuesBuffer);
     unsigned int threadGroup_xy = (validCount + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     //debugPrintKeysValues(keysBuffer, valuesBuffer, validCount, 10000);
     //------------- RADIX SORT PASS ----------------
     glu::RadixSort sorter;
@@ -257,11 +258,18 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     setupSortedBufferSsbo(validCount, gaussianBufferSorted, 1); // <-- last int is binding pos
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBufferSorted);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, valuesBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, drawIndirectBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, drawIndirectBuffer);
     glDispatchCompute(threadGroup_xy, 1, 1);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+
+
+    //debugPrintGaussians(gaussianBuffer, 0);
+    //debugPrintGaussians(gaussianBufferSorted, 0);
     
     //------------- END RADIX SORT STAGE -------------
-    glFinish(); //Do I need actually need this ?
+    //glFinish(); //Do I need actually need this ?
 
     glUseProgram(renderShaderProgram);
 
