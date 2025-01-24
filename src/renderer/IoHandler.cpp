@@ -81,7 +81,7 @@ void cursor_position_callback(GLFWwindow* window, double xpos, double ypos) {
 
 // Scroll callback to adjust camera distance (zoom)
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    float zoomSpeed = 1.0f;
+    float zoomSpeed = 0.5f;
     distance -= static_cast<float>(yoffset) * zoomSpeed;
     
     // Clamp distance to avoid extreme zoom

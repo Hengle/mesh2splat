@@ -14,7 +14,7 @@ public:
 
 	void initializeOpenGLState();
 	static glm::vec3 computeCameraPosition(float yaw, float pitch, float distance);
-	void run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss);
+	void run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss, int resolutionTarget);
 	void renderLoop(GLFWwindow* window, ImGuiUI& gui);
 	//TODO: For now not using this, will implement a render-pass based structure and change how the render-loop is implemented
 	void recordRenderPass(); 

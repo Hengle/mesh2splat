@@ -28,6 +28,7 @@ uniform mat4 u_viewToClip;
 uniform mat4 u_objectToWorld; 
 uniform vec2 u_resolution;
 uniform vec3 u_hfov_focal;
+uniform float u_std_dev;
 
 //TODO: Should define some common imports, this func should be used also in other shaders
 void castQuatToMat3(vec4 quat, out mat3 rotMatrix)
@@ -85,7 +86,7 @@ void main() {
 
 	//vec3 gaussianWorld = u_objectToWorld * vec4(gaussianPosition_ms.xyz, 1);
 	//TODO: I am technically having to log and then exp the same scale values along the pipeline, but whatever
-	computeCov3D(gaussianQuaternion, exp(gaussianPackedScale.xyz), cov3d);
+	computeCov3D(gaussianQuaternion, exp(gaussianPackedScale.xyz) * u_std_dev, cov3d);
 	vec4 gaussian_vs = u_worldToView * vec4(gaussianPosition_ms.xyz, 1);
 
 	vec4 pos2dHom = u_viewToClip * gaussian_vs;

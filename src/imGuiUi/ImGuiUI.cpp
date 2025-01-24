@@ -59,10 +59,11 @@ void ImGuiUI::renderUI()
         runConversionFlag = true;
     }
 
-    if (ImGui::SliderFloat("Gaussian Std", &gaussian_std, minStd, maxStd, "%.2f"))
-    {
-        runConversionFlag = true;
-    };
+    //TODO: right now std_dev is not updated in the actual gaussianBuffer, just during rendering. Need to consider this when exporting
+    if (ImGui::SliderFloat("Gaussian Std", &gaussian_std, minStd, maxStd, "%.2f"));
+    //{
+    //    runConversionFlag = true;
+    //};
     if (ImGui::SliderFloat("Mesh2Splat quality", &quality, 0.0f, 1.0f, "%.2f")) {
         runConversionFlag = true;
     }

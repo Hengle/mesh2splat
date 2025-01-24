@@ -112,8 +112,10 @@ void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }*/
 
-void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss)
+void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss, int resolutionTarget)
 {
+    //TODO: take inspo for StopThePop: https://arxiv.org/pdf/2402.00525
+    //When sorting consider that a global sort based on mean depth in view space its consistent during translation
     if (gaussianBuffer == static_cast<GLuint>(-1) ||
         drawIndirectBuffer == static_cast<GLuint>(-1) ||
         pointsVAO == 0 ||
@@ -180,6 +182,8 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     setUniformMat4(renderShaderProgram, "u_viewToClip", projection);
     setUniform2f(renderShaderProgram,   "u_resolution", glm::ivec2(width, height));
     setUniform3f(renderShaderProgram,   "u_hfov_focal", hfov_focal);
+    setUniform1f(renderShaderProgram,   "u_std_dev", std_gauss / (float(resolutionTarget)));
+
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
@@ -206,8 +210,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glGetBufferSubData(GL_ARRAY_BUFFER, 0, validCount * sizeof(GaussianDataSSBO), gaussians.data());
 
     //TODO: JUST MISSING RADIX SORT COMPUTE PASSES
-
-    // Transform Gaussian positions to view space
+    // Transform Gaussian positions to view space and apply global sort
     auto viewSpaceDepth = [&](const GaussianDataSSBO& g) -> float {
         glm::vec4 viewPos = view * glm::vec4(g.position.x,g.position.y, g.position.z, 1.0);
         return viewPos.z; 
@@ -225,8 +228,8 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
              GL_DYNAMIC_DRAW);
 
 
-    //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, adn we need to free the data to avoid
-    // memory leak. Could use a flag to check if the buffer was freed or not
+    //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
+    // memory leak. Should structure renderer architecture
     unsigned int stride = sizeof(glm::vec4) * 6; //TODO: ISSUE6 (check for it)
     
     for (int i = 1; i <= 6; ++i) {
@@ -245,7 +248,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 	
 void Renderer::clearingPrePass(glm::vec4 clearColor)
 {
-    glClearColor(clearColor.r, clearColor.g, clearColor.b, 0);
+    glClearColor(clearColor.r, clearColor.g, clearColor.b, 0); //Important for correct blending
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -340,7 +343,7 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
             }
 
             //TODO: should have per render passes class in renderer and a scene object + a vector of optional parameters and a blackboard
-            run3dgsRenderingPass(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gui.getGaussianStd());
+            run3dgsRenderingPass(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gui.getGaussianStd(), gui.getResolutionTarget());
         }
 
         gui.postframe();
