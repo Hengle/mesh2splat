@@ -10,11 +10,13 @@ Renderer::Renderer()
     computeShaderProgram     = createComputeShaderProgram(); 
     gaussianBuffer           = -1;
     drawIndirectBuffer       = -1;
+    keysBuffer               = -1;
+	valuesBuffer             = -1;
     normalizedUvSpaceWidth   = 0;
     normalizedUvSpaceHeight  = 0;
 
     lastShaderCheckTime     = glfwGetTime();
-    initializeShaderFileMonitoring(shaderFiles, converterShadersInfo, computeShadersInfo, rendering3dgsShadersInfo);
+    initializeShaderFileMonitoring(shaderFiles, converterShadersInfo, computeShadersInfo, radixSortPrePassShadersInfo, rendering3dgsShadersInfo);
 }
 
 Renderer::~Renderer()
@@ -112,6 +114,7 @@ void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }*/
 
+//TODO: no need to pass the renderShaderProgram, its a member var
 void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss, int resolutionTarget)
 {
     //TODO: take inspo for StopThePop: https://arxiv.org/pdf/2402.00525
@@ -121,16 +124,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
         pointsVAO == 0 ||
         renderShaderProgram == 0) return;
 
-    glUseProgram(renderShaderProgram);
-
-    //TODO: this will work once sorting is working
-	glEnable(GL_BLEND);
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-
-    //The correct one, from slide deck of Bernard K.
-	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-
+    //CAMERA SETUP
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
@@ -155,6 +149,60 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     float htanx = htany / height * width;
     float focal_z = height / (2 * htany);
     glm::vec3 hfov_focal = glm::vec3(htanx, htany, focal_z);
+
+
+    //READ INFO FROM SSBO BUFFER FOR: RADIX SORT PREPASS - RADIX SORT - RADIX SORT POST PASS
+    
+    glFinish();
+    //-------------RADIX SORT PREPASS----------------
+    glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
+    
+    GLint bufferSize = 0;
+    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
+
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
+    //TODO: should not need to re-define this buffer each time lol
+    struct DrawArraysIndirectCommand {
+        GLuint count;        // Number of vertices to draw.
+        GLuint instanceCount;    // Number of instances.
+        GLuint first;        // Starting index in the vertex buffer.
+        GLuint baseInstance; // Base instance for instanced rendering.
+    };
+    DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
+        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
+    );
+    unsigned int validCount = cmd->instanceCount;
+    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+    std::vector<GaussianDataSSBO> gaussians(validCount);
+    glGetBufferSubData(GL_ARRAY_BUFFER, 0, validCount * sizeof(GaussianDataSSBO), gaussians.data());
+
+    //TODO: JUST MISSING RADIX SORT COMPUTE PASSES
+    // Transform Gaussian positions to view space and apply global sort
+    glUseProgram(radixSortPrepassProgram);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, gaussianBuffer);
+    setUniformMat4(radixSortPrepassProgram, "u_view", view);
+    setUniform1i(radixSortPrepassProgram, "u_count", validCount);
+    setupKeysBufferSsbo(validCount, &keysBuffer, 1);
+    setupValuesBufferSsbo(validCount, &valuesBuffer, 2);
+
+    glu::RadixSort sorter;
+    sorter(keysBuffer, valuesBuffer, validCount);
+    
+    //END RADIX SORT STAGE
+
+    glUseProgram(renderShaderProgram);
+
+    //TODO: this will work once sorting is working
+	glEnable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH_TEST);
+
+    //The correct one, from slide deck of Bernard K.
+	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+
+
 
     //Probably better with indexing, may save some performance
     std::vector<float> quadVertices = {
@@ -184,33 +232,10 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     setUniform3f(renderShaderProgram,   "u_hfov_focal", hfov_focal);
     setUniform1f(renderShaderProgram,   "u_std_dev", std_gauss / (float(resolutionTarget)));
 
-
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
 
-    glFinish();
-    glBindBuffer(GL_ARRAY_BUFFER, gaussianBuffer);
-    
-    GLint bufferSize = 0;
-    glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
-    //TODO: should not need to re-define this buffer each time lol
-    struct DrawArraysIndirectCommand {
-        GLuint count;        // Number of vertices to draw.
-        GLuint instanceCount;    // Number of instances.
-        GLuint first;        // Starting index in the vertex buffer.
-        GLuint baseInstance; // Base instance for instanced rendering.
-    };
-    DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
-        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
-    );
-    unsigned int validCount = cmd->instanceCount;
-    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
-    std::vector<GaussianDataSSBO> gaussians(validCount);
-    glGetBufferSubData(GL_ARRAY_BUFFER, 0, validCount * sizeof(GaussianDataSSBO), gaussians.data());
 
-    //TODO: JUST MISSING RADIX SORT COMPUTE PASSES
-    // Transform Gaussian positions to view space and apply global sort
     auto viewSpaceDepth = [&](const GaussianDataSSBO& g) -> float {
         glm::vec4 viewPos = view * glm::vec4(g.position.x,g.position.y, g.position.z, 1.0);
         return viewPos.z; 
@@ -227,6 +252,10 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
              gaussians.data(), 
              GL_DYNAMIC_DRAW);
 
+
+
+    //glu::RadixSort radixSort;
+    //radixSort();
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
     // memory leak. Should structure renderer architecture
@@ -259,9 +288,10 @@ bool Renderer::updateShadersIfNeeded() {
             // Update timestamp
             info.lastWriteTime = fs::last_write_time(info.filePath);
 
-            this->renderShaderProgram   = reloadShaderProgram(converterShadersInfo,     this->renderShaderProgram);
-            this->computeShaderProgram  = reloadShaderProgram(computeShadersInfo,       this->computeShaderProgram);
-            this->renderShaderProgram   = reloadShaderProgram(rendering3dgsShadersInfo, this->renderShaderProgram);
+            this->renderShaderProgram       = reloadShaderProgram(converterShadersInfo,         this->renderShaderProgram);
+            this->computeShaderProgram      = reloadShaderProgram(computeShadersInfo,           this->computeShaderProgram);
+            this->renderShaderProgram       = reloadShaderProgram(rendering3dgsShadersInfo,     this->renderShaderProgram);
+            this->radixSortPrepassProgram   = reloadShaderProgram(radixSortPrePassShadersInfo,  this->radixSortPrepassProgram);
 
             return true; //TODO: ideally it should just reload the programs for which that shader is included, need dependency for that
         }

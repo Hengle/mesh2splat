@@ -15,10 +15,13 @@
 #define VOLUMETRIC_SURFACE_FRAGMENT_SHADER_LOCATION "./src/shaders/volumetric/volumetric_fragment_shader.glsl" 
 #define VOLUMETRIC_SURFACE_COMPUTE_SHADER_LOCATION "./src/shaders/volumetric/compute_shader.glsl" 
 
+#define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
+
+#define RADIX_SORT_PREPASS_SHADER_LOCATION "./src/shaders/rendering/radixSortPrepass.glsl" 
+
 #define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
 #define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
 
-#define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
 
 
 GLuint compileShader(const char* source, GLenum type);
@@ -39,7 +42,9 @@ GLuint* setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int h
 
 void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
 
-void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
+void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
+void setupKeysBufferSsbo(unsigned int size, GLuint* keysBuffer, unsigned int bindingPos);
+void setupValuesBufferSsbo(unsigned int size, GLuint* valuesBuffer, unsigned int bindingPos);
 
 std::string readShaderFile(const char* filePath);
 
@@ -54,6 +59,7 @@ void initializeShaderFileMonitoring(
     std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
     std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
     std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
     std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo
 );
 

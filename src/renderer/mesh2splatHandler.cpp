@@ -66,7 +66,7 @@ void Mesh2splatConverterHandler::runConversionPass(const std::string& meshFilePa
             glDeleteBuffers(1, &gaussianBuffer);
         }
 
-        setupSsbo(resolution, resolution, &gaussianBuffer);
+        setupGaussianBufferSsbo(resolution, resolution, &gaussianBuffer);
         
         if (drawIndirectBuffer != 0) {
             glDeleteBuffers(1, &drawIndirectBuffer);

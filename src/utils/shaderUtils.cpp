@@ -72,12 +72,18 @@ void initializeShaderFileMonitoring(
     std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
     std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
     std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
+    std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
     std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo) {
 
     shaderFiles["converterVert"]        = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
     shaderFiles["converterGeom"]        = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
     shaderFiles["converterFrag"]        = { fs::last_write_time(CONVERTER_FRAG_SHADER_LOCATION),   CONVERTER_FRAG_SHADER_LOCATION };
+    
     shaderFiles["readerCompute"]        = { fs::last_write_time(TRANSFORM_COMPUTE_SHADER_LOCATION),   TRANSFORM_COMPUTE_SHADER_LOCATION };
+    
+    //TODO: add postPass
+    shaderFiles["radixSortPrepassCompute"]     = { fs::last_write_time(RADIX_SORT_PREPASS_SHADER_LOCATION),   RADIX_SORT_PREPASS_SHADER_LOCATION };
+    
     shaderFiles["renderer3dgsVert"]     = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
     shaderFiles["renderer3dgsFrag"]     = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
 
@@ -89,6 +95,10 @@ void initializeShaderFileMonitoring(
 
     computeShadersInfo = {
         { TRANSFORM_COMPUTE_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+    };
+
+    radixSortPrePostShadersInfo = {
+        { RADIX_SORT_PREPASS_SHADER_LOCATION,    GL_COMPUTE_SHADER }
     };
 
     rendering3dgsShadersInfo = {
@@ -538,15 +548,37 @@ void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gauss
 
 }
 
-void setupSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
+
+//TODO: often violating D.R.Y --> find better generalization
+void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
 {
     glGenBuffers(1, &(*gaussianBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*gaussianBuffer));
-    GLsizeiptr bufferSize = width * height * sizeof(glm::vec4) * 6;
     //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
-    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_STATIC_DRAW);
+    GLsizeiptr bufferSize = width * height * sizeof(glm::vec4) * 6;
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
     unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*gaussianBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void setupKeysBufferSsbo(unsigned int size, GLuint* keysBuffer, unsigned int bindingPos)
+{
+    glGenBuffers(1, &(*keysBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*keysBuffer));
+    GLsizeiptr bufferSize = size * sizeof(unsigned int);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*keysBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void setupValuesBufferSsbo(unsigned int size, GLuint* valuesBuffer, unsigned int bindingPos)
+{
+    glGenBuffers(1, &(*valuesBuffer));
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, (*valuesBuffer));
+    GLsizeiptr bufferSize = size * sizeof(unsigned int);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, (*valuesBuffer));
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 

@@ -5,6 +5,7 @@
 #include "mesh2SplatHandler.hpp"
 #include "../parsers.hpp"
 #include "../utils/shaderUtils.hpp"
+#include "../radixSort/RadixSort.hpp"
 
 class Renderer
 {
@@ -32,12 +33,20 @@ private:
 	GLuint converterShaderProgram;
 	GLuint renderShaderProgram;
 	GLuint computeShaderProgram;
+	GLuint radixSortPrepassProgram;
+
 	GLuint gaussianBuffer;
 	GLuint drawIndirectBuffer;
 
+	GLuint keysBuffer;
+	GLuint valuesBuffer;
+
+	
 	std::unordered_map<std::string, ShaderFileInfo> shaderFiles;
+	//Todo make this into a map and store name->shaderInfo map
 	std::vector<std::pair<std::string, GLenum>> converterShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> computeShadersInfo;
+	std::vector<std::pair<std::string, GLenum>> radixSortPrePassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
 	double lastShaderCheckTime;
 
