@@ -320,11 +320,11 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), quadVertices.data(), GL_DYNAMIC_DRAW);
 
     //TODO: should name all uniforms with this convention for clarity
-    setUniformMat4(renderShaderProgram, "u_MVP", MVP);
+    //setUniformMat4(renderShaderProgram, "u_MVP", MVP);
     setUniformMat4(renderShaderProgram, "u_worldToView", view);
-    setUniformMat4(renderShaderProgram, "u_objectToWorld", model);
+    //setUniformMat4(renderShaderProgram, "u_objectToWorld", model);
     setUniformMat4(renderShaderProgram, "u_viewToClip", projection);
-    setUniform2f(renderShaderProgram,   "u_resolution", glm::ivec2(width, height));
+    //setUniform2f(renderShaderProgram,   "u_resolution", glm::ivec2(width, height));
     setUniform3f(renderShaderProgram,   "u_hfov_focal", hfov_focal);
     setUniform1f(renderShaderProgram,   "u_std_dev", std_gauss / (float(resolutionTarget)));
 
