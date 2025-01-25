@@ -22,6 +22,7 @@ public:
 	//TODO: For now not using this, will implement a render-pass based structure and change how the render-loop is implemented
 	void recordRenderPass(); 
 	bool updateShadersIfNeeded(bool forceReload=false);
+	unsigned int getGaussianCountFromIndirectBuffer();
 private:
 	void clearingPrePass(glm::vec4 clearColor);
 	Mesh2splatConverterHandler mesh2SplatConversionHandler;

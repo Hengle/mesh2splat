@@ -14,6 +14,7 @@
 #include <unordered_map>
 #include <algorithm>
 #include <fstream>
+#include <locale>
 #include <sstream>
 #include "../../thirdParty/stb_image_write.h"
 #include <limits>
@@ -212,3 +213,5 @@ void computeAndLoadTextureInformation(
 );
 
 bool shouldSkip(const GaussianDataSSBO& g);
+
+std::string formatWithCommas(int value);

@@ -52,21 +52,16 @@ void ImGuiUI::renderUI()
 
     ImGui::ColorEdit4("Background Color", &sceneBackgroundColor.x);
 
-    ImGui::Combo("Resolution", &resolutionIndex, resolutionLabels, IM_ARRAYSIZE(resolutionLabels));
-    ImGui::Combo("Format", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
-
-    if (ImGui::Button("Run Conversion")) {
-        runConversionFlag = true;
-    }
 
     //TODO: right now std_dev is not updated in the actual gaussianBuffer, just during rendering. Need to consider this when exporting
-    if (ImGui::SliderFloat("Gaussian Std", &gaussian_std, minStd, maxStd, "%.2f"));
+    if (ImGui::SliderFloat("Gaussian Std Dev", &gaussian_std, minStd, maxStd, "%.2f"));
     //{
     //    runConversionFlag = true;
     //};
     if (ImGui::SliderFloat("Mesh2Splat quality", &quality, 0.0f, 1.0f, "%.2f")) {
         runConversionFlag = true;
     }
+    ImGui::Combo("Format", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
 
     ImGui::InputText("Save .PLY destination", destinationFilePathBuffer, sizeof(destinationFilePathBuffer));
     if (ImGui::Button("Save splat")) {
@@ -82,6 +77,14 @@ void ImGuiUI::preframe()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 }
+
+void ImGuiUI::displayGaussianCount(unsigned int gaussianCount)
+{
+    ImGui::Begin("Gaussian Count");
+    ImGui::Text("N: %s", formatWithCommas(gaussianCount).c_str());
+    ImGui::End();
+}
+
 
 void ImGuiUI::postframe()
 {

@@ -358,6 +358,32 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
     return false;
 }
 
+unsigned int Renderer::getGaussianCountFromIndirectBuffer()
+{
+    if (drawIndirectBuffer != static_cast<GLuint>(-1))
+    {
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
+        //TODO: should not need to re-define this buffer each time lol
+        struct DrawArraysIndirectCommand {
+            GLuint count;        // Number of vertices to draw.
+            GLuint instanceCount;    // Number of instances.
+            GLuint first;        // Starting index in the vertex buffer.
+            GLuint baseInstance; // Base instance for instanced rendering.
+        };
+
+        DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
+            GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
+        );
+
+        unsigned int validCount = cmd->instanceCount;
+        glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+        return validCount;
+    }
+    return 0;
+
+}
+
+
 //TODO: implement shader hot-reloading
 void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
 {
@@ -434,7 +460,7 @@ void Renderer::renderLoop(GLFWwindow* window, ImGuiUI& gui)
             //TODO: should have per render passes class in renderer and a scene object + a vector of optional parameters and a blackboard
             run3dgsRenderingPass(window, pointsVAO, gaussianBuffer, drawIndirectBuffer, renderShaderProgram, gui.getGaussianStd(), gui.getResolutionTarget());
         }
-
+        gui.displayGaussianCount(getGaussianCountFromIndirectBuffer());
         gui.postframe();
 
         glfwSwapBuffers(window);

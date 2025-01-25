@@ -4,6 +4,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glm.hpp>
+#include "../utils/utils.hpp"
 
 class ImGuiUI {
 public:
@@ -13,6 +14,7 @@ public:
     void preframe();
     void initialize(GLFWwindow* window);
     void renderUI();
+    void displayGaussianCount(unsigned int gaussianCount=0);
     void postframe();
 
     bool shouldRunConversion();
@@ -29,6 +31,7 @@ public:
     void setLoadNewMesh(bool shouldLoadNewMesh);
     void setRunConversion(bool shouldRunConversionFlag);
     void setShouldSavePly(bool shouldSavePly);
+
 
 
 private:

@@ -394,3 +394,31 @@ bool shouldSkip(const GaussianDataSSBO& g) {
             g.rotation == glm::vec4(0.0f) &&
             g.pbr      == glm::vec4(0.0f));
 }
+
+std::string formatWithCommas(int value) {
+    bool isNegative = false;
+    std::string numStr;
+    
+    // Handle negative numbers
+    if (value < 0) {
+        isNegative = true;
+        value = -value;
+    }
+    
+    // Convert integer to string
+    numStr = std::to_string(value);
+    
+    // Insert commas every three digits from the right
+    int insertPosition = static_cast<int>(numStr.length()) - 3;
+    while (insertPosition > 0) {
+        numStr.insert(insertPosition, ",");
+        insertPosition -= 3;
+    }
+    
+    // Add negative sign back if necessary
+    if (isNegative) {
+        numStr = "-" + numStr;
+    }
+    
+    return numStr;
+}
