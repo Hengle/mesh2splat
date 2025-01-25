@@ -27,12 +27,6 @@
 
 GLuint compileShader(const char* source, GLenum type);
 
-GLuint createConverterShaderProgram();
-
-GLuint createRendererShaderProgram();
-
-GLuint createComputeShaderProgram();
-
 void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap);
 
 void generateMeshesVBO(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh);

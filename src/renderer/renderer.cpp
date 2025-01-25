@@ -23,12 +23,11 @@ Renderer::Renderer()
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
     updateShadersIfNeeded(true);
-
+    
     glGenBuffers(1, &keysBuffer);
     glGenBuffers(1, &valuesBuffer);
     glGenBuffers(1, &gaussianBufferSorted);
 
-    // 2) Suppose you guess a maximum size: e.g. maxElements = 1e6
     GLsizeiptr maxKeysBytes   = MAX_GAUSSIANS_TO_SORT * sizeof(unsigned int);
     GLsizeiptr maxValuesBytes = MAX_GAUSSIANS_TO_SORT * sizeof(unsigned int);
     GLsizeiptr maxGaussBytes  = MAX_GAUSSIANS_TO_SORT * sizeof(GaussianDataSSBO);
@@ -138,43 +137,6 @@ void debugPrintGaussians(GLuint gaussianBuffer, unsigned int maxPrintCount = 50)
     glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
-void debugPrintKeysValues(GLuint keySsbo, GLuint valSsbo, size_t count, size_t maxPrint = 50)
-{
-    // Sanity clamp: if count < maxPrint, just print them all
-    if (count < maxPrint) {
-        maxPrint = count;
-    }
-
-    // 1. Read back the key buffer
-    std::vector<GLuint> keys(count);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, keySsbo);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, count * sizeof(GLuint), keys.data());
-
-    // 2. Read back the value buffer
-    std::vector<GLuint> vals(count);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, valSsbo);
-    glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, count * sizeof(GLuint), vals.data());
-
-    // 3. Print a small header
-    printf("===== Debug Print of Keys and Values (showing up to %zu of %zu) =====\n", maxPrint, count);
-    printf("Index |  Key (uint)  |  Value (uint)\n");
-    printf("------|--------------|--------------\n");
-
-    // 4. Print the first `maxPrint` entries
-    for (size_t i = 0; i < maxPrint; ++i)
-    {
-        printf("%5zu | %10u  | %10u\n", i, keys[i], vals[i]);
-    }
-
-    // 5. If we limited the output, let the user know
-    if (maxPrint < count) {
-        printf("... (truncated; total %zu)\n", count);
-    }
-
-    printf("\n");
-}
-
-
 //TODO: no need to pass the renderShaderProgram, its a member var
 void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint gaussianBuffer, GLuint drawIndirectBuffer, GLuint renderShaderProgram, float std_gauss, int resolutionTarget)
 {
@@ -263,13 +225,8 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
     glDispatchCompute(threadGroup_xy, 1, 1);
 
     glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
-
-
-    //debugPrintGaussians(gaussianBuffer, 0);
-    //debugPrintGaussians(gaussianBufferSorted, 0);
     
     //------------- END RADIX SORT STAGE -------------
-    //glFinish(); //Do I need actually need this ?
 
     glUseProgram(renderShaderProgram);
 
@@ -323,7 +280,7 @@ void Renderer::run3dgsRenderingPass(GLFWwindow* window, GLuint pointsVAO, GLuint
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
     
-    glDrawArraysIndirect(GL_TRIANGLES, 0); //instance parameters set in framBufferReaderCS.glsl
+    glDrawArraysIndirect(GL_TRIANGLES, 0);
     glBindVertexArray(0);
     glDisable(GL_BLEND);
 }

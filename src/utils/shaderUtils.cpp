@@ -37,36 +37,6 @@ std::string readShaderFile(const char* filePath) {
     }
 }
 
-GLuint createConverterShaderProgram() {
-
-    std::string vertexShaderSource          = readShaderFile(CONVERTER_VERTEX_SHADER_LOCATION);
-    std::string geomShaderSource            = readShaderFile(CONVERTER_GEOM_SHADER_LOCATION);
-    std::string fragmentShaderSource        = readShaderFile(CONVERTER_FRAG_SHADER_LOCATION);
-
-
-    GLuint vertexShader         = compileShader(vertexShaderSource.c_str(),         GL_VERTEX_SHADER);
-    GLuint geomShader           = compileShader(geomShaderSource.c_str(),           GL_GEOMETRY_SHADER);
-    GLuint fragmentShader       = compileShader(fragmentShaderSource.c_str(),       GL_FRAGMENT_SHADER);
-
-
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, geomShader);
-    glAttachShader(program, fragmentShader);
-
-    GLint success;
-    const int maxMsgLength = 512;
-    GLchar infoLog[maxMsgLength];
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(program, maxMsgLength, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    return program;
-}
-
 //TODO: probably could find way to better generalize this
 void initializeShaderFileMonitoring(
     std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
@@ -607,49 +577,3 @@ void setupValuesBufferSsbo(unsigned int size, GLuint valuesBuffer, unsigned int 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-GLuint createRendererShaderProgram()
-{
-    std::string vertexShaderSource          = readShaderFile(RENDERER_VERTEX_SHADER_LOCATION);
-    std::string fragmentShaderSource        = readShaderFile(RENDERER_FRAGMENT_SHADER_LOCATION);
-
-    GLuint vertexShader         = compileShader(vertexShaderSource.c_str(),         GL_VERTEX_SHADER);
-    GLuint fragmentShader       = compileShader(fragmentShaderSource.c_str(),       GL_FRAGMENT_SHADER);
-
-    GLuint program = glCreateProgram();
-    glAttachShader(program, vertexShader);
-    glAttachShader(program, fragmentShader);
-
-    GLint success;
-    const int maxMsgLength = 512;
-    GLchar infoLog[maxMsgLength];
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(program, maxMsgLength, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    return program;
-};
-
-GLuint createComputeShaderProgram()
-{
-    std::string computeShaderSource         = readShaderFile(TRANSFORM_COMPUTE_SHADER_LOCATION);
-
-    GLuint computeShader                    = compileShader(computeShaderSource.c_str(),         GL_COMPUTE_SHADER);
-
-    GLuint program = glCreateProgram();
-    glAttachShader(program, computeShader);
-
-    GLint success;
-    const int maxMsgLength = 512;
-    GLchar infoLog[maxMsgLength];
-    glLinkProgram(program);
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(program, maxMsgLength, NULL, infoLog);
-        std::cerr << "ERROR::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-    }
-
-    return program;
-}
