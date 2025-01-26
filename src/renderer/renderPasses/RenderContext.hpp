@@ -3,7 +3,7 @@
 #include "../../utils/utils.hpp"
 #include "../../utils/shaderUtils.hpp"
 
-
+//TODO: split up in sub contexts
 struct RenderContext {
     // Parameters
     std::string meshFilePath;

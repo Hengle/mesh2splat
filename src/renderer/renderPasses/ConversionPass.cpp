@@ -58,6 +58,7 @@ void ConversionPass::conversion(
     glUseProgram(shaderProgram);
 
     //-------------------------------SET UNIFORMS-------------------------------   
+    // TODO: these should be set, but by setting them here it would influence the rendering part which edits the std dev 
     //setUniform1f(shaderProgram, "u_sigma_x", GAUSSIAN_STD / (float(referenceResolution))); //I separate x and y in case want it to be anisotropic in the future
     //setUniform1f(shaderProgram, "u_sigma_y", GAUSSIAN_STD / (float(referenceResolution)));
 

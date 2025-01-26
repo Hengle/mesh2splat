@@ -7,6 +7,7 @@
 #include "../radixSort/RadixSort.hpp"
 #include "renderPasses/RenderContext.hpp"
 #include "RenderPasses.hpp"
+#include "../utils/SceneManager.hpp"
 
 
 #define MAX_GAUSSIANS_TO_SORT 5000000 
@@ -33,6 +34,7 @@ public:
 	void setViewportResolutionForConversion(int resolutionTarget);
 	void setStdDevFromImGui(float stdDev);
 	void resetRendererViewportResolution();
+	SceneManager& getSceneManager();
 
 private:
 	
@@ -41,6 +43,7 @@ private:
 
 	GLFWwindow* rendererGlfwWindow;
 
+	std::unique_ptr<SceneManager> sceneManager;
 	RenderContext renderContext;
 	
 	std::unordered_map<std::string, ShaderFileInfo> shaderFiles;

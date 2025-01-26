@@ -4,6 +4,8 @@
 
 Renderer::Renderer(GLFWwindow* window)
 {
+    sceneManager = std::make_unique<SceneManager>(renderContext);
+
     rendererGlfwWindow = window;
     renderPassesOrder = {};
     renderContext = {};
@@ -36,7 +38,6 @@ Renderer::Renderer(GLFWwindow* window)
     GLsizeiptr maxValuesBytes = MAX_GAUSSIANS_TO_SORT * sizeof(unsigned int);
     GLsizeiptr maxGaussBytes  = MAX_GAUSSIANS_TO_SORT * sizeof(GaussianDataSSBO);
 
-    // 3) Bind & allocate
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.keysBuffer);
     glBufferData(GL_SHADER_STORAGE_BUFFER, maxKeysBytes, nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
@@ -188,6 +189,11 @@ void Renderer::resetRendererViewportResolution()
 void Renderer::setStdDevFromImGui(float stdDev)
 {
     renderContext.gaussianStd = stdDev;
+}
+
+SceneManager& Renderer::getSceneManager()
+{
+    return *sceneManager;
 }
 
 

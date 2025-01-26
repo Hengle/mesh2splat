@@ -1,5 +1,6 @@
 #include "normalizedUvUnwrapping.hpp"
 
+
 static void RandomColor(uint8_t* color)
 {
 	for (int i = 0; i < 3; i++)
@@ -119,7 +120,7 @@ static void RasterizePolygon(uint8_t* dest, int destWidth, int vertices[][2], co
 }
 #endif
 
-void generateNormalizedUvCoordinatesPerFace(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<Mesh>& meshes)
+void generateNormalizedUvCoordinatesPerMesh(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<Mesh>& meshes)
 {
 	for (auto& mesh : meshes)
 	{

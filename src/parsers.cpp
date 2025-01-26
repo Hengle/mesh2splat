@@ -1,10 +1,5 @@
 #include "parsers.hpp"
-#define TINYGLTF_IMPLEMENTATION
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "../thirdParty/tiny_gltf.h"
-#define STB_IMAGE_RESIZE_IMPLEMENTATION
-#include "../thirdParty/stb_image_resize.h"
+
 
 //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
 TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) 
@@ -284,14 +279,9 @@ std::vector<glm::vec2> projectMeshVertices(const std::vector<glm::vec3>& vertice
 //https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 template<typename T>
 const T* getBufferData(const tinygltf::Model& model, int accessorIndex) {
-    //The second step of structuring the data is accomplished with accessor objects. An accessor refers to a bufferview
-    //They define how the data of a bufferView has to be interpreted by providing information about the data types and the layout.
-    //Each accessor also has a byteOffset property. For the example above, it has been 0 for both accessors, because there was only one accessor for each bufferView.
-    //But when multiple accessors refer to the same bufferView, then the byteOffset describes where the data of the accessor starts, relative to the bufferView that it refers to.
+
     const auto& accessor    = model.accessors[accessorIndex];
-    const auto& bufferView  = model.bufferViews[accessor.bufferView]; //"A bufferView describes a "chunk" or a "slice" of the whole, raw buffer data."
-    //For a specific buffer, a bufferview might describe the part of the buffer that contains the data of the indices, and the other might describe the vertex positions
-    //Bytoffset refers to offset in whole buffer
+    const auto& bufferView  = model.bufferViews[accessor.bufferView];
     const auto& buffer      = model.buffers[bufferView.buffer];
     
     //TODO: This may not be too safe and I should write this a bit better, but it is not production code so for now it works
@@ -505,7 +495,7 @@ void parseGltfFileToMesh(const std::string& filename, std::string base_folder, s
                         dst->tangent[e] = tangents[index[e]];
                     }
                 } else {
-                    //TODO: YOU SHOULD FK AVERAGE IT BETWEEN THE TANGENTS OF FACES THAT SHARE THIS VERTEX
+                    //TODO: YOU SHOULD AVERAGE IT BETWEEN THE TANGENTS OF FACES THAT SHARE THIS VERTEX
                     //but tbh just reimport it in Blender and export the damn tangents (there is a checkbox on the right of the exporter window under "data->mesh->Tangents")
                     glm::vec3 dv1 = dst->pos[1] - dst->pos[0];
                     glm::vec3 dv2 = dst->pos[2] - dst->pos[0];
