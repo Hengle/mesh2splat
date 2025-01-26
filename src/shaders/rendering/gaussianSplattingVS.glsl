@@ -136,7 +136,7 @@ void main() {
 	pos2dHom.xy = pos2dHom.xy + vertexPos.xy * quadwh_ndc;
 
 	gl_Position = pos2dHom;
-	//TODO: Should actually use the conic to compute varying density
+	//TODO: Should actually use the conic to compute varying densit
 	out_conic = vec3(cov2d[1][1] * det_inv, -cov2d[0][1] * det_inv, cov2d[0][0] * det_inv);
 	out_color = gaussianColor.rgb;
 	out_opacity = gaussianColor.a;

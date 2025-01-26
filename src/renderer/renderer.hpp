@@ -12,16 +12,15 @@
 
 #define MAX_GAUSSIANS_TO_SORT 5000000 
 
-class Renderer
-{
+class Renderer {
 public:
 	Renderer(GLFWwindow* window);
 	~Renderer();
 
+
 	void initialize();
     void renderFrame();        // Execute all enabled render passes
 	void clearingPrePass(glm::vec4 clearColor); //TODO: hmmm
-	
 	void updateTransformations();
 	static glm::vec3 computeCameraPosition();
 	//TODO: For now not using this, will implement a render-pass based structure and change how the render-loop is implemented

@@ -1,7 +1,7 @@
 ﻿#include "./utils/normalizedUvUnwrapping.hpp"
 #include "renderer/renderer.hpp"
 #include "glewGlfwHandlers/glewGlfwHandler.hpp"
-
+#include "renderer/guiRendererConcreteMediator.hpp"
 
 int main(int argc, char** argv) {
     GlewGlfwHandler glewGlfwHandler(glm::ivec2(1080, 720), "Mesh2Splat");
@@ -11,6 +11,7 @@ int main(int argc, char** argv) {
     ImGuiUI.initialize(glewGlfwHandler.getWindow());
     Renderer renderer(glewGlfwHandler.getWindow());
     renderer.initialize();
+    GuiRendererConcreteMediator guiRendererMediator(renderer, ImGuiUI);
 
     while (!glfwWindowShouldClose(glewGlfwHandler.getWindow())) {
         glfwPollEvents();
@@ -19,45 +20,8 @@ int main(int argc, char** argv) {
 
         ImGuiUI.preframe();
         ImGuiUI.renderUI();
-
-        double currentTime = glfwGetTime();
-        if (currentTime - renderer.getLastShaderCheckTime() > 1.0) {
-            ImGuiUI.setRunConversion(renderer.updateShadersIfNeeded());
-            renderer.setLastShaderCheckTime(currentTime);
-        }
-
         
-        if (ImGuiUI.shouldLoadNewMesh() && !ImGuiUI.getFilePath().empty()) {
-            renderer.getSceneManager().loadModel(ImGuiUI.getFilePath(), ImGuiUI.getFilePathParentFolder());
-            renderer.setViewportResolutionForConversion(ImGuiUI.getResolutionTarget());
-            renderer.enableRenderPass("conversion");              
-            ImGuiUI.setLoadNewMesh(false);
-            ImGuiUI.setMeshLoaded(true);
-        }
-
-
-        if (ImGuiUI.shouldRunConversion()) {
-            renderer.enableRenderPass("conversion"); 
-            renderer.setViewportResolutionForConversion(ImGuiUI.getResolutionTarget());
-            ImGuiUI.setRunConversion(false);
-        }
-
-        if (ImGuiUI.shouldSavePly() && !ImGuiUI.getFilePathParentFolder().empty())
-        {
-            GaussianDataSSBO* gaussianData = nullptr;
-            unsigned int gaussianCount;
-            read3dgsDataFromSsboBuffer(renderer.getRenderContext()->drawIndirectBuffer, renderer.getRenderContext()->gaussianBuffer, gaussianData, gaussianCount);
-            writeBinaryPlyStandardFormatFromSSBO(ImGuiUI.getFullFilePathDestination(), gaussianData, gaussianCount);
-            ImGuiUI.setShouldSavePly(false);
-        }
-        if (ImGuiUI.wasMeshLoaded())
-        {
-            renderer.resetRendererViewportResolution();
-            renderer.setStdDevFromImGui(ImGuiUI.getGaussianStd());
-            renderer.enableRenderPass("radixSort");
-            renderer.enableRenderPass("gaussianSplatting");
-        }
-
+        guiRendererMediator.update();
         
         renderer.renderFrame();
 
