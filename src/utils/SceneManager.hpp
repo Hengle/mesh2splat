@@ -3,7 +3,7 @@
 #include "../renderer/renderPasses/RenderContext.hpp"
 #include "./normalizedUvUnwrapping.hpp"
 #include "../parsers/parsers.hpp"
-
+#include "Texture.hpp"
 
 class SceneManager {
 public:

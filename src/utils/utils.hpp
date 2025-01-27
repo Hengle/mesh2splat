@@ -31,7 +31,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
-
 static void CheckOpenGLError(const char* stmt, const char* fname, int line)
 {
     GLenum err = glGetError();
@@ -162,6 +161,12 @@ struct TextureDataGl {
 
     TextureDataGl(unsigned char* textureData, unsigned int bpp, unsigned int glTextureID) : textureData(textureData), bpp(bpp), glTextureID(glTextureID){}
     TextureDataGl(unsigned char* textureData, unsigned int bpp) : textureData(textureData), bpp(bpp), glTextureID(0){}
+
+    //~TextureDataGl() {
+    //    if (textureData) {
+    //        delete textureData;
+    //    }
+    //}
 };
 
 bool file_exists(std::string fn);

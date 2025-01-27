@@ -147,99 +147,105 @@ namespace glUtils
     }
 
 
-    //TODO: must return the ID for each texture
-    void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap)
+//TODO: must return the ID for each texture
+void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap)
+{
+    std::map<std::string, GLenum> textureUnits = {
+        { BASE_COLOR_TEXTURE,           GL_TEXTURE0 },
+        { NORMAL_TEXTURE,               GL_TEXTURE1 },
+        { METALLIC_ROUGHNESS_TEXTURE,   GL_TEXTURE2 },
+        { AO_TEXTURE,                   GL_TEXTURE3 },
+        { EMISSIVE_TEXTURE,             GL_TEXTURE4 }
+    };
+
+    for (auto& textureTypeMapEntry : textureTypeMap)
     {
-        //TODO: at second loading is not updating the textures
-        std::map<std::string, GLenum> textureUnits = {
-            { BASE_COLOR_TEXTURE,           GL_TEXTURE0 },
-            { NORMAL_TEXTURE,               GL_TEXTURE1 },
-            { METALLIC_ROUGHNESS_TEXTURE,   GL_TEXTURE2 },
-            { AO_TEXTURE,                   GL_TEXTURE3 },
-            { EMISSIVE_TEXTURE,             GL_TEXTURE4 }
-        };
+        const std::string& textureName = textureTypeMapEntry.first;
+        TextureDataGl& textureDataGl = textureTypeMapEntry.second;
+        unsigned char* textureData = textureDataGl.textureData;
+        
+        auto unitIt = textureUnits.find(textureName);
+        if (unitIt == textureUnits.end())
+            continue;
 
-        for (auto& textureTypeMapEntry : textureTypeMap)
+        GLenum textureUnit = unitIt->second;
+
+        // Delete existing texture if it exists
+        if (textureDataGl.glTextureID != 0)
         {
-            const std::string& textureName = textureTypeMapEntry.first;
-            unsigned char* textureData = textureTypeMapEntry.second.textureData;
-
-            if (textureUnits.find(textureName) != textureUnits.end())
-            {
-                GLuint texture;
-                GLenum textureUnit = textureUnits[textureName];
-            
-                glActiveTexture(textureUnit);
-            
-                glGenTextures(1, &texture); 
-                glBindTexture(GL_TEXTURE_2D, texture);
-
-                int width, height;
-                if (textureName == BASE_COLOR_TEXTURE)
-                {
-                    width = material.baseColorTexture.width;
-                    height = material.baseColorTexture.height;
-                }
-                else if (textureName == NORMAL_TEXTURE)
-                {
-                    width = material.normalTexture.width;
-                    height = material.normalTexture.height;
-                }
-                else if (textureName == METALLIC_ROUGHNESS_TEXTURE)
-                {
-                    width = material.metallicRoughnessTexture.width;
-                    height = material.metallicRoughnessTexture.height;
-                }
-                else if (textureName == AO_TEXTURE)
-                {
-                    width = material.occlusionTexture.width;
-                    height = material.occlusionTexture.height;
-                }
-                else if (textureName == EMISSIVE_TEXTURE)
-                {
-                    width = material.emissiveTexture.width;
-                    height = material.emissiveTexture.height;
-                }
-                else
-                {
-                    continue;
-                }
-
-                GLenum internalFormat = GL_RGB;
-                GLenum format = GL_RGB;
-
-                if (textureTypeMapEntry.second.bpp == 4)
-                {
-                    internalFormat = GL_RGBA;
-                    format = GL_RGBA;
-                }
-
-                glTexImage2D(
-                    GL_TEXTURE_2D,
-                    0, internalFormat,
-                    width, height,
-                    0, format,
-                    GL_UNSIGNED_BYTE,
-                    textureData
-                );
-
-                glGenerateMipmap(GL_TEXTURE_2D);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 40);
-                //TODO: this is trash, oh mamma mia this is really bad. Change it sooner than later.
-                //Before the assignment it was the Bpp and now it is the textureID...
-                textureTypeMapEntry.second.glTextureID = texture;
-                glBindTexture(GL_TEXTURE_2D, 0);
-            }
+            glDeleteTextures(1, &textureDataGl.glTextureID);
+            textureDataGl.glTextureID = 0;
         }
-    }
 
+        // Determine width and height based on the texture type
+        int width = 0;
+        int height = 0;
+
+        if (textureName == BASE_COLOR_TEXTURE)
+        {
+            width = material.baseColorTexture.width;
+            height = material.baseColorTexture.height;
+        }
+        else if (textureName == NORMAL_TEXTURE)
+        {
+            width = material.normalTexture.width;
+            height = material.normalTexture.height;
+        }
+        else if (textureName == METALLIC_ROUGHNESS_TEXTURE)
+        {
+            width = material.metallicRoughnessTexture.width;
+            height = material.metallicRoughnessTexture.height;
+        }
+        else if (textureName == AO_TEXTURE)
+        {
+            width = material.occlusionTexture.width;
+            height = material.occlusionTexture.height;
+        }
+        else if (textureName == EMISSIVE_TEXTURE)
+        {
+            width = material.emissiveTexture.width;
+            height = material.emissiveTexture.height;
+        }
+        else
+        {
+            continue;
+        }
+
+        // Skip if the material doesn't have this texture or data is invalid
+        if (width <= 0 || height <= 0 || textureData == nullptr)
+            continue;
+
+        GLuint texture;
+        glActiveTexture(textureUnit);
+        glGenTextures(1, &texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+        textureDataGl.glTextureID = texture;
+
+        GLenum internalFormat = textureDataGl.bpp == 4 ? GL_RGBA : GL_RGB;
+        GLenum format = internalFormat;
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0, internalFormat,
+            width, height,
+            0, format,
+            GL_UNSIGNED_BYTE,
+            textureData
+        );
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4); // Reduced from 40 to a reasonable level
+
+        
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+}
 
     void generateMeshesVBO(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh) {
     

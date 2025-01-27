@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../utils/utils.hpp"
-#include "../../utils/shaderUtils.hpp"
+#include "../../utils/glUtils.hpp"
 
 //TODO: split up in sub contexts
 struct RenderContext {

@@ -11,8 +11,6 @@ namespace parsers
 
 	void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap);
 
-	void parseGltfFileToMesh(const std::string& filename, std::string base_folder, std::vector<Mesh>& meshes);
-
 	void writePbrPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
 
 	void writeBinaryPlyLit(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
