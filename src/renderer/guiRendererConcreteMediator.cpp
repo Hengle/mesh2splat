@@ -14,6 +14,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
         case EventType::RunConversion: {
             renderer.enableRenderPass("conversion");
             renderer.setViewportResolutionForConversion(imguiUI.getResolutionTarget());
+            imguiUI.setRunConversion(false);
             break;
         }
         case EventType::EnableGaussianRendering: {
