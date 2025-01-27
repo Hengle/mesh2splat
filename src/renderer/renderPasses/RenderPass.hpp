@@ -1,9 +1,9 @@
 #pragma once
 #include "RenderContext.hpp"
 
-class RenderPass {
+class IRenderPass {
 public:
-    virtual ~RenderPass() = default;
+    virtual ~IRenderPass() = default;
     virtual void execute(RenderContext& context) = 0;
     virtual bool isEnabled() const { return isPassEnabled; }
     virtual void setIsEnabled(bool isPassEnabled) { this->isPassEnabled = isPassEnabled; };

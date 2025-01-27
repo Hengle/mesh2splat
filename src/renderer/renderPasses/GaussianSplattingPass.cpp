@@ -33,10 +33,10 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, quadVertices.size() * sizeof(float), quadVertices.data(), GL_DYNAMIC_DRAW);
 
-    setUniformMat4(renderContext.shaderPrograms.renderShaderProgram, "u_worldToView", renderContext.viewMat);
-    setUniformMat4(renderContext.shaderPrograms.renderShaderProgram, "u_viewToClip", renderContext.projMat);
-    setUniform3f(renderContext.shaderPrograms.renderShaderProgram,   "u_hfov_focal", renderContext.hfov_focal);
-    setUniform1f(renderContext.shaderPrograms.renderShaderProgram,   "u_std_dev", renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
+    glUtils::setUniformMat4(renderContext.shaderPrograms.renderShaderProgram, "u_worldToView", renderContext.viewMat);
+    glUtils::setUniformMat4(renderContext.shaderPrograms.renderShaderProgram, "u_viewToClip", renderContext.projMat);
+    glUtils::setUniform3f(renderContext.shaderPrograms.renderShaderProgram,   "u_hfov_focal", renderContext.hfov_focal);
+    glUtils::setUniform1f(renderContext.shaderPrograms.renderShaderProgram,   "u_std_dev", renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
 
     //per instance quad data
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);

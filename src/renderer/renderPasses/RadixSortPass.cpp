@@ -25,12 +25,12 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
-    setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
-    setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
-    setupKeysBufferSsbo(validCount, renderContext.keysBuffer, 1);
+    glUtils::setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
+    glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
+    glUtils::setupKeysBufferSsbo(validCount, renderContext.keysBuffer, 1);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.keysBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
-    setupValuesBufferSsbo(validCount, renderContext.valuesBuffer, 2);
+    glUtils::setupValuesBufferSsbo(validCount, renderContext.valuesBuffer, 2);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.valuesBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
     unsigned int threadGroup_xy = (validCount + 255) / 256;
@@ -49,11 +49,11 @@ void RadixSortPass::sort(RenderContext& renderContext, unsigned int validCount)
 void RadixSortPass::gatherPost(RenderContext& renderContext, unsigned int validCount)
 {
     glUseProgram(renderContext.shaderPrograms.radixSortGatherProgram);
-    setUniform1ui(renderContext.shaderPrograms.radixSortGatherProgram, "u_count", validCount);
+    glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortGatherProgram, "u_count", validCount);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
-    setupSortedBufferSsbo(validCount, renderContext.gaussianBufferSorted, 1); // <-- last uint is binding pos
+    glUtils::setupSortedBufferSsbo(validCount, renderContext.gaussianBufferSorted, 1); // <-- last uint is binding pos
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.drawIndirectBuffer);

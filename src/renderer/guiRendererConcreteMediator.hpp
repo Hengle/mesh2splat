@@ -3,7 +3,7 @@
 #include "Renderer.hpp"
 #include "../imGuiUi/ImGuiUi.hpp"
 
-class GuiRendererConcreteMediator : public Mediator {
+class GuiRendererConcreteMediator : public IMediator {
 public:
     GuiRendererConcreteMediator(Renderer& renderer, ImGuiUI& imguiUI)
         : renderer(renderer), imguiUI(imguiUI) {}

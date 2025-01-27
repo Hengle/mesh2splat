@@ -27,7 +27,7 @@ bool SceneManager::loadModel(const std::string& filePath, const std::string& par
         Mesh meshData = mesh.first;
         GLMesh meshGl = mesh.second;
         loadAllTextureMapImagesIntoMap(meshData.material, renderContext.textureTypeMap);
-        generateTextures(meshData.material, renderContext.textureTypeMap);
+        glUtils::generateTextures(meshData.material, renderContext.textureTypeMap);
     }
 
     return true;
@@ -283,10 +283,7 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
 // Generate Normalized UV Coordinates
 void SceneManager::generateNormalizedUvCoordinates(std::vector<Mesh>& meshes)
 {
-    for (auto& mesh : meshes)
-	{
-		generateNormalizedUvCoordinatesPerFace(renderContext.normalizedUvSpaceHeight, renderContext.normalizedUvSpaceHeight, mesh);
-	}
+    uvUnwrapping::generateNormalizedUvCoordinatesPerMesh(renderContext.normalizedUvSpaceHeight, renderContext.normalizedUvSpaceHeight, meshes);
 }
 
 // Setup Mesh Buffers

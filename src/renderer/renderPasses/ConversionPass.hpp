@@ -1,7 +1,7 @@
 #pragma once
 #include "RenderPass.hpp"
 
-class ConversionPass : public RenderPass {
+class ConversionPass : public IRenderPass {
 public:
     ~ConversionPass() = default;
     void execute(RenderContext &renderContext);

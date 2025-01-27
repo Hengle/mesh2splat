@@ -21,7 +21,7 @@ Renderer::Renderer(GLFWwindow* window)
 
     lastShaderCheckTime      = glfwGetTime();
     //TODO: should this maybe live in the Renderer rather than shader utils? Probably yes
-    initializeShaderFileMonitoring(
+    glUtils::initializeShaderFileMonitoring(
         shaderFiles,
         converterShadersInfo, computeShadersInfo,
         radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
@@ -199,18 +199,18 @@ SceneManager& Renderer::getSceneManager()
 
 bool Renderer::updateShadersIfNeeded(bool forceReload) {
     for (auto& entry : shaderFiles) {
-        ShaderFileInfo& info = entry.second;
+        glUtils::ShaderFileInfo& info = entry.second;
         if (forceReload || shaderFileChanged(info) ) {
             // Update timestamp
-            info.lastWriteTime                  = fs::last_write_time(info.filePath);
+            info.lastWriteTime                  = glUtils::fs::last_write_time(info.filePath);
 
-            this->renderContext.shaderPrograms.converterShaderProgram   = reloadShaderPrograms(converterShadersInfo, this->renderContext.shaderPrograms.converterShaderProgram);
-            this->renderContext.shaderPrograms.computeShaderProgram     = reloadShaderPrograms(computeShadersInfo, this->renderContext.shaderPrograms.computeShaderProgram);
+            this->renderContext.shaderPrograms.converterShaderProgram   = glUtils::reloadShaderPrograms(converterShadersInfo, this->renderContext.shaderPrograms.converterShaderProgram);
+            this->renderContext.shaderPrograms.computeShaderProgram     = glUtils::reloadShaderPrograms(computeShadersInfo, this->renderContext.shaderPrograms.computeShaderProgram);
 
-            this->renderContext.shaderPrograms.radixSortPrepassProgram  = reloadShaderPrograms(radixSortPrePassShadersInfo, this->renderContext.shaderPrograms.radixSortPrepassProgram);
-            this->renderContext.shaderPrograms.radixSortGatherProgram   = reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
+            this->renderContext.shaderPrograms.radixSortPrepassProgram  = glUtils::reloadShaderPrograms(radixSortPrePassShadersInfo, this->renderContext.shaderPrograms.radixSortPrepassProgram);
+            this->renderContext.shaderPrograms.radixSortGatherProgram   = glUtils::reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
 
-            this->renderContext.shaderPrograms.renderShaderProgram      = reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
+            this->renderContext.shaderPrograms.renderShaderProgram      = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
 
             return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others
             //TODO P1: investigate this, I am not sure I dont think I need to recreate all programs, I am now convinced I can just do reloadShaderPrograms(info, --> ) need to know how it is saved within the map

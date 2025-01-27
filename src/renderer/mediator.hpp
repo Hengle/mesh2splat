@@ -4,8 +4,8 @@
 #include <any>
 #include "event.hpp"
 
-class Mediator {
+class IMediator {
 public:
     virtual void notify(EventType event) = 0;
-    virtual ~Mediator() = default;
+    virtual ~IMediator() = default;
 };

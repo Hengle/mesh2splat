@@ -13,7 +13,7 @@ void ConversionPass::execute(RenderContext &renderContext)
         GLMesh meshGl = std::get<1>(mesh);
 
         GLuint framebuffer;
-        GLuint* drawBuffers = setupFrameBuffer(framebuffer, renderContext.resolutionTarget, renderContext.resolutionTarget);
+        GLuint* drawBuffers = glUtils::setupFrameBuffer(framebuffer, renderContext.resolutionTarget, renderContext.resolutionTarget);
 
         glViewport(0, 0, renderContext.resolutionTarget, renderContext.resolutionTarget);
         
@@ -29,7 +29,7 @@ void ConversionPass::execute(RenderContext &renderContext)
             glDeleteBuffers(1, &(renderContext.gaussianBuffer));
         }
 
-        setupGaussianBufferSsbo(renderContext.resolutionTarget, renderContext.resolutionTarget, &(renderContext.gaussianBuffer));
+        glUtils::setupGaussianBufferSsbo(renderContext.resolutionTarget, renderContext.resolutionTarget, &(renderContext.gaussianBuffer));
         
         if (renderContext.drawIndirectBuffer != 0) {
             glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
@@ -65,26 +65,26 @@ void ConversionPass::conversion(
     //Textures
     if (textureTypeMap.find(BASE_COLOR_TEXTURE) != textureTypeMap.end())
     {
-        setTexture2D(shaderProgram, "albedoTexture", textureTypeMap.at(BASE_COLOR_TEXTURE).glTextureID,     0);
-        setUniform1i(shaderProgram, "hasAlbedoMap", 1);
+        glUtils::setTexture2D(shaderProgram, "albedoTexture", textureTypeMap.at(BASE_COLOR_TEXTURE).glTextureID,     0);
+        glUtils::setUniform1i(shaderProgram, "hasAlbedoMap", 1);
     }
     if (textureTypeMap.find(NORMAL_TEXTURE) != textureTypeMap.end())
     {
-        setTexture2D(shaderProgram, "normalTexture", textureTypeMap.at(NORMAL_TEXTURE).glTextureID,         1);
-        setUniform1i(shaderProgram, "hasNormalMap", 1);
+        glUtils::setTexture2D(shaderProgram, "normalTexture", textureTypeMap.at(NORMAL_TEXTURE).glTextureID,         1);
+        glUtils::setUniform1i(shaderProgram, "hasNormalMap", 1);
     }
     if (textureTypeMap.find(METALLIC_ROUGHNESS_TEXTURE) != textureTypeMap.end())
     {
-        setTexture2D(shaderProgram, "metallicRoughnessTexture", textureTypeMap.at(METALLIC_ROUGHNESS_TEXTURE).glTextureID,     2);
-        setUniform1i(shaderProgram, "hasMetallicRoughnessMap", 1);
+        glUtils::setTexture2D(shaderProgram, "metallicRoughnessTexture", textureTypeMap.at(METALLIC_ROUGHNESS_TEXTURE).glTextureID,     2);
+        glUtils::setUniform1i(shaderProgram, "hasMetallicRoughnessMap", 1);
     }
     if (textureTypeMap.find(AO_TEXTURE) != textureTypeMap.end())
     {
-        setTexture2D(shaderProgram, "occlusionTexture", textureTypeMap.at(AO_TEXTURE).glTextureID,          3);
+        glUtils::setTexture2D(shaderProgram, "occlusionTexture", textureTypeMap.at(AO_TEXTURE).glTextureID,          3);
     }
     if (textureTypeMap.find(EMISSIVE_TEXTURE) != textureTypeMap.end())
     {
-        setTexture2D(shaderProgram, "emissiveTexture", textureTypeMap.at(EMISSIVE_TEXTURE).glTextureID,     4);
+        glUtils::setTexture2D(shaderProgram, "emissiveTexture", textureTypeMap.at(EMISSIVE_TEXTURE).glTextureID,     4);
     }
 
     glBindVertexArray(vao);
@@ -117,7 +117,7 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
     unsigned int i = 0;
     for (auto uniformName : std::vector<std::string>{ "texPositionAndScaleX", "scaleZAndNormal", "rotationAsQuat", "texColor", "pbrAndScaleY" })
     {
-        setTexture2D(computeShaderProgram, uniformName,    drawBuffers[i], i);
+        glUtils::setTexture2D(computeShaderProgram, uniformName,    drawBuffers[i], i);
         ++i;
     }
 
