@@ -1,6 +1,6 @@
 #pragma once
 #include "utils.hpp"
-#include "../parsers.hpp"
+#include "../parsers/parsers.hpp"
 #include "../../thirdParty/xatlas/xatlas.h"
 #include "../../thirdParty/stb_image_write.h"
 

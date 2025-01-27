@@ -1,6 +1,6 @@
 #pragma once
 #include "utils.hpp"
-#include "../parsers.hpp"
+#include "../parsers/parsers.hpp"
 
 namespace glUtils
 { 

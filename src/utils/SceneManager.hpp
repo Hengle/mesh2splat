@@ -2,7 +2,7 @@
 #include "utils.hpp"
 #include "../renderer/renderPasses/RenderContext.hpp"
 #include "./normalizedUvUnwrapping.hpp"
-#include "../parsers.hpp"
+#include "../parsers/parsers.hpp"
 
 
 class SceneManager {

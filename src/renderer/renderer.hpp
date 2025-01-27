@@ -2,7 +2,7 @@
 #include "../utils/utils.hpp"
 #include "ioHandler.hpp"
 #include "../imGuiUi/ImGuiUi.hpp"
-#include "../parsers.hpp"
+#include "../parsers/parsers.hpp"
 #include "../utils/shaderUtils.hpp"
 #include "../radixSort/RadixSort.hpp"
 #include "renderPasses/RenderContext.hpp"

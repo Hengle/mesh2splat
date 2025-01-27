@@ -1,9 +1,9 @@
 #pragma once
-#include "../thirdParty/tiny_gltf.h"
-#include "../thirdParty/stb_image.h"   
-#include "../thirdParty/stb_image_resize.h"
-#include "../thirdParty/stb_image_write.h"
-#include "utils/utils.hpp"
+#include "../../thirdParty/tiny_gltf.h"
+#include "../../thirdParty/stb_image.h"   
+#include "../../thirdParty/stb_image_resize.h"
+#include "../../thirdParty/stb_image_write.h"
+#include "../utils/utils.hpp"
 
 TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight);
 
