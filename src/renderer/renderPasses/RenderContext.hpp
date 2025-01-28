@@ -54,6 +54,8 @@ struct RenderContext {
     GLuint valuesBuffer;
     GLuint gaussianBufferSorted;
     GLuint drawIndirectBuffer;
+    
+    unsigned int countFromPly = 0;
 
     // Data Structures
     std::vector<std::pair<Mesh, GLMesh>> dataMeshAndGlMesh;

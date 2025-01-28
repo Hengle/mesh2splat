@@ -20,7 +20,7 @@ void main() {
 	gl_Position = pos2dNdc;
 	//TODO: Should actually use the conic to compute varying density
 	//out_conic = vec3(cov2d[1][1] * det_inv, -cov2d[0][1] * det_inv, cov2d[0][0] * det_inv);
-	out_color = color.rgb;
+	out_color = color.rgb * color.a;
 	out_opacity = color.a;
 	out_uv = vertexPos.xy;
 }

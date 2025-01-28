@@ -91,6 +91,7 @@ void GaussianSplattingPass::computePrepass(RenderContext& renderContext)
         GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), GL_MAP_READ_BIT
     );
 
+
     unsigned int validCount = cmd->instanceCount;
     glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 

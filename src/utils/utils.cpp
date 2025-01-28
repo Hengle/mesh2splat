@@ -45,7 +45,7 @@ glm::vec3 getShFromColor(glm::vec3 color)
 
 glm::vec3 getColorFromSh(glm::vec3 sh)
 {
-    glm::vec3 col = sh + glm::vec3(0.5f) / SH_COEFF0;
+    glm::vec3 col = sh * SH_COEFF0 + glm::vec3(0.5f);
     return glm::vec3(col.x, col.y, col.z);
 }
 

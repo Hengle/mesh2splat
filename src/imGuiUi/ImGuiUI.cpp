@@ -8,10 +8,14 @@ ImGuiUI::ImGuiUI(float defaultResolutionIndex, int defaultFormat, float defaultG
       runConversionFlag(false),
       loadNewMesh(false),
       savePly(false),
-      hasMeshBeenLoaded(false)
+      hasMeshBeenLoaded(false),
+      loadNewPly(false),
+      hasPlyBeenLoaded(false)
 {
     //TODO: remove this and add a different debug default folder
     strcpy(meshFilePathBuffer, "C:\\Users\\sscolari\\Desktop\\dataset\\scifiHelmet\\scifiHelmet.glb");
+    strcpy(plyFilePathBuffer, "C:\\Users\\sscolari\\Desktop\\halcyonFix\\halcyon\\Content\\Halcyon\\PlyTestAssets\\plushToyUp.ply");
+
     destinationFilePathBuffer[0] = '\0';  // empty destination path initially
 }
 

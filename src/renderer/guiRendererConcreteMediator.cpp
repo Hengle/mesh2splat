@@ -12,7 +12,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
             break;
         }
         case EventType::LoadPly: {
-            renderer.getSceneManager().loadPly(imguiUI.getMeshFilePath());
+            renderer.getSceneManager().loadPly(imguiUI.getPlyFilePath());
             renderer.enableRenderPass("radixSort");
             renderer.enableRenderPass("gaussianSplatting");
             imguiUI.setLoadNewPly(false);

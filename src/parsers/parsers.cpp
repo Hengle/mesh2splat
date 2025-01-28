@@ -638,36 +638,42 @@ namespace parsers
         GaussianDataSSBO gaussian;
 
         for (size_t i = 0; i < numVertices; ++i) {
-            // Set position (w = 1.0 for homogeneous coordinates)
-            gaussian.position.x = vertex_x[i];
-            gaussian.position.y = vertex_y[i];
-            gaussian.position.z = vertex_z[i];
-            gaussian.position.w = 1.0f;
+            try {
+                // Set position (w = 1.0 for homogeneous coordinates)
+                gaussian.position.x = vertex_x[i];
+                gaussian.position.y = vertex_y[i];
+                gaussian.position.z = vertex_z[i];
+                gaussian.position.w = 1.0f;
 
-            glm::vec3 rgb_color = getColorFromSh(glm::vec3(vertex_f_dc_0[i], vertex_f_dc_1[i], vertex_f_dc_2[i]));
-            gaussian.color.x = rgb_color[i];
-            gaussian.color.y = rgb_color[i];
-            gaussian.color.z = rgb_color[i];
-            gaussian.color.w = sigmoid(vertex_opacity[i]);
+                glm::vec3 rgb_color = getColorFromSh(glm::vec3(vertex_f_dc_0[i], vertex_f_dc_1[i], vertex_f_dc_2[i]));
+                gaussian.color.x = rgb_color.r;
+                gaussian.color.y = rgb_color.g;
+                gaussian.color.z = rgb_color.b;
+                gaussian.color.w = sigmoid(vertex_opacity[i]);
 
-            gaussian.scale.x = vertex_scale_0[i];
-            gaussian.scale.y = vertex_scale_1[i];
-            gaussian.scale.z = vertex_scale_2[i];
-            gaussian.scale.w = 1.0f;
+                gaussian.scale.x = vertex_scale_0[i];
+                gaussian.scale.y = vertex_scale_1[i];
+                gaussian.scale.z = vertex_scale_2[i];
+                gaussian.scale.w = 1.0f;
 
-            gaussian.normal.x = vertex_nx[i];
-            gaussian.normal.y = vertex_ny[i];
-            gaussian.normal.z = vertex_nz[i];
-            gaussian.normal.w = 0.0f;
+                gaussian.normal.x = vertex_nx[i];
+                gaussian.normal.y = vertex_ny[i];
+                gaussian.normal.z = vertex_nz[i];
+                gaussian.normal.w = 0.0f;
 
-            gaussian.rotation.x = vertex_rot_0[i];
-            gaussian.rotation.y = vertex_rot_1[i];
-            gaussian.rotation.z = vertex_rot_2[i];
-            gaussian.rotation.w = vertex_rot_3[i];
+                gaussian.rotation.x = vertex_rot_0[i];
+                gaussian.rotation.y = vertex_rot_1[i];
+                gaussian.rotation.z = vertex_rot_2[i];
+                gaussian.rotation.w = vertex_rot_3[i];
 
-            gaussian.pbr = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+                gaussian.pbr = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 
-            gaussians.push_back(gaussian);
+                gaussians.push_back(gaussian);
+            }
+            catch (const std::exception& exc)
+            {
+                std::cerr << exc.what();;
+            }
         }
     }
 

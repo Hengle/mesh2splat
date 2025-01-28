@@ -4,6 +4,7 @@
 #include "./normalizedUvUnwrapping.hpp"
 #include "../parsers/parsers.hpp"
 #include "Texture.hpp"
+#include "../renderer/RenderPasses.hpp"
 
 class SceneManager {
 public:

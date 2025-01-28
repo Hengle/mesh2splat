@@ -13,15 +13,26 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 #ifdef  _DEBUG
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::RADIX_SORT_KEYSVALUE, -1, "RADIX_SORT_KEYSVALUE");
 #endif 
+    unsigned int validCount = 0;
+    //Assume that if not 0 then we loaded a ply file
+    if (renderContext.countFromPly == 0)
+    {
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
 
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
+        DrawElementsIndirectCommand* cmd = (DrawElementsIndirectCommand*)glMapBufferRange(
+            GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), GL_MAP_READ_BIT
+        );
 
-    DrawElementsIndirectCommand* cmd = (DrawElementsIndirectCommand*)glMapBufferRange(
-        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), GL_MAP_READ_BIT
-    );
+        validCount = cmd->instanceCount;
+        glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+    }
+    else
+    {
+        //glGenBuffers(1, &(renderContext.drawIndirectBuffer));
+        validCount = renderContext.countFromPly;
+        //glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
+    }
 
-    unsigned int validCount = cmd->instanceCount;
-    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 
     // Transform Gaussian positions to view space and apply global sort
     glUseProgram(renderContext.shaderPrograms.radixSortPrepassProgram);

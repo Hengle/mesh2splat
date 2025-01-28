@@ -82,7 +82,7 @@ void main() {
 	
 	mat3 cov3d;
 
-	computeCov3D(guassian.rotation, exp(guassian.scale.xyz) * u_stdDev, cov3d);
+	computeCov3D(guassian.rotation, exp(guassian.scale.xyz), cov3d);
 	vec4 gaussian_vs = u_worldToView * vec4(guassian.position.xyz, 1);
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
