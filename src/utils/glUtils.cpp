@@ -46,7 +46,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherPassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo) {
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo) {
 
         shaderFiles["converterVert"]                = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
         shaderFiles["converterGeom"]                = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
@@ -58,6 +59,8 @@ namespace glUtils
         shaderFiles["radixSortPrepassCompute"]      = { fs::last_write_time(RADIX_SORT_PREPASS_SHADER_LOCATION),   RADIX_SORT_PREPASS_SHADER_LOCATION };
         shaderFiles["radixSortGatherCompute"]       = { fs::last_write_time(RADIX_SORT_GATHER_SHADER_LOCATION),   RADIX_SORT_GATHER_SHADER_LOCATION };
     
+
+        shaderFiles["rendererComputePrepass"]       = { fs::last_write_time(RENDERER_PREPASS_COMPUTE_SHADER_LOCATION),   RENDERER_PREPASS_COMPUTE_SHADER_LOCATION };
         shaderFiles["renderer3dgsVert"]             = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
         shaderFiles["renderer3dgsFrag"]             = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
 
@@ -77,6 +80,12 @@ namespace glUtils
 
         radixSortGatherPassShadersInfo = {
             { RADIX_SORT_GATHER_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+        };
+
+
+        
+        rendering3dgsComputePrepassShadersInfo = {
+            { RENDERER_PREPASS_COMPUTE_SHADER_LOCATION,      GL_COMPUTE_SHADER },
         };
 
         rendering3dgsShadersInfo = {
@@ -582,6 +591,26 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         GLsizeiptr bufferSize = size * sizeof(unsigned int);
         glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, valuesBuffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
+
+    void setupPerQuadTransformationsBufferSsbo(unsigned int size, GLuint perQuadTransformationsBuffer, unsigned int bindingPos)
+    { 
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, perQuadTransformationsBuffer);
+        GLsizeiptr bufferSize = size * sizeof(glm::vec4) * 3;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, perQuadTransformationsBuffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
+
+    //TODO: next refactor: replace all previous with this
+    template<typename T>
+    void setupAndBindSSBO(unsigned int size, GLuint buffer, unsigned int bindingPos)
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+        GLsizeiptr bufferSize = size * sizeof(T);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, buffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 

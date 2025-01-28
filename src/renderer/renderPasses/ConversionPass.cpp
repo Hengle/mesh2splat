@@ -106,7 +106,7 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
                     GL_DYNAMIC_DRAW);
 
     DrawArraysIndirectCommand cmd_init;
-    cmd_init.count         = 6;  
+    cmd_init.count         = 4;  
     cmd_init.instanceCount = 0;  
     cmd_init.first         = 0;
     cmd_init.baseInstance  = 0;

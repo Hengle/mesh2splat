@@ -10,14 +10,16 @@ Renderer::Renderer(GLFWwindow* window)
     renderPassesOrder = {};
     renderContext = {};
     glGenVertexArrays(1, &(renderContext.vao));
-    renderContext.gaussianBuffer            = -1;
-    renderContext.drawIndirectBuffer        = -1;
-    renderContext.keysBuffer                = -1;
-	renderContext.valuesBuffer              = -1;
-    renderContext.gaussianBufferSorted      = -1;
-    renderContext.normalizedUvSpaceWidth    = 0;
-    renderContext.normalizedUvSpaceHeight   = 0;
-    renderContext.rendererGlfwWindow        = window; //TODO: this double reference is ugly, refactor
+    //TODO: these should be set to 0 not -1...
+    renderContext.gaussianBuffer                = -1;
+    renderContext.drawIndirectBuffer            = -1;
+    renderContext.keysBuffer                    = -1;
+	renderContext.valuesBuffer                  = -1;
+    renderContext.gaussianBufferSorted          = -1;
+    renderContext.perQuadTransformationsBuffer  = 0;
+    renderContext.normalizedUvSpaceWidth        = 0;
+    renderContext.normalizedUvSpaceHeight       = 0;
+    renderContext.rendererGlfwWindow            = window; //TODO: this double reference is ugly, refactor
 
     lastShaderCheckTime      = glfwGetTime();
     //TODO: should this maybe live in the Renderer rather than shader utils? Probably yes
@@ -25,12 +27,13 @@ Renderer::Renderer(GLFWwindow* window)
         shaderFiles,
         converterShadersInfo, computeShadersInfo,
         radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
-        rendering3dgsShadersInfo
+        rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
     updateShadersIfNeeded(true);
     
     glGenBuffers(1, &(renderContext.keysBuffer));
+    glGenBuffers(1, &(renderContext.perQuadTransformationsBuffer));
     glGenBuffers(1, &(renderContext.valuesBuffer));
     glGenBuffers(1, &(renderContext.gaussianBufferSorted));
 
@@ -64,6 +67,7 @@ Renderer::~Renderer()
 {
     glDeleteVertexArrays(1, &(renderContext.vao));
 
+    glDeleteProgram(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
     glDeleteProgram(renderContext.shaderPrograms.renderShaderProgram);
     glDeleteProgram(renderContext.shaderPrograms.converterShaderProgram);
     glDeleteProgram(renderContext.shaderPrograms.computeShaderProgram);
@@ -243,6 +247,8 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
             this->renderContext.shaderPrograms.radixSortGatherProgram   = glUtils::reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
 
             this->renderContext.shaderPrograms.renderShaderProgram      = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
+            
+            this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram      = glUtils::reloadShaderPrograms(rendering3dgsComputePrepassShadersInfo, this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
 
             return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others
             //TODO P1: investigate this, I am not sure I dont think I need to recreate all programs, I am now convinced I can just do reloadShaderPrograms(info, --> ) need to know how it is saved within the map

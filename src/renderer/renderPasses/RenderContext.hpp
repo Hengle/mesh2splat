@@ -21,6 +21,7 @@ struct RenderContext {
     {
         GLuint converterShaderProgram;
         GLuint computeShaderProgram;
+        GLuint computeShaderGaussianPrepassProgram;
         GLuint renderShaderProgram;
         GLuint radixSortPrepassProgram;
         GLuint radixSortGatherProgram;
@@ -38,6 +39,7 @@ struct RenderContext {
     GLuint* drawBuffers; //TODO: BEWARE
     GLuint gaussianBuffer;
     GLuint keysBuffer;
+    GLuint perQuadTransformationsBuffer;
     GLuint valuesBuffer;
     GLuint gaussianBufferSorted;
     GLuint drawIndirectBuffer;

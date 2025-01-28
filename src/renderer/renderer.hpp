@@ -51,7 +51,9 @@ private:
 	std::vector<std::pair<std::string, GLenum>> computeShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> radixSortPrePassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> radixSortGatherPassShadersInfo;
+	std::vector<std::pair<std::string, GLenum>> rendering3dgsComputePrepassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
+
 	double lastShaderCheckTime;
 
 	double gpuFrameTimeMs;

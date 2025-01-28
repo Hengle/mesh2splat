@@ -21,6 +21,9 @@ namespace glUtils
     #define RADIX_SORT_PREPASS_SHADER_LOCATION "./src/shaders/rendering/radixSortPrepass.glsl" 
     #define RADIX_SORT_GATHER_SHADER_LOCATION "./src/shaders/rendering/radixSortGather.glsl" 
 
+
+    #define RENDERER_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPrepassCS.glsl" 
+
     #define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
     #define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
 
@@ -42,6 +45,10 @@ namespace glUtils
     void setupSortedBufferSsbo(unsigned int size, GLuint sortedBuffer, unsigned int bindingPos);
     void setupKeysBufferSsbo(unsigned int size, GLuint keysBuffer, unsigned int bindingPos);
     void setupValuesBufferSsbo(unsigned int size, GLuint valuesBuffer, unsigned int bindingPos);
+    void setupPerQuadTransformationsBufferSsbo(unsigned int size, GLuint perQuadTransformationsBuffer, unsigned int bindingPos);
+
+    template<typename T>
+    void setupAndBindSSBO(unsigned int size, GLuint buffer, unsigned int bindingPos);
 
     std::string readShaderFile(const char* filePath);
 
@@ -59,7 +66,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo
     );
 
     bool shaderFileChanged(const ShaderFileInfo& info);

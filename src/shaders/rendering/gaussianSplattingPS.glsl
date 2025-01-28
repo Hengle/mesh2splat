@@ -2,7 +2,6 @@
 
 in vec3 out_color;
 in float out_opacity;
-in vec3 out_conic;
 in vec2 out_uv;
 
 out vec4 FragColor;

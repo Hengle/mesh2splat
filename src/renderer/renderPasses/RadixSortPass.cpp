@@ -11,7 +11,7 @@ void RadixSortPass::execute(RenderContext& renderContext)
 unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 {
 
-     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
 
     DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
         GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
