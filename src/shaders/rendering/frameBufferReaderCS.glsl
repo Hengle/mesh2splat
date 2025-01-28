@@ -25,6 +25,7 @@ layout(std430, binding = 6) writeonly buffer DrawCommand {
     uint count;
     uint instanceCount;
     uint first;
+    uint baseVertex;
     uint baseInstance;
 } drawElementsIndirectCommand;
 

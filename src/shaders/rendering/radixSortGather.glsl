@@ -26,7 +26,7 @@ void main() {
     }
 
     if (gid == 0) {
-        drawElementsIndirectCommand.count        = 4;
+        drawElementsIndirectCommand.count        = 6;
         drawElementsIndirectCommand.instanceCount = u_count;
         drawElementsIndirectCommand.first        = 0;
         drawElementsIndirectCommand.baseInstance = 0;

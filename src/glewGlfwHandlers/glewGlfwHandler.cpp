@@ -4,6 +4,12 @@ GlewGlfwHandler::GlewGlfwHandler(glm::ivec2 windowDimensions, std::string window
 {
     if (!glfwInit())
         exit(-1);
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    //glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+
     this->window = glfwCreateWindow(windowDimensions.x, windowDimensions.y, windowName.c_str(), NULL, NULL);
     if (!this->window) {
         glfwTerminate();

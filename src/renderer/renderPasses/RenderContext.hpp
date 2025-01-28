@@ -3,6 +3,17 @@
 #include "../../utils/utils.hpp"
 #include "../../utils/glUtils.hpp"
 
+enum PassesDebugIDs
+{
+    CONVERSION_PASS                 = 0,
+    CONVERSION_AGGREGATION_PASS     = 1,
+    RADIX_SORT_KEYSVALUE            = 2,
+    RADIX_SORT_MAIN                 = 3,
+    RADIX_SORT_GATHER               = 4,
+    GAUSSIAN_SPLATTING_PREPASS      = 5,
+    GAUSSIAN_SPLATTING_RENDER       = 6
+};
+
 //TODO: split up in sub contexts
 struct RenderContext {
     // Parameters

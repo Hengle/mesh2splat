@@ -42,13 +42,16 @@ namespace glUtils
     void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
 
     void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
-    void setupSortedBufferSsbo(unsigned int size, GLuint sortedBuffer, unsigned int bindingPos);
-    void setupKeysBufferSsbo(unsigned int size, GLuint keysBuffer, unsigned int bindingPos);
-    void setupValuesBufferSsbo(unsigned int size, GLuint valuesBuffer, unsigned int bindingPos);
-    void setupPerQuadTransformationsBufferSsbo(unsigned int size, GLuint perQuadTransformationsBuffer, unsigned int bindingPos);
 
     template<typename T>
-    void setupAndBindSSBO(unsigned int size, GLuint buffer, unsigned int bindingPos);
+    void resizeAndBindToPosSSBO(unsigned int size, GLuint buffer, unsigned int bindingPos)
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+        GLsizeiptr bufferSize = size * sizeof(T);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, buffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    };
 
     std::string readShaderFile(const char* filePath);
 

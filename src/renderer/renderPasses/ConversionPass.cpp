@@ -47,6 +47,7 @@ void ConversionPass::execute(RenderContext &renderContext)
     }
 }
 
+
 void ConversionPass::conversion(
         GLuint shaderProgram, GLuint vao,
         GLuint framebuffer, size_t vertexCount,
@@ -54,6 +55,9 @@ void ConversionPass::conversion(
         const std::map<std::string, TextureDataGl>& textureTypeMap, MaterialGltf material, unsigned int referenceResolution, float GAUSSIAN_STD
     ) 
 {
+#ifdef  _DEBUG
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::CONVERSION_PASS, -1, "CONVERSION_VS_GS_PS_PASS");
+#endif 
     // Use shader program and perform tessellation
     glUseProgram(shaderProgram);
 
@@ -92,27 +96,37 @@ void ConversionPass::conversion(
 
     glDrawArrays(GL_TRIANGLES, 0, vertexCount); 
 
+#ifdef  _DEBUG
+    glPopDebugGroup();
+#endif 
+ 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
 
 void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffers, GLuint& gaussianBuffer, GLuint& drawIndirectBuffer, unsigned int resolutionTarget)
 {
     glGenBuffers(1, &drawIndirectBuffer);
+
+#ifdef  _DEBUG
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::CONVERSION_AGGREGATION_PASS, -1, "CONVERSION_AGGREGATION_PASS");
+#endif 
+
     glUseProgram(computeShaderProgram);
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
     glBufferData(GL_DRAW_INDIRECT_BUFFER,
-                    sizeof(DrawArraysIndirectCommand),
+                    sizeof(DrawElementsIndirectCommand),
                     nullptr,
                     GL_DYNAMIC_DRAW);
 
-    DrawArraysIndirectCommand cmd_init;
+    DrawElementsIndirectCommand cmd_init;
     cmd_init.count         = 4;  
     cmd_init.instanceCount = 0;  
     cmd_init.first         = 0;
+    cmd_init.baseVertex    = 0;
     cmd_init.baseInstance  = 0;
 
-    // 4) Upload to the GPU buffer
-    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), &cmd_init);
+    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), &cmd_init);
 
     unsigned int i = 0;
     for (auto uniformName : std::vector<std::string>{ "texPositionAndScaleX", "scaleZAndNormal", "rotationAsQuat", "texColor", "pbrAndScaleY" })
@@ -135,4 +149,8 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
 
     // Ensure compute shader completion
     glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+
+#ifdef  _DEBUG
+    glPopDebugGroup();
+#endif 
 }

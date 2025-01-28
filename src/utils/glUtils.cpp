@@ -554,7 +554,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
     }
 
 
-    //TODO: often violating D.R.Y --> find better generalization
+    //TODO: this one is a bit different
     void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
     {
         glGenBuffers(1, &(*gaussianBuffer));
@@ -564,53 +564,6 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
         unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, *gaussianBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-
-    void setupSortedBufferSsbo(unsigned int size, GLuint sortedBuffer, unsigned int bindingPos)
-    {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, sortedBuffer);
-        GLsizeiptr bufferSize = size * sizeof(GaussianDataSSBO);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, sortedBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-
-    void setupKeysBufferSsbo(unsigned int size, GLuint keysBuffer, unsigned int bindingPos)
-    {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, keysBuffer);
-        GLsizeiptr bufferSize = size * sizeof(unsigned int);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, keysBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-
-    void setupValuesBufferSsbo(unsigned int size, GLuint valuesBuffer, unsigned int bindingPos)
-    { 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, valuesBuffer);
-        GLsizeiptr bufferSize = size * sizeof(unsigned int);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, valuesBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-
-    void setupPerQuadTransformationsBufferSsbo(unsigned int size, GLuint perQuadTransformationsBuffer, unsigned int bindingPos)
-    { 
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, perQuadTransformationsBuffer);
-        GLsizeiptr bufferSize = size * sizeof(glm::vec4) * 3;
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, perQuadTransformationsBuffer);
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    }
-
-    //TODO: next refactor: replace all previous with this
-    template<typename T>
-    void setupAndBindSSBO(unsigned int size, GLuint buffer, unsigned int bindingPos)
-    {
-        glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
-        GLsizeiptr bufferSize = size * sizeof(T);
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, buffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
     }
 

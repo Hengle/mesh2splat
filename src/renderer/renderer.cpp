@@ -37,21 +37,10 @@ Renderer::Renderer(GLFWwindow* window)
     glGenBuffers(1, &(renderContext.valuesBuffer));
     glGenBuffers(1, &(renderContext.gaussianBufferSorted));
 
-    GLsizeiptr maxKeysBytes   = MAX_GAUSSIANS_TO_SORT * sizeof(unsigned int);
-    GLsizeiptr maxValuesBytes = MAX_GAUSSIANS_TO_SORT * sizeof(unsigned int);
-    GLsizeiptr maxGaussBytes  = MAX_GAUSSIANS_TO_SORT * sizeof(GaussianDataSSBO);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.keysBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, maxKeysBytes, nullptr, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.valuesBuffer);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, maxValuesBytes, nullptr, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, maxGaussBytes, nullptr, GL_DYNAMIC_DRAW);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, renderContext.gaussianBufferSorted);
+    glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.keysBuffer, 1);
+    glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.valuesBuffer, 2);
+    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT , renderContext.gaussianBufferSorted, 3);
+    glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 3, renderContext.perQuadTransformationsBuffer, 4);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -263,16 +252,9 @@ unsigned int Renderer::getGaussianCountFromIndirectBuffer()
     if (this->renderContext.drawIndirectBuffer != static_cast<GLuint>(-1))
     {
         glBindBuffer(GL_DRAW_INDIRECT_BUFFER, this->renderContext.drawIndirectBuffer);
-        //TODO: should not need to re-define this buffer each time lol
-        struct DrawArraysIndirectCommand {
-            GLuint count;        // Number of vertices to draw.
-            GLuint instanceCount;    // Number of instances.
-            GLuint first;        // Starting index in the vertex buffer.
-            GLuint baseInstance; // Base instance for instanced rendering.
-        };
 
-        DrawArraysIndirectCommand* cmd = (DrawArraysIndirectCommand*)glMapBufferRange(
-            GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawArraysIndirectCommand), GL_MAP_READ_BIT
+        IRenderPass::DrawElementsIndirectCommand* cmd = (IRenderPass::DrawElementsIndirectCommand*)glMapBufferRange(
+            GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IRenderPass::DrawElementsIndirectCommand), GL_MAP_READ_BIT
         );
 
         unsigned int validCount = cmd->instanceCount;

@@ -8,10 +8,11 @@ public:
     virtual bool isEnabled() const { return isPassEnabled; }
     virtual void setIsEnabled(bool isPassEnabled) { this->isPassEnabled = isPassEnabled; };
     
-    struct DrawArraysIndirectCommand {
+    struct DrawElementsIndirectCommand {
         GLuint count;        
         GLuint instanceCount;
-        GLuint first;        
+        GLuint first;       
+        GLuint baseVertex;
         GLuint baseInstance; 
     };
 
