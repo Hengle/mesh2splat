@@ -24,6 +24,8 @@ uniform mat4 u_worldToView;
 uniform mat4 u_viewToClip;
 uniform vec2 u_resolution;
 uniform vec3 u_camPos;
+uniform int u_renderMode;
+
 
 layout(std430, binding = 0) readonly buffer GaussianBuffer {
     GaussianVertex gaussians[];
@@ -102,8 +104,22 @@ void main() {
 		perQuadTransformations.ndcTransformations[gid].color				= vec4(gaussian.color.rgb, 0);
 		return;
     }
+	
+	vec4 outputColor = vec4(0, 0, 0, 0);
+	if (u_renderMode == 1)
+	{
+		float normalizedDepth = (-gaussian_vs.z - 0.01) / (100.0 - 0.01);
+		float invertedLinearizedDepth = clamp(normalizedDepth, 0, 1);
+		float expDepthFallof = exp(-10 * invertedLinearizedDepth);
+		float zSq = clamp((expDepthFallof), 0, 1);
+		outputColor = vec4(zSq, zSq, zSq, gaussian.color.a);
+	}
+	else
+	{
+		outputColor = gaussian.color;
+	}
 
-
+	
 	pos2d.xyz = pos2d.xyz / pos2d.w;
 	pos2d.w = 1.f;
 
@@ -155,7 +171,8 @@ void main() {
 
 	perQuadTransformations.ndcTransformations[gid].gaussianMean2dNdc	= pos2d;
 	perQuadTransformations.ndcTransformations[gid].quadScaleNdc			= vec4(majorAxisMultiplier, minorAxisMultiplier);
-	perQuadTransformations.ndcTransformations[gid].color				= gaussian.color;
+
+	perQuadTransformations.ndcTransformations[gid].color				= outputColor;
 
 }
 

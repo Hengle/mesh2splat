@@ -199,6 +199,12 @@ void Renderer::setStdDevFromImGui(float stdDev)
     renderContext.gaussianStd = stdDev;
 }
 
+void Renderer::setRenderMode(ImGuiUI::VisualizationOption selectedRenderMode)
+{
+    //HM: https://stackoverflow.com/questions/14589417/can-an-enum-class-be-converted-to-the-underlying-type (I just one-lined it)
+    renderContext.renderMode = static_cast<std::underlying_type<ImGuiUI::VisualizationOption>::type>(selectedRenderMode);
+}
+
 SceneManager& Renderer::getSceneManager()
 {
     return *sceneManager;
@@ -226,7 +232,6 @@ void Renderer::updateGaussianBuffer()
 
     glUtils::fillGaussianBufferSsbo(&(renderContext.gaussianBuffer), renderContext.readGaussians);
 }
-
 
 bool Renderer::updateShadersIfNeeded(bool forceReload) {
     for (auto& entry : shaderFiles) {

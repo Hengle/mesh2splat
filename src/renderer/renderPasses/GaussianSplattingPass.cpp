@@ -98,12 +98,14 @@ void GaussianSplattingPass::computePrepass(RenderContext& renderContext)
     // Transform Gaussian positions to view space and apply global sort
     glUseProgram(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
 
-    glUtils::setUniform1f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_stdDev", renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
-    glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_hfov_focal", renderContext.hfov_focal);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_worldToView", renderContext.viewMat);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_viewToClip", renderContext.projMat);
-    glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_resolution", renderContext.rendererResolution);
-    glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram, "u_camPos", renderContext.camPos);
+    glUtils::setUniform1f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_stdDev", renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
+    glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_hfov_focal", renderContext.hfov_focal);
+    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_worldToView", renderContext.viewMat);
+    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_viewToClip", renderContext.projMat);
+    glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_camPos", renderContext.camPos);
+    glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
+
 
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);

@@ -33,7 +33,7 @@ public:
 	SceneManager& getSceneManager();
 	double getTotalGpuFrameTimeMs() const;
 	void updateGaussianBuffer();
-
+	void setRenderMode(ImGuiUI::VisualizationOption renderMode);
 
 private:
 	std::map<std::string, std::unique_ptr<IRenderPass>> renderPasses;
@@ -58,6 +58,5 @@ private:
 	double gpuFrameTimeMs;
 
 	Camera& camera;
-
 
 };

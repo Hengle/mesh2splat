@@ -439,6 +439,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         glUniform1i(uniformLocation, uniformValue);
     }
 
+
     void setUniform1ui(GLuint shaderProgram, std::string uniformName, unsigned int uniformValue)
     {
         GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());

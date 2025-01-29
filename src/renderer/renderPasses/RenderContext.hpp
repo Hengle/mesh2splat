@@ -63,4 +63,6 @@ struct RenderContext {
     std::vector<GaussianDataSSBO> readGaussians;
     
     std::deque<GLuint> queryPool;
+
+    unsigned int renderMode; //0: color, 1: depth
 };

@@ -31,6 +31,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
         case EventType::EnableGaussianRendering: {
             renderer.resetRendererViewportResolution();
             renderer.setStdDevFromImGui(imguiUI.getGaussianStd());
+            renderer.setRenderMode(imguiUI.selectedRenderMode());
             renderer.enableRenderPass("radixSort");
             renderer.enableRenderPass("gaussianSplatting");
             break;
@@ -38,7 +39,9 @@ void GuiRendererConcreteMediator::notify(EventType event)
         case EventType::CheckShaderUpdate: {
             renderer.updateShadersIfNeeded();
             renderer.setLastShaderCheckTime(glfwGetTime());
+            break;
         }
+         
     }
 }
 

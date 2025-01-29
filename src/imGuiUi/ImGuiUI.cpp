@@ -72,12 +72,10 @@ void ImGuiUI::renderUI()
 
 
     ImGui::ColorEdit4("Background Color", &sceneBackgroundColor.x);
+    ImGui::Combo("Render Mode", &renderIndex, renderLabels, IM_ARRAYSIZE(renderLabels));
 
     //TODO: right now std_dev is not updated in the actual gaussianBuffer, just during rendering. Need to consider this when exporting
     if (ImGui::SliderFloat("Gaussian Std Dev", &gaussian_std, minStd, maxStd, "%.2f"));
-    //{
-    //    runConversionFlag = true;
-    //};
 
     if (ImGui::SliderFloat("Mesh2Splat quality", &quality, 0.0f, 1.0f, "%.2f")) {
         runConversionFlag = true;
@@ -88,6 +86,7 @@ void ImGuiUI::renderUI()
     if (ImGui::Button("Save splat")) {
         savePly = true;
     }
+
 
     ImGui::End();
 
@@ -180,6 +179,8 @@ glm::vec4 ImGuiUI::getSceneBackgroundColor() const { return sceneBackgroundColor
 float ImGuiUI::getGaussianStd() const { return gaussian_std; };
 int ImGuiUI::getResolutionTarget() const { return static_cast<int>(minRes + quality * (maxRes - minRes)); };
 
+//renderModeSelector
+ImGuiUI::VisualizationOption ImGuiUI::selectedRenderMode() const { return renderOptions[renderIndex]; };
 
 void ImGuiUI::setLoadNewMesh(bool shouldLoadNewMesh) { loadNewMesh = shouldLoadNewMesh; };
 void ImGuiUI::setMeshLoaded(bool loaded) { hasMeshBeenLoaded = loaded; };

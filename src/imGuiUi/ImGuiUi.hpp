@@ -22,6 +22,7 @@ public:
     bool shouldSavePly() const;
     bool wasMeshLoaded() const;
     bool shouldLoadPly() const;
+
     bool wasPlyLoaded() const;
 
     std::string getMeshFilePath() const;
@@ -29,7 +30,6 @@ public:
     std::string getMeshFullFilePathDestination() const;
     std::string getPlyFilePathParentFolder() const;
     std::string getPlyFilePath() const;
-
 
 
     float getGaussianStd() const;
@@ -46,8 +46,15 @@ public:
     void setLoadNewPly(bool loadedPly);
     void setPlyLoaded(bool loadedPly);
 
-
     void renderGpuFrametime();
+
+    enum class VisualizationOption
+    {
+        COLOR = 0,
+        DEPTH = 1,
+    };
+    
+    ImGuiUI::VisualizationOption selectedRenderMode() const ;
 
 
 private:
@@ -59,11 +66,18 @@ private:
     const int formatOptions[2] = { 1, 2 };
     const char* formatLabels[2] = { "PLY Standard Format", "Pbr PLY" };
 
+    int renderIndex;
+    const ImGuiUI::VisualizationOption renderOptions[2] = { ImGuiUI::VisualizationOption::COLOR, ImGuiUI::VisualizationOption::DEPTH };
+    const char* renderLabels[2] = { "Color", "Depth" };
+
     float gaussian_std;
     float quality;
     bool runConversionFlag;
     bool loadNewMesh;
     bool loadNewPly;
+
+    //Rendering flags
+    bool hasRenderModeChanged;
 
     bool hasPlyBeenLoaded;
     bool hasMeshBeenLoaded;
