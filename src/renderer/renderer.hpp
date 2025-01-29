@@ -32,6 +32,8 @@ public:
 	void resetRendererViewportResolution();
 	SceneManager& getSceneManager();
 	double getTotalGpuFrameTimeMs() const;
+	void updateGaussianBuffer();
+
 
 private:
 	std::map<std::string, std::unique_ptr<IRenderPass>> renderPasses;

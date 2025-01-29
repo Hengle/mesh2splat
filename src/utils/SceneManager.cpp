@@ -28,28 +28,7 @@ bool SceneManager::loadModel(const std::string& filePath, const std::string& par
 }
 
 bool SceneManager::loadPly(const std::string& filePath) {
-    std::vector<GaussianDataSSBO> gaussians;
-    parsers::loadPlyFile(filePath, gaussians);
-
-    //TODO: bad, very bad
-    glGenBuffers(1, &(renderContext.drawIndirectBuffer));
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER,
-                    sizeof(IRenderPass::DrawElementsIndirectCommand),
-                    nullptr,
-                    GL_DYNAMIC_DRAW);
-
-    IRenderPass::DrawElementsIndirectCommand cmd_init;
-    cmd_init.count         = 4;  
-    cmd_init.instanceCount = 0;  
-    cmd_init.first         = 0;
-    cmd_init.baseVertex    = 0;
-    cmd_init.baseInstance  = 0;
-
-    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IRenderPass::DrawElementsIndirectCommand), &cmd_init);
-
-    glUtils::fillGaussianBufferSsbo(&(renderContext.gaussianBuffer), gaussians);
-    renderContext.countFromPly = gaussians.size();
+    parsers::loadPlyFile(filePath, renderContext.readGaussians);
     return true;
 }
 

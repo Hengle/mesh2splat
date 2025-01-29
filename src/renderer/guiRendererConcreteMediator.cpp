@@ -13,6 +13,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
         }
         case EventType::LoadPly: {
             renderer.getSceneManager().loadPly(imguiUI.getPlyFilePath());
+            renderer.updateGaussianBuffer();
             renderer.enableRenderPass("radixSort");
             renderer.enableRenderPass("gaussianSplatting");
             imguiUI.setLoadNewPly(false);

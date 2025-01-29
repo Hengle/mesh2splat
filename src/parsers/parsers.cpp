@@ -593,52 +593,51 @@ namespace parsers
 
     void loadPlyFile(std::string plyFileLocation, std::vector<GaussianDataSSBO>& gaussians)
     {
-
-        happly::PLYData plyIn(plyFileLocation);
-        std::vector<float> vertex_x = plyIn.getElement("vertex").getProperty<float>("x");
-        std::vector<float> vertex_y = plyIn.getElement("vertex").getProperty<float>("y");
-        std::vector<float> vertex_z = plyIn.getElement("vertex").getProperty<float>("z");
+        try {
+            happly::PLYData plyIn(plyFileLocation);
+            std::vector<float> vertex_x = plyIn.getElement("vertex").getProperty<float>("x");
+            std::vector<float> vertex_y = plyIn.getElement("vertex").getProperty<float>("y");
+            std::vector<float> vertex_z = plyIn.getElement("vertex").getProperty<float>("z");
         
-        std::vector<float> vertex_nx = plyIn.getElement("vertex").getProperty<float>("nx");
-        std::vector<float> vertex_ny = plyIn.getElement("vertex").getProperty<float>("ny");
-        std::vector<float> vertex_nz = plyIn.getElement("vertex").getProperty<float>("nz");
+            std::vector<float> vertex_nx = plyIn.getElement("vertex").getProperty<float>("nx");
+            std::vector<float> vertex_ny = plyIn.getElement("vertex").getProperty<float>("ny");
+            std::vector<float> vertex_nz = plyIn.getElement("vertex").getProperty<float>("nz");
 
-        std::vector<float> vertex_f_dc_0 = plyIn.getElement("vertex").getProperty<float>("f_dc_0");
-        std::vector<float> vertex_f_dc_1 = plyIn.getElement("vertex").getProperty<float>("f_dc_1");
-        std::vector<float> vertex_f_dc_2 = plyIn.getElement("vertex").getProperty<float>("f_dc_2");
+            std::vector<float> vertex_f_dc_0 = plyIn.getElement("vertex").getProperty<float>("f_dc_0");
+            std::vector<float> vertex_f_dc_1 = plyIn.getElement("vertex").getProperty<float>("f_dc_1");
+            std::vector<float> vertex_f_dc_2 = plyIn.getElement("vertex").getProperty<float>("f_dc_2");
 
-        //TODO: skipping SHs for now
+            //TODO: skipping SHs for now
         
-        std::vector<float> vertex_opacity = plyIn.getElement("vertex").getProperty<float>("opacity");
+            std::vector<float> vertex_opacity = plyIn.getElement("vertex").getProperty<float>("opacity");
         
-        std::vector<float> vertex_scale_0 = plyIn.getElement("vertex").getProperty<float>("scale_0");
-        std::vector<float> vertex_scale_1 = plyIn.getElement("vertex").getProperty<float>("scale_1");
-        std::vector<float> vertex_scale_2 = plyIn.getElement("vertex").getProperty<float>("scale_2");
+            std::vector<float> vertex_scale_0 = plyIn.getElement("vertex").getProperty<float>("scale_0");
+            std::vector<float> vertex_scale_1 = plyIn.getElement("vertex").getProperty<float>("scale_1");
+            std::vector<float> vertex_scale_2 = plyIn.getElement("vertex").getProperty<float>("scale_2");
 
-        std::vector<float> vertex_rot_0 = plyIn.getElement("vertex").getProperty<float>("rot_0");
-        std::vector<float> vertex_rot_1 = plyIn.getElement("vertex").getProperty<float>("rot_1");
-        std::vector<float> vertex_rot_2 = plyIn.getElement("vertex").getProperty<float>("rot_2");
-        std::vector<float> vertex_rot_3 = plyIn.getElement("vertex").getProperty<float>("rot_3");
+            std::vector<float> vertex_rot_0 = plyIn.getElement("vertex").getProperty<float>("rot_0");
+            std::vector<float> vertex_rot_1 = plyIn.getElement("vertex").getProperty<float>("rot_1");
+            std::vector<float> vertex_rot_2 = plyIn.getElement("vertex").getProperty<float>("rot_2");
+            std::vector<float> vertex_rot_3 = plyIn.getElement("vertex").getProperty<float>("rot_3");
 
-        size_t numVertices = vertex_x.size();
-        if (vertex_y.size() != numVertices || vertex_z.size() != numVertices ||
-            vertex_nx.size() != numVertices || vertex_ny.size() != numVertices ||
-            vertex_nz.size() != numVertices || vertex_f_dc_0.size() != numVertices ||
-            vertex_f_dc_1.size() != numVertices || vertex_f_dc_2.size() != numVertices ||
-            vertex_opacity.size() != numVertices || vertex_scale_0.size() != numVertices ||
-            vertex_scale_1.size() != numVertices || vertex_scale_2.size() != numVertices ||
-            vertex_rot_0.size() != numVertices || vertex_rot_1.size() != numVertices ||
-            vertex_rot_2.size() != numVertices || vertex_rot_3.size() != numVertices) {
-            throw std::runtime_error("Inconsistent vertex property sizes in PLY file.");
-        }
+            size_t numVertices = vertex_x.size();
+            if (vertex_y.size() != numVertices || vertex_z.size() != numVertices ||
+                vertex_nx.size() != numVertices || vertex_ny.size() != numVertices ||
+                vertex_nz.size() != numVertices || vertex_f_dc_0.size() != numVertices ||
+                vertex_f_dc_1.size() != numVertices || vertex_f_dc_2.size() != numVertices ||
+                vertex_opacity.size() != numVertices || vertex_scale_0.size() != numVertices ||
+                vertex_scale_1.size() != numVertices || vertex_scale_2.size() != numVertices ||
+                vertex_rot_0.size() != numVertices || vertex_rot_1.size() != numVertices ||
+                vertex_rot_2.size() != numVertices || vertex_rot_3.size() != numVertices) {
+                throw std::runtime_error("Inconsistent vertex property sizes in PLY file.");
+            }
 
-        gaussians.clear();
-        gaussians.reserve(numVertices);
+            gaussians.clear();
+            gaussians.reserve(numVertices);
 
-        GaussianDataSSBO gaussian;
+            GaussianDataSSBO gaussian;
 
-        for (size_t i = 0; i < numVertices; ++i) {
-            try {
+            for (size_t i = 0; i < numVertices; ++i) {
                 // Set position (w = 1.0 for homogeneous coordinates)
                 gaussian.position.x = vertex_x[i];
                 gaussian.position.y = vertex_y[i];
@@ -671,11 +670,10 @@ namespace parsers
 
                 gaussians.push_back(gaussian);
             }
-            catch (const std::exception& exc)
-            {
-                std::cerr << exc.what();;
-            }
+        } catch (const std::exception& exc) {
+            std::cerr << exc.what();
         }
+        
     }
 
     void savePlyVector(std::string outputFileLocation, std::vector<Gaussian3D> gaussians_3D_list, unsigned int FORMAT)

@@ -88,16 +88,20 @@ void main() {
 	mat3 cov3d;
 
 	computeCov3D(guassian.rotation, exp(guassian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE, cov3d);
+
 	vec4 gaussian_vs = u_worldToView * vec4(guassian.position.xyz, 1);
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
 	
 	float clip = 1.2 * pos2d.w;
 
-	//if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
-    //    gl_Position = vec4(0.0, 0.0, 2.0, 1.0);
-    //    return;
-    //}
+	if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
+		perQuadTransformations.ndcTransformations[gid].gaussianMean2dNdc	= pos2d;
+		perQuadTransformations.ndcTransformations[gid].quadScaleNdc			= vec4(0,0,0,0);
+		perQuadTransformations.ndcTransformations[gid].color				= vec4(guassian.color.rgb, 0);
+		return;
+    }
+
 
 	pos2d.xyz = pos2d.xyz / pos2d.w;
 	pos2d.w = 1.f;
@@ -145,17 +149,8 @@ void main() {
     vec2 majorAxis = min(sqrt(3.0*lambda1), 1024.0) * diagonalVector;
     vec2 minorAxis = min(sqrt(3.0*lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-
 	vec2 majorAxisMultiplier = majorAxis / u_resolution;
 	vec2 minorAxisMultiplier = minorAxis / u_resolution;
-
-	//float det = determinant(mat2(cov2d));
-	//if (abs(det) < 1e-6) return;
-	//float det_inv = 1.f / det;
-	//
-	//vec2 quadwh_scr = vec2(3.f * sqrt(cov2d[0][0]), 3.f * sqrt(cov2d[1][1]));
-	////from screen to NDC, inverse
-	//vec2 quadwh_ndc = (quadwh_scr / wh) * 2;
 
 	perQuadTransformations.ndcTransformations[gid].gaussianMean2dNdc	= pos2d;
 	perQuadTransformations.ndcTransformations[gid].quadScaleNdc			= vec4(majorAxisMultiplier, minorAxisMultiplier);
