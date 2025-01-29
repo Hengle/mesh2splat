@@ -2,7 +2,7 @@
 
 void GaussianSplattingPass::execute(RenderContext& renderContext)
 {
-    computePrepass(renderContext);
+    //computePrepass(renderContext);
 
     glViewport(0, 0, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
 

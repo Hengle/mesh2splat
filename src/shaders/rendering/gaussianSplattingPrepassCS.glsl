@@ -108,9 +108,9 @@ void main() {
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
 	
-	float clip = 1.2 * pos2d.w; //Need to see how conservative that is
+	float clip = 1.05 * pos2d.w; //Need to see how conservative that is
 
-	//TODO: dumb
+	//TODO: quite conservative honestly
 	if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
 		return;
     }
@@ -188,6 +188,6 @@ void main() {
 
 	perQuadTransformations.ndcTransformations[gaussianIndex].color				= outputColor;
 
-	gaussianBufferOutPostFilter[gaussianIndex] = gaussian;
+	gaussianBufferOutPostFilter.gaussians[gaussianIndex] = gaussian;
 }
 

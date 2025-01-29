@@ -10,12 +10,12 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
 
     DrawElementsIndirectCommand* cmd = (DrawElementsIndirectCommand*)glMapBufferRange(
-        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), GL_MAP_READ_BIT
+        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), GL_MAP_WRITE_BIT 
     );
 
     unsigned int validCount = cmd->instanceCount;
     cmd->instanceCount = 0;
-    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), &cmd);
+    //glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), &cmd);
     glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
 
     // Transform Gaussian positions to view space and apply global sort
@@ -30,23 +30,24 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
 
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.gaussianBufferPostFiltering);
 
     if(validCount > MAX_GAUSSIANS_TO_SORT) glUtils::resizeAndBindToPosSSBO<glm::vec4>(validCount * 3, renderContext.perQuadTransformationsBuffer, 2);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.perQuadTransformationsBuffer);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.perQuadTransformationsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.perQuadTransformationsBuffer);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.drawIndirectBuffer);
+    //glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.drawIndirectBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, renderContext.drawIndirectBuffer);
     
-    unsigned int threadGroup_xy = (validCount + 255) / 256;
+    //Technically should happen on all of them, right?
+    unsigned int threadGroup_xy = (renderContext.readGaussians.size() + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);
-    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 #ifdef  _DEBUG
     glPopDebugGroup();
