@@ -105,18 +105,20 @@ void main() {
 		return;
     }
 	
+	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
-	if (u_renderMode == 1)
+	if (u_renderMode == 0)
+	{
+		outputColor = gaussian.color;
+
+	}
+	else if (u_renderMode == 1)
 	{
 		float normalizedDepth = (-gaussian_vs.z - 0.01) / (100.0 - 0.01);
 		float invertedLinearizedDepth = clamp(normalizedDepth, 0, 1);
 		float expDepthFallof = exp(-10 * invertedLinearizedDepth);
 		float zSq = clamp((expDepthFallof), 0, 1);
 		outputColor = vec4(zSq, zSq, zSq, gaussian.color.a);
-	}
-	else
-	{
-		outputColor = gaussian.color;
 	}
 
 	

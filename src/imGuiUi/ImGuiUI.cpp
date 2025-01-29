@@ -70,7 +70,6 @@ void ImGuiUI::renderUI()
         }
     }
 
-
     ImGui::ColorEdit4("Background Color", &sceneBackgroundColor.x);
     ImGui::Combo("Render Mode", &renderIndex, renderLabels, IM_ARRAYSIZE(renderLabels));
 
