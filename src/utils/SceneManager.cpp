@@ -28,8 +28,16 @@ bool SceneManager::loadModel(const std::string& filePath, const std::string& par
 }
 
 bool SceneManager::loadPly(const std::string& filePath) {
-    parsers::loadPlyFile(filePath, renderContext.readGaussians);
-    return true;
+    try {
+        parsers::loadPlyFile(filePath, renderContext.readGaussians);
+        return true;
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "Error loading PLY file: " << filePath << std::endl;
+        return false;
+    }
+    return false;
 }
 
 template <typename T>

@@ -12,12 +12,14 @@ void GuiRendererConcreteMediator::notify(EventType event)
             break;
         }
         case EventType::LoadPly: {
-            renderer.getSceneManager().loadPly(imguiUI.getPlyFilePath());
-            renderer.updateGaussianBuffer();
-            renderer.enableRenderPass("radixSort");
-            renderer.enableRenderPass("gaussianSplatting");
-            imguiUI.setLoadNewPly(false);
-            imguiUI.setPlyLoaded(true);
+            if (renderer.getSceneManager().loadPly(imguiUI.getPlyFilePath()))
+            {
+                renderer.updateGaussianBuffer();
+                renderer.enableRenderPass("radixSort");
+                renderer.enableRenderPass("gaussianSplatting");
+                imguiUI.setLoadNewPly(false);
+                imguiUI.setPlyLoaded(true);
+            }
             break;
         }
         case EventType::RunConversion: {
