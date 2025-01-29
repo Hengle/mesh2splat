@@ -416,6 +416,38 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, feedbackBuffer);
     }
 
+    template<typename T>
+    void setUniform(GLuint shaderProgram, std::string uniformName, T uniformValue)
+    {
+        GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+        if (uniformLocation == -1) {
+            std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+        }
+        //TODO: I am open to a better solution
+        if constexpr (std::is_same_v<T, float>) {
+            glUniform1f(uniformLocation, uniformValue);
+        }
+        else if constexpr (std::is_same_v<T, int>) {
+            glUniform1i(uniformLocation, uniformValue);
+        }
+        else if constexpr (std::is_same_v<T, glm::vec2>) {
+            glUniform2fv(uniformLocation, 1, &uniformValue[0]);
+        }
+        else if constexpr (std::is_same_v<T, glm::vec3>) {
+            glUniform3fv(uniformLocation, 1, &uniformValue[0]);
+        }
+        else if constexpr (std::is_same_v<T, glm::vec4>) {
+            glUniform4fv(uniformLocation, 1, &uniformValue[0]);
+        }
+        else if constexpr (std::is_same_v<T, glm::mat4>) {
+            glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, &uniformValue[0][0]);
+        }
+        else {
+            static_assert(sizeof(T) == 0, "setUniform: Unsupported uniform type.");
+        }
+    }
+
     void setUniform1f(GLuint shaderProgram, std::string uniformName, float uniformValue)
     {
         GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());

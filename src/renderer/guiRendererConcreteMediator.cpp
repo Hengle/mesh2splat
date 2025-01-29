@@ -6,39 +6,49 @@ void GuiRendererConcreteMediator::notify(EventType event)
         case EventType::LoadModel: {
             renderer.getSceneManager().loadModel(imguiUI.getMeshFilePath(), imguiUI.getMeshFilePathParentFolder());
             renderer.setViewportResolutionForConversion(imguiUI.getResolutionTarget());
-            renderer.enableRenderPass("conversion");
+            renderer.enableRenderPass(conversionPassName);
+            
             imguiUI.setLoadNewMesh(false);
             imguiUI.setMeshLoaded(true);
+            
             break;
         }
         case EventType::LoadPly: {
             if (renderer.getSceneManager().loadPly(imguiUI.getPlyFilePath()))
             {
                 renderer.updateGaussianBuffer();
-                renderer.enableRenderPass("radixSort");
-                renderer.enableRenderPass("gaussianSplatting");
+                renderer.enableRenderPass(gaussiansPrePassName);
+                renderer.enableRenderPass(radixSortPassName);
+                renderer.enableRenderPass(gaussianSplattingPassName);
+                renderer.resetRendererViewportResolution();
+
                 imguiUI.setLoadNewPly(false);
                 imguiUI.setPlyLoaded(true);
             }
             break;
         }
         case EventType::RunConversion: {
-            renderer.enableRenderPass("conversion");
+            renderer.enableRenderPass(conversionPassName);
             renderer.setViewportResolutionForConversion(imguiUI.getResolutionTarget());
+            
             imguiUI.setRunConversion(false);
+            
             break;
         }
         case EventType::EnableGaussianRendering: {
             renderer.resetRendererViewportResolution();
             renderer.setStdDevFromImGui(imguiUI.getGaussianStd());
             renderer.setRenderMode(imguiUI.selectedRenderMode());
-            renderer.enableRenderPass("radixSort");
-            renderer.enableRenderPass("gaussianSplatting");
+            renderer.enableRenderPass(gaussiansPrePassName);
+            renderer.enableRenderPass(radixSortPassName);
+            renderer.enableRenderPass(gaussianSplattingPassName);
+            
             break;
         }
         case EventType::CheckShaderUpdate: {
             renderer.updateShadersIfNeeded();
             renderer.setLastShaderCheckTime(glfwGetTime());
+            
             break;
         }
          

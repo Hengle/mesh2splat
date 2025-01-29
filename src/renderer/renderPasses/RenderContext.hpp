@@ -50,6 +50,7 @@ struct RenderContext {
     size_t vertexCount;
     GLuint* drawBuffers; //TODO: BEWARE
     GLuint gaussianBuffer;
+    GLuint gaussianBufferPostFiltering;
     GLuint keysBuffer;
     GLuint perQuadTransformationsBuffer;
     GLuint valuesBuffer;

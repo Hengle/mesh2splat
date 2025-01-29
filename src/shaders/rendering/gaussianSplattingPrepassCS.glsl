@@ -31,9 +31,21 @@ layout(std430, binding = 0) readonly buffer GaussianBuffer {
     GaussianVertex gaussians[];
 } gaussianBuffer;
 
-layout(std430, binding = 1) writeonly buffer PerQuadTransformations {
+layout(std430, binding = 1) writeonly buffer GaussianBufferOutPostFilter {
+    GaussianVertex gaussians[];
+} gaussianBufferOutPostFilter;
+
+layout(std430, binding = 2) writeonly buffer PerQuadTransformations {
     QuadNdcTransformation ndcTransformations[];
 } perQuadTransformations;
+
+layout(std430, binding = 3) writeonly buffer DrawElementsIndirectCommand {
+    unsigned int count;
+    unsigned int instanceCount;
+    unsigned int first;
+    unsigned int baseVertex;
+    unsigned int baseInstance;
+} drawElementsCommand;
 
 
 void castQuatToMat3(vec4 quat, out mat3 rotMatrix)
@@ -96,12 +108,10 @@ void main() {
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
 	
-	float clip = 1.2 * pos2d.w;
+	float clip = 1.2 * pos2d.w; //Need to see how conservative that is
 
+	//TODO: dumb
 	if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
-		perQuadTransformations.ndcTransformations[gid].gaussianMean2dNdc	= pos2d;
-		perQuadTransformations.ndcTransformations[gid].quadScaleNdc			= vec4(0,0,0,0);
-		perQuadTransformations.ndcTransformations[gid].color				= vec4(gaussian.color.rgb, 0);
 		return;
     }
 	
@@ -171,10 +181,13 @@ void main() {
 	vec2 majorAxisMultiplier = majorAxis / u_resolution;
 	vec2 minorAxisMultiplier = minorAxis / u_resolution;
 
-	perQuadTransformations.ndcTransformations[gid].gaussianMean2dNdc	= pos2d;
-	perQuadTransformations.ndcTransformations[gid].quadScaleNdc			= vec4(majorAxisMultiplier, minorAxisMultiplier);
+	unsigned int gaussianIndex = atomicAdd(drawElementsCommand.instanceCount, 1);
 
-	perQuadTransformations.ndcTransformations[gid].color				= outputColor;
+	perQuadTransformations.ndcTransformations[gaussianIndex].gaussianMean2dNdc	= pos2d;
+	perQuadTransformations.ndcTransformations[gaussianIndex].quadScaleNdc		= vec4(majorAxisMultiplier, minorAxisMultiplier);
 
+	perQuadTransformations.ndcTransformations[gaussianIndex].color				= outputColor;
+
+	gaussianBufferOutPostFilter[gaussianIndex] = gaussian;
 }
 

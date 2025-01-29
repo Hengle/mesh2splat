@@ -107,7 +107,6 @@ void GaussianSplattingPass::computePrepass(RenderContext& renderContext)
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
 
 
-
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferSorted);
 
@@ -115,6 +114,7 @@ void GaussianSplattingPass::computePrepass(RenderContext& renderContext)
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.perQuadTransformationsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.perQuadTransformationsBuffer);
+
     
     unsigned int threadGroup_xy = (validCount + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);

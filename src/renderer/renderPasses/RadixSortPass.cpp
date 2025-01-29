@@ -15,7 +15,7 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 #endif 
     unsigned int validCount = 0;
     //Assume that if not 0 then we loaded a ply file
-
+    //TODO: i am setting/reading this indirect buffer way too many times from the cpu
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
 
     DrawElementsIndirectCommand* cmd = (DrawElementsIndirectCommand*)glMapBufferRange(
@@ -29,8 +29,8 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
     // Transform Gaussian positions to view space and apply global sort
     glUseProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
     glUtils::setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
     glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
     
@@ -42,6 +42,7 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 
     unsigned int threadGroup_xy = (validCount + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);
+
     glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 #ifdef  _DEBUG
     glPopDebugGroup();
@@ -72,8 +73,8 @@ void RadixSortPass::gatherPost(RenderContext& renderContext, unsigned int validC
     glUseProgram(renderContext.shaderPrograms.radixSortGatherProgram);
     glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortGatherProgram, "u_count", validCount);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
     glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(validCount, renderContext.gaussianBufferSorted, 1); // <-- last uint is binding pos
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);

@@ -63,7 +63,7 @@ namespace glUtils
         std::string filePath;
     };
 
-    //TODO: Wont scale, use some data structure
+    //TODO: Wont scale ffs!!!
     void initializeShaderFileMonitoring(
         std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
         std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
@@ -81,6 +81,9 @@ namespace glUtils
         GLuint oldProgram);
 
     //TODO: Make template function for this and make these one generic
+    template<typename T>
+    void setUniform(GLuint shaderProgram, std::string uniformName, T uniformValue);
+
     void setUniform1f(GLuint shaderProgram, std::string uniformName, float uniformValue);
     void setUniform1i(GLuint shaderProgram, std::string uniformName, int uniformValue);
     void setUniform1ui(GLuint shaderProgram, std::string uniformName, unsigned int uniformValue);

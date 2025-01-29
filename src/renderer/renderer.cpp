@@ -12,6 +12,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glGenVertexArrays(1, &(renderContext.vao));
     //TODO: these should be set to 0 not -1...
     renderContext.gaussianBuffer                = -1;
+    renderContext.gaussianBufferPostFiltering    = -1;
     renderContext.drawIndirectBuffer            = -1;
     renderContext.keysBuffer                    = -1;
 	renderContext.valuesBuffer                  = -1;
@@ -36,7 +37,10 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glGenBuffers(1, &(renderContext.perQuadTransformationsBuffer));
     glGenBuffers(1, &(renderContext.valuesBuffer));
     glGenBuffers(1, &(renderContext.gaussianBufferSorted));
+    glGenBuffers(1, &(renderContext.gaussianBufferPostFiltering));
 
+
+    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT, renderContext.gaussianBufferPostFiltering, 5);
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.keysBuffer, 1);
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.valuesBuffer, 2);
     glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT , renderContext.gaussianBufferSorted, 3);
@@ -68,6 +72,8 @@ Renderer::~Renderer()
     glDeleteBuffers(1, &(renderContext.keysBuffer));
     glDeleteBuffers(1, &(renderContext.valuesBuffer));
     glDeleteBuffers(1, &(renderContext.gaussianBufferSorted));
+    glDeleteBuffers(1, &(renderContext.gaussianBufferPostFiltering));
+
 
     for (auto& query : renderContext.queryPool) {
         glDeleteQueries(1, &query);
@@ -75,16 +81,15 @@ Renderer::~Renderer()
 }
 
 void Renderer::initialize() {
-    std::string conversionPassName = "conversion";
-    std::string radixSortPassName = "radixSort";
-    std::string gaussianSplattingPassName = "gaussianSplatting";
 
-    renderPasses[conversionPassName]          = std::make_unique<ConversionPass>();
-    renderPasses[radixSortPassName]           = std::make_unique<RadixSortPass>();
-    renderPasses[gaussianSplattingPassName]   = std::make_unique<GaussianSplattingPass>();
+    renderPasses[conversionPassName]            = std::make_unique<ConversionPass>();
+    renderPasses[gaussiansPrePassName]          = std::make_unique<GaussiansPrepass>();
+    renderPasses[radixSortPassName]             = std::make_unique<RadixSortPass>();
+    renderPasses[gaussianSplattingPassName]     = std::make_unique<GaussianSplattingPass>();
 
     renderPassesOrder = {
         conversionPassName,
+        gaussiansPrePassName,
         radixSortPassName,
         gaussianSplattingPassName
     };
