@@ -16,7 +16,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     renderContext.drawIndirectBuffer            = -1;
     renderContext.keysBuffer                    = -1;
 	renderContext.valuesBuffer                  = -1;
-    renderContext.gaussianBufferSorted          = -1;
+    renderContext.perQuadTransformationBufferSorted          = -1;
     renderContext.perQuadTransformationsBuffer  = 0;
     renderContext.normalizedUvSpaceWidth        = 0;
     renderContext.normalizedUvSpaceHeight       = 0;
@@ -36,15 +36,16 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glGenBuffers(1, &(renderContext.keysBuffer));
     glGenBuffers(1, &(renderContext.perQuadTransformationsBuffer));
     glGenBuffers(1, &(renderContext.valuesBuffer));
-    glGenBuffers(1, &(renderContext.gaussianBufferSorted));
+    glGenBuffers(1, &(renderContext.perQuadTransformationBufferSorted));
     glGenBuffers(1, &(renderContext.gaussianBufferPostFiltering));
 
 
-    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT, renderContext.gaussianBufferPostFiltering, 5);
+
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.keysBuffer, 1);
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.valuesBuffer, 2);
-    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT , renderContext.gaussianBufferSorted, 3);
+    glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 3, renderContext.perQuadTransformationBufferSorted, 3);
     glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 3, renderContext.perQuadTransformationsBuffer, 4);
+    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT, renderContext.gaussianBufferPostFiltering, 5);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -71,7 +72,7 @@ Renderer::~Renderer()
     glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
     glDeleteBuffers(1, &(renderContext.keysBuffer));
     glDeleteBuffers(1, &(renderContext.valuesBuffer));
-    glDeleteBuffers(1, &(renderContext.gaussianBufferSorted));
+    glDeleteBuffers(1, &(renderContext.perQuadTransformationBufferSorted));
     glDeleteBuffers(1, &(renderContext.gaussianBufferPostFiltering));
 
 
@@ -115,12 +116,12 @@ void Renderer::renderFrame()
     if (!renderContext.queryPool.empty()) {
         GLuint currentQuery = renderContext.queryPool.front();
         glEndQuery(GL_TIME_ELAPSED);
-
+    
         renderContext.queryPool.pop_front();
         renderContext.queryPool.push_back(currentQuery);
     }
-
-    if (renderContext.queryPool.size() > 1) {
+    
+    if (renderContext.queryPool.size() > 5) {
         GLuint completedQuery = renderContext.queryPool.front();
         GLuint64 elapsedTime = 0;
         glGetQueryObjectui64v(completedQuery, GL_QUERY_RESULT, &elapsedTime);

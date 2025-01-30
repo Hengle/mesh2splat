@@ -2,8 +2,6 @@
 
 void GaussianSplattingPass::execute(RenderContext& renderContext)
 {
-    //computePrepass(renderContext);
-
     glViewport(0, 0, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
 
 #ifdef  _DEBUG
@@ -54,7 +52,7 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
 
     //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, renderContext.perQuadTransformationsBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, renderContext.perQuadTransformationBufferSorted);
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
     // memory leak. Should structure renderer architecture
@@ -70,6 +68,7 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     
     glDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0);
 
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
 #ifdef  _DEBUG
     glPopDebugGroup();
 #endif 
@@ -107,8 +106,8 @@ void GaussianSplattingPass::computePrepass(RenderContext& renderContext)
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
 
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferSorted);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.perQuadTransformationBufferSorted);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.perQuadTransformationBufferSorted);
 
     if(validCount > MAX_GAUSSIANS_TO_SORT) glUtils::resizeAndBindToPosSSBO<glm::vec4>(validCount * 3, renderContext.perQuadTransformationsBuffer, 1);
 

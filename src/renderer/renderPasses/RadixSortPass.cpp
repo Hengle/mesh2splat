@@ -28,17 +28,13 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
 
     // Transform Gaussian positions to view space and apply global sort
     glUseProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
-
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
     glUtils::setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
     glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
-    
-    glUtils::resizeAndBindToPosSSBO<unsigned int>(validCount, renderContext.keysBuffer, 1);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.keysBuffer);
-    
-    glUtils::resizeAndBindToPosSSBO<unsigned int>(validCount, renderContext.valuesBuffer, 2);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.valuesBuffer);
+
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
+
 
     unsigned int threadGroup_xy = (validCount + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);
@@ -73,13 +69,11 @@ void RadixSortPass::gatherPost(RenderContext& renderContext, unsigned int validC
     glUseProgram(renderContext.shaderPrograms.radixSortGatherProgram);
     glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortGatherProgram, "u_count", validCount);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferPostFiltering);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
-    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(validCount, renderContext.gaussianBufferSorted, 1); // <-- last uint is binding pos
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBufferSorted);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.perQuadTransformationsBuffer);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.perQuadTransformationBufferSorted);  
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.drawIndirectBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, renderContext.drawIndirectBuffer);
+
     unsigned int threadGroup_xy = (validCount + 255) / 256;
     glDispatchCompute(threadGroup_xy, 1, 1);
 

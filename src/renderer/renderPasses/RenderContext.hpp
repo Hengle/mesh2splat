@@ -54,7 +54,7 @@ struct RenderContext {
     GLuint keysBuffer;
     GLuint perQuadTransformationsBuffer;
     GLuint valuesBuffer;
-    GLuint gaussianBufferSorted;
+    GLuint perQuadTransformationBufferSorted;
     GLuint drawIndirectBuffer;
 
     // Data Structures
