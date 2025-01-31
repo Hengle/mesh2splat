@@ -107,7 +107,7 @@ void main() {
 	mat3 cov3d;
 	float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
 
-	computeCov3D(gaussian.rotation, exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE * multiplier, cov3d);
+	computeCov3D(gaussian.rotation, gaussian.scale.xyz * GAUSSIAN_CUTOFF_SCALE * u_stdDev, cov3d);
 
 	
 	//TODO: probably better with shader permutation (?)

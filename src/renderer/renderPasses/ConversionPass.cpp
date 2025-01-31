@@ -7,7 +7,6 @@ void ConversionPass::execute(RenderContext &renderContext)
     //TODO: If model has many meshes this is probably not the most efficient approach.
     //For how the mesh2splat method currently works, we still need to generate a separate frame and drawbuffer per mesh, but the gpu conversion
     //could be done via batch rendering (I guess (?))
-    
     //If we are running the conversion pass means the currently existing framebuffer with respective draw buffers should be deleted before the conversion passes
     for (auto& mesh : renderContext.dataMeshAndGlMesh) {
         Mesh meshData = std::get<0>(mesh);
@@ -26,15 +25,19 @@ void ConversionPass::execute(RenderContext &renderContext)
         );
 
         //Need to do this to free memory, this means we need to rebind the gaussianBuffer in later stages
-        if (renderContext.gaussianBuffer != 0) {
-            glDeleteBuffers(1, &(renderContext.gaussianBuffer));
+        if (renderContext.gaussianBuffer == 0) {
+            glGenBuffers(1, &(renderContext.gaussianBuffer));
         }
 
-        glGenBuffers(1, &(renderContext.gaussianBuffer));
+        //glGenBuffers(1, &(renderContext.gaussianBuffer));
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
         //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
         GLsizeiptr bufferSize = renderContext.resolutionTarget * renderContext.resolutionTarget * sizeof(glm::vec4) * 6;
-        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        GLint currentSize;
+        glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &currentSize);
+        if (currentSize != bufferSize) {
+            glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        }
         //unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
         //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, *gaussianBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -148,4 +151,5 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
 #ifdef  _DEBUG
     glPopDebugGroup();
 #endif 
+
 }

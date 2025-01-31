@@ -15,8 +15,7 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_resolution", renderContext.rendererResolution);
     glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_camPos", renderContext.camPos);
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
-
-    
+        
     GLint size = 0;
     glBindBuffer          (GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &size);

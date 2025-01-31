@@ -10,7 +10,6 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     renderPassesOrder = {};
     renderContext = {};
     glGenVertexArrays(1, &(renderContext.vao));
-    //TODO: these should be set to 0 not -1...
     renderContext.gaussianBuffer                = 0;
     renderContext.gaussianBufferPostFiltering   = 0;
     renderContext.drawIndirectBuffer            = 0;
