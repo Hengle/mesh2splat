@@ -73,7 +73,7 @@ void GuiRendererConcreteMediator::update()
         notify(EventType::LoadPly);
     }
 
-    if (imguiUI.shouldRunConversion()) {
+    if (true) {
         notify(EventType::RunConversion);
     }
 

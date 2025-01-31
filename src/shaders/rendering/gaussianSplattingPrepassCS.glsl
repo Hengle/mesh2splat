@@ -105,11 +105,13 @@ void main() {
     }
 
 	mat3 cov3d;
-	float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
-
-	computeCov3D(gaussian.rotation, gaussian.scale.xyz * GAUSSIAN_CUTOFF_SCALE * u_stdDev, cov3d);
-
-	
+	//float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
+	//if(gaussian.pbr.w == 1)
+	//computeCov3D(gaussian.rotation, exp(scaleFiltered) * GAUSSIAN_CUTOFF_SCALE, cov3d);
+	//else
+	//vec3 scale = exp(gaussian.scale.xyz);
+	computeCov3D(gaussian.rotation, exp(gaussian.scale.xyz + vec3(1e-7)) * GAUSSIAN_CUTOFF_SCALE, cov3d);
+		
 	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
 	if (u_renderMode == 0)
