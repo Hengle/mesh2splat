@@ -21,13 +21,7 @@ layout(std430, binding = 5) buffer GaussianBuffer {
     GaussianVertex vertices[];
 } gaussianBuffer;
 
-layout(std430, binding = 6) writeonly buffer DrawCommand {
-    uint count;
-    uint instanceCount;
-    uint first;
-    uint baseVertex;
-    uint baseInstance;
-} drawElementsIndirectCommand;
+layout(binding = 6) uniform atomic_uint g_validCounter;
 
 
 layout(local_size_x = 16, local_size_y = 16) in;  
@@ -39,7 +33,7 @@ void main() {
 
     if (posAndScaleXData == vec4(0, 0, 0, 0)) return; //TOOD: naive check, find better way
 
-    uint index      = atomicAdd(drawElementsIndirectCommand.instanceCount, 1);
+    uint gaussianIndex = atomicCounterIncrement(g_validCounter);
 
     //should change ordering and leave scale as first components, otherwise confusing
     vec4 position               = vec4(posAndScaleXData.xyz, 1);
@@ -55,10 +49,10 @@ void main() {
     vec4 scale                  = vec4(posAndScaleXData.w, pbrAndScaleY.z, scaleZAndNormalData.x, 1.0);
 
     //TODO: I could save at least one vec4 by packing the pbr properties in the .w of position and .w of color
-    gaussianBuffer.vertices[index].position     = position;
-    gaussianBuffer.vertices[index].color        = colorData; 
-    gaussianBuffer.vertices[index].scale        = scale; 
-    gaussianBuffer.vertices[index].normal       = normal; 
-    gaussianBuffer.vertices[index].rotation     = quaternion; 
-    gaussianBuffer.vertices[index].pbr          = vec4(pbrAndScaleY.xy, 0 , 1); //last one is a flag to check wheter it was read from mesh or standard ply (1: mesh)
+    gaussianBuffer.vertices[gaussianIndex].position     = position;
+    gaussianBuffer.vertices[gaussianIndex].color        = colorData; 
+    gaussianBuffer.vertices[gaussianIndex].scale        = scale; 
+    gaussianBuffer.vertices[gaussianIndex].normal       = normal; 
+    gaussianBuffer.vertices[gaussianIndex].rotation     = quaternion; 
+    gaussianBuffer.vertices[gaussianIndex].pbr          = vec4(pbrAndScaleY.xy, 0 , 1); //last one is a flag to check wheter it was read from mesh or standard ply (1: mesh)
 }

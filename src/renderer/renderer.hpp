@@ -33,6 +33,7 @@ public:
 	SceneManager& getSceneManager();
 	double getTotalGpuFrameTimeMs() const;
 	void updateGaussianBuffer();
+	void gaussianBufferFromSize(unsigned int size);
 	void setRenderMode(ImGuiUI::VisualizationOption renderMode);
 
 private:

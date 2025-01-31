@@ -16,10 +16,11 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_camPos", renderContext.camPos);
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
 
-    //Technically should happen on all of them, maybe some temporal approach could be used
+    
     GLint size = 0;
     glBindBuffer          (GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &size);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.gaussianBufferPostFiltering);
@@ -31,6 +32,7 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     unsigned int threadGroup_xy = int(size / (sizeof(glm::vec4) * 6));
 
     glDispatchCompute(threadGroup_xy, 1, 1);
+
     glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 #ifdef  _DEBUG

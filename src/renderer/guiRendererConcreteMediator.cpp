@@ -5,9 +5,13 @@ void GuiRendererConcreteMediator::notify(EventType event)
     switch (event) {
         case EventType::LoadModel: {
             renderer.getSceneManager().loadModel(imguiUI.getMeshFilePath(), imguiUI.getMeshFilePathParentFolder());
+            renderer.gaussianBufferFromSize(imguiUI.getResolutionTarget() * imguiUI.getResolutionTarget());
             renderer.setViewportResolutionForConversion(imguiUI.getResolutionTarget());
             renderer.enableRenderPass(conversionPassName);
-            
+            renderer.enableRenderPass(gaussiansPrePassName);
+            renderer.enableRenderPass(radixSortPassName);
+            renderer.enableRenderPass(gaussianSplattingPassName);
+
             imguiUI.setLoadNewMesh(false);
             imguiUI.setMeshLoaded(true);
             

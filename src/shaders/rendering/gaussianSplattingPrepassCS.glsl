@@ -74,7 +74,7 @@ void computeCov3D(vec4 quat, vec3 scales, out mat3 sigma3d) {
 	mat3 scaleMatrix = mat3(
 		scales.x , 0, 0, 
 		0, scales.y , 0,
-		0, 0, scales.z
+		0, 0, scales.z					
 	);
 
 	mat3 rotMatrix;
@@ -108,7 +108,6 @@ void main() {
 	float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
 
 	computeCov3D(gaussian.rotation, exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE * multiplier, cov3d);
-
 
 	
 	//TODO: probably better with shader permutation (?)
@@ -184,6 +183,7 @@ void main() {
 
 	perQuadTransformations.ndcTransformations[gaussianIndex].color				= outputColor;
 
+	//TODO: I would just need the view space depth here tbh, not the whole gaussian. This would probably make it faster
 	gaussianBufferOutPostFilter.gaussians[gaussianIndex] = gaussian;
 }
 

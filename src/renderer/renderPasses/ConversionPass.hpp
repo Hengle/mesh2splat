@@ -13,5 +13,5 @@ private:
         int normalizedUVSpaceWidth, int normalizedUVSpaceHeight,
         const std::map<std::string, TextureDataGl>& textureTypeMap, MaterialGltf material, unsigned int referenceResolution, float GAUSSIAN_STD
     );
-    void aggregation(GLuint& computeShaderProgram, GLuint* drawBuffers, GLuint& gaussianBuffer, GLuint& drawIndirectBuffer, unsigned int resolutionTarget);
+    void aggregation(GLuint& computeShaderProgram, GLuint* drawBuffers, GLuint& gaussianBuffer, GLuint& drawIndirectBuffer, GLuint& atomicCounterBuffer, unsigned int resolutionTarget);
 };

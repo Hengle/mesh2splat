@@ -3,6 +3,7 @@
 
 void ConversionPass::execute(RenderContext &renderContext)
 {
+    
     //TODO: If model has many meshes this is probably not the most efficient approach.
     //For how the mesh2splat method currently works, we still need to generate a separate frame and drawbuffer per mesh, but the gpu conversion
     //could be done via batch rendering (I guess (?))
@@ -29,16 +30,25 @@ void ConversionPass::execute(RenderContext &renderContext)
             glDeleteBuffers(1, &(renderContext.gaussianBuffer));
         }
 
-        glUtils::setupGaussianBufferSsbo(renderContext.resolutionTarget, renderContext.resolutionTarget, &(renderContext.gaussianBuffer));
+        glGenBuffers(1, &(renderContext.gaussianBuffer));
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
+        //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
+        GLsizeiptr bufferSize = renderContext.resolutionTarget * renderContext.resolutionTarget * sizeof(glm::vec4) * 6;
+        glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
+        //unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
+        //glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, *gaussianBuffer);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+
+        //glUtils::setupGaussianBufferSsbo(renderContext.resolutionTarget, renderContext.resolutionTarget, &(renderContext.gaussianBuffer));
         
-        if (renderContext.drawIndirectBuffer != 0) {
-            glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
-        }
+        //if (renderContext.drawIndirectBuffer != 0) {
+        //    glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
+        //}
 
         //TODO: ideally this should not be necessary, and we should directly atomically append into the SSBO from the fragment shader
         // not doing so results in wasted work (wherever texture map has no data), but need to handle fragment syncronization. For now this is ok.
             
-        aggregation(renderContext.shaderPrograms.computeShaderProgram, drawBuffers, renderContext.gaussianBuffer, renderContext.drawIndirectBuffer, renderContext.resolutionTarget);
+        aggregation(renderContext.shaderPrograms.computeShaderProgram, drawBuffers, renderContext.gaussianBuffer, renderContext.drawIndirectBuffer, renderContext.atomicCounterBuffer, renderContext.resolutionTarget);
 
         const int numberOfTextures = 5;
         glDeleteTextures(numberOfTextures, drawBuffers); 
@@ -105,29 +115,14 @@ void ConversionPass::conversion(
 }
 
 
-void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffers, GLuint& gaussianBuffer, GLuint& drawIndirectBuffer, unsigned int resolutionTarget)
+void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffers, GLuint& gaussianBuffer, GLuint& drawIndirectBuffer, GLuint& atomicCounterBuffer, unsigned int resolutionTarget)
 {
-    glGenBuffers(1, &drawIndirectBuffer);
 
 #ifdef  _DEBUG
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::CONVERSION_AGGREGATION_PASS, -1, "CONVERSION_AGGREGATION_PASS");
 #endif 
 
     glUseProgram(computeShaderProgram);
-    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, drawIndirectBuffer);
-    glBufferData(GL_DRAW_INDIRECT_BUFFER,
-                    sizeof(DrawElementsIndirectCommand),
-                    nullptr,
-                    GL_DYNAMIC_DRAW);
-
-    DrawElementsIndirectCommand cmd_init;
-    cmd_init.count         = 6;  
-    cmd_init.instanceCount = 0;  
-    cmd_init.first         = 0;
-    cmd_init.baseVertex    = 0;
-    cmd_init.baseInstance  = 0;
-
-    glBufferSubData(GL_DRAW_INDIRECT_BUFFER, 0, sizeof(DrawElementsIndirectCommand), &cmd_init);
 
     unsigned int i = 0;
     for (auto uniformName : std::vector<std::string>{ "texPositionAndScaleX", "scaleZAndNormal", "rotationAsQuat", "texColor", "pbrAndScaleY" })
@@ -139,8 +134,8 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 5, gaussianBuffer);
 
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, drawIndirectBuffer);
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, drawIndirectBuffer);
+    glUtils::resetAtomicCounter(atomicCounterBuffer);
+    glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 6, atomicCounterBuffer);
 
     GLuint groupsX = (GLuint)ceil(resolutionTarget / 16.0);
     GLuint groupsY = (GLuint)ceil(resolutionTarget / 16.0);
@@ -148,7 +143,7 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
     glDispatchCompute(groupsX, groupsY, 1);
 
     // Ensure compute shader completion
-    glMemoryBarrier(GL_COMMAND_BARRIER_BIT | GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+    glMemoryBarrier(GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
 
 #ifdef  _DEBUG
     glPopDebugGroup();

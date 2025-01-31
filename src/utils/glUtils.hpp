@@ -42,8 +42,10 @@ namespace glUtils
     void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
 
     void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
-    void fillGaussianBufferSsbo(GLuint* gaussianBuffer, std::vector<GaussianDataSSBO>& gaussians);
-
+    
+    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<GaussianDataSSBO>& gaussians);
+    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, unsigned int size);
+    
     void resetAtomicCounter(GLuint atomicCounterBuffer);
 
     template<typename T>

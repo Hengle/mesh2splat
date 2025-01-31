@@ -50,9 +50,10 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
 
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, quadEBO);
-
     glBindBuffer(GL_ARRAY_BUFFER, renderContext.perQuadTransformationBufferSorted);
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.perQuadTransformationBufferSorted);
+
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
     // memory leak. Should structure renderer architecture
@@ -65,7 +66,7 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     }
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, renderContext.drawIndirectBuffer);
-    
+
     glDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0);
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
