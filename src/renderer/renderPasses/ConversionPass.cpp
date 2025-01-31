@@ -121,7 +121,7 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
                     GL_DYNAMIC_DRAW);
 
     DrawElementsIndirectCommand cmd_init;
-    cmd_init.count         = 4;  
+    cmd_init.count         = 6;  
     cmd_init.instanceCount = 0;  
     cmd_init.first         = 0;
     cmd_init.baseVertex    = 0;
@@ -142,7 +142,6 @@ void ConversionPass::aggregation(GLuint& computeShaderProgram, GLuint* drawBuffe
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, drawIndirectBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 6, drawIndirectBuffer);
 
-    // Dispatch compute work groups
     GLuint groupsX = (GLuint)ceil(resolutionTarget / 16.0);
     GLuint groupsY = (GLuint)ceil(resolutionTarget / 16.0);
 

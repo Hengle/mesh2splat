@@ -39,15 +39,8 @@ layout(std430, binding = 2) writeonly buffer PerQuadTransformations {
     QuadNdcTransformation ndcTransformations[];
 } perQuadTransformations;
 
-layout(std430, binding = 3) writeonly buffer DrawElementsIndirectCommand {
-    unsigned int count;
-    unsigned int instanceCount;
-    unsigned int first;
-    unsigned int baseVertex;
-    unsigned int baseInstance;
-} drawElementsCommand;
 
-layout(binding = 4) uniform atomic_uint g_validCounter;
+layout(binding = 3) uniform atomic_uint g_validCounter;
 
 void castQuatToMat3(vec4 quat, out mat3 rotMatrix)
 {
@@ -98,21 +91,8 @@ void main() {
 
     if (gid >= gaussianBuffer.gaussians.length()) return;
 
-	if (gl_GlobalInvocationID.x == 0) {
-        drawElementsCommand.count = 6u;
-        drawElementsCommand.instanceCount = 1u;
-    }
-
-    // Make sure all other threads see the updated value:
-    barrier();
-
 	GaussianVertex gaussian = gaussianBuffer.gaussians[gid];
 	
-	mat3 cov3d;
-	float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
-
-	computeCov3D(gaussian.rotation, exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE * multiplier, cov3d);
-
 	vec4 gaussian_vs = u_worldToView * vec4(gaussian.position.xyz, 1);
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
@@ -123,6 +103,13 @@ void main() {
 	if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
 		return;
     }
+
+	mat3 cov3d;
+	float multiplier = gaussian.pbr.w == 1 ? u_stdDev : 1;
+
+	computeCov3D(gaussian.rotation, exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE * multiplier, cov3d);
+
+
 	
 	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
