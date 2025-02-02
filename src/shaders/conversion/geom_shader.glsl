@@ -430,8 +430,8 @@ void main() {
     vec3 Ju = vec3(J_T[0][0], J_T[1][0], J_T[2][0]); 
     vec3 Jv = vec3(J_T[0][1], J_T[1][1], J_T[2][1]); 
 
-    float gaussian_scale_x = length(Ju) * u_sigma_x;
-    float gaussian_scale_y = length(Jv) * u_sigma_y;
+    float gaussian_scale_x = length(Ju); //* u_sigma_x;
+    float gaussian_scale_y = length(Jv); //* u_sigma_y;
 
     //Due to numerical error, I cannot pack this into log
     float packed_s_x    = gaussian_scale_x;

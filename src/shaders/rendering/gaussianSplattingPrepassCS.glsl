@@ -112,7 +112,7 @@ void main() {
 	//vec3 scale = exp(gaussian.scale.xyz);
 	vec3 scale = vec3(0, 0, 0);
 	if (u_format == 0)
-		scale = gaussian.scale.xyz * GAUSSIAN_CUTOFF_SCALE;
+		scale = gaussian.scale.xyz * u_stdDev * GAUSSIAN_CUTOFF_SCALE;
 	else if(u_format == 1)
 		scale = exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE;
 
