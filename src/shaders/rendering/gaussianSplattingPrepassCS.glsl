@@ -191,7 +191,7 @@ void main() {
 	perQuadTransformations.ndcTransformations[gaussianIndex].gaussianMean2dNdc	= pos2d;
 	perQuadTransformations.ndcTransformations[gaussianIndex].quadScaleNdc		= vec4(majorAxisMultiplier, minorAxisMultiplier);
 
-	perQuadTransformations.ndcTransformations[gaussianIndex].color				= gaussian.color;
+	perQuadTransformations.ndcTransformations[gaussianIndex].color				= outputColor;
 
 	//TODO: I would just need the view space depth here tbh, not the whole gaussian. This would probably make it faster
 	gaussianBufferOutPostFilter.gaussians[gaussianIndex] = gaussian;

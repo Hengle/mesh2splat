@@ -284,18 +284,13 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
 
 unsigned int Renderer::getGaussianCountFromIndirectBuffer()
 {
-    //if (this->renderContext.drawIndirectBuffer)
-    //{
-    //    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, this->renderContext.drawIndirectBuffer);
-    //
-    //    IRenderPass::DrawElementsIndirectCommand* cmd = (IRenderPass::DrawElementsIndirectCommand*)glMapBufferRange(
-    //        GL_DRAW_INDIRECT_BUFFER, 0, sizeof(IRenderPass::DrawElementsIndirectCommand), GL_MAP_READ_BIT
-    //    );
-    //
-    //    unsigned int validCount = cmd->instanceCount;
-    //    glUnmapBuffer(GL_DRAW_INDIRECT_BUFFER);
-    //    return validCount;
-    //}
+    if (this->renderContext.atomicCounterBuffer)
+    {
+        uint32_t validCount = 0;
+        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderContext.atomicCounterBuffer);
+        glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(uint32_t), &validCount);
+        return validCount;
+    }
     return 0;
 
 }
