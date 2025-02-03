@@ -9,7 +9,6 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     rendererGlfwWindow = window;
     renderPassesOrder = {};
     renderContext = {};
-    glGenVertexArrays(1, &(renderContext.vao));
     renderContext.gaussianBuffer                = 0;
     renderContext.gaussianBufferPostFiltering   = 0;
     renderContext.drawIndirectBuffer            = 0;
@@ -34,6 +33,8 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
     updateShadersIfNeeded(true);
+    
+    glGenVertexArrays(1, &(renderContext.vao));
     
     glGenBuffers(1, &(renderContext.keysBuffer));
     glGenBuffers(1, &(renderContext.perQuadTransformationsBuffer));
@@ -121,7 +122,7 @@ void Renderer::initialize() {
     renderPasses[conversionPassName]            = std::make_unique<ConversionPass>();
     renderPasses[gaussiansPrePassName]          = std::make_unique<GaussiansPrepass>();
     renderPasses[radixSortPassName]             = std::make_unique<RadixSortPass>();
-    renderPasses[gaussianSplattingPassName]     = std::make_unique<GaussianSplattingPass>();
+    renderPasses[gaussianSplattingPassName]     = std::make_unique<GaussianSplattingPass>(renderContext);
 
     renderPassesOrder = {
         conversionPassName,

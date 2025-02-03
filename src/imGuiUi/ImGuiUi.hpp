@@ -52,6 +52,7 @@ public:
     {
         COLOR = 0,
         DEPTH = 1,
+        NORMAL = 2
     };
     
     ImGuiUI::VisualizationOption selectedRenderMode() const ;
@@ -67,8 +68,8 @@ private:
     const char* formatLabels[2] = { "PLY Standard Format", "Pbr PLY" };
 
     int renderIndex;
-    const ImGuiUI::VisualizationOption renderOptions[2] = { ImGuiUI::VisualizationOption::COLOR, ImGuiUI::VisualizationOption::DEPTH };
-    const char* renderLabels[2] = { "Color", "Depth" };
+    const ImGuiUI::VisualizationOption renderOptions[3] = { ImGuiUI::VisualizationOption::COLOR, ImGuiUI::VisualizationOption::DEPTH, ImGuiUI::VisualizationOption::NORMAL };
+    const char* renderLabels[3] = { "Color", "Depth", "Normals"};
 
     float gaussian_std;
     float quality;

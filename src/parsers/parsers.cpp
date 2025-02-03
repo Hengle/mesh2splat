@@ -286,7 +286,7 @@ namespace parsers
         return projectedVertices;
     }
 
-    void writePbrPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
+    void writePbrPLY(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians, float scaleMultiplier) {
         std::ofstream file(filename, std::ios::binary | std::ios::out);
 
         // Write header in ASCII
@@ -323,7 +323,7 @@ namespace parsers
         file << "end_header\n";
 
         // Write vertex data in binary
-        for (const auto& gaussian : gaussians) {
+        for (auto& gaussian : gaussians) {
             //Mean
             file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
             file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
@@ -333,19 +333,31 @@ namespace parsers
             file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
             file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
             //RGB
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
+
+            //TODO: 
+            glm::vec3 sh0 = getShFromColor(gaussian.color);
+            
+            file.write(reinterpret_cast<const char*>(&sh0.r), sizeof(sh0.r));
+            file.write(reinterpret_cast<const char*>(&sh0.g), sizeof(sh0.g));
+            file.write(reinterpret_cast<const char*>(&sh0.b), sizeof(sh0.b));
+
+            //file.write(reinterpret_cast<const char*>(&gaussian.color.r), sizeof(gaussian.color.r));
+            //file.write(reinterpret_cast<const char*>(&gaussian.color.g), sizeof(gaussian.color.g));
+            //file.write(reinterpret_cast<const char*>(&gaussian.color.b), sizeof(gaussian.color.b));
 
             //---------NEW-----------------------------------------------------
             //Material properties
 
-            file.write(reinterpret_cast<const char*>(&gaussian.material.metallicFactor), sizeof(gaussian.material.metallicFactor));
-            file.write(reinterpret_cast<const char*>(&gaussian.material.roughnessFactor), sizeof(gaussian.material.roughnessFactor));
+            file.write(reinterpret_cast<const char*>(&gaussian.pbr.x), sizeof(gaussian.pbr.x));
+            file.write(reinterpret_cast<const char*>(&gaussian.pbr.y), sizeof(gaussian.pbr.y));
             //-----------------------------------------------------------------
 
             //Opacity
-            file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
+            file.write(reinterpret_cast<const char*>(&gaussian.color.a), sizeof(gaussian.color.a));
+            
+            gaussian.scale.x = std::log(gaussian.scale.x * scaleMultiplier);
+            gaussian.scale.y = std::log(gaussian.scale.y * scaleMultiplier);
+            gaussian.scale.z = std::log(gaussian.scale.z * scaleMultiplier);           
 
             file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
             file.write(reinterpret_cast<const char*>(&gaussian.scale.y), sizeof(gaussian.scale.y));
@@ -359,86 +371,13 @@ namespace parsers
         file.close();
     }
 
-    void writeBinaryPlyLit(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
-        std::ofstream file(filename, std::ios::binary | std::ios::out);
-
-        // Write header in ASCII
-        file << "ply\n";
-        file << "format binary_little_endian 1.0\n";
-        file << "element vertex " << gaussians.size() << "\n";
-
-        file << "property float x\n";               //0
-        file << "property float y\n";               //1
-        file << "property float z\n";               //2
-
-        file << "property float nx\n";              //3
-        file << "property float ny\n";              //4
-        file << "property float nz\n";              //5
-
-        file << "property float f_dc_0\n";    //6
-        file << "property float f_dc_1\n";    //7
-        file << "property float f_dc_2\n";    //8
-
-        file << "property float opacity\n";         //9
-
-        file << "property float scale_0\n";         //10
-        file << "property float scale_1\n";         //11
-        file << "property float scale_2\n";         //12
-
-        file << "property float rot_0\n";           //13
-        file << "property float rot_1\n";           //14
-        file << "property float rot_2\n";           //15
-        file << "property float rot_3\n";           //16
-
-        file << "property float roughness\n";       //17
-        file << "property float metallic\n";        //18
-
-        file << "end_header\n";
-
-        // Write vertex data in binary
-        for (const auto& gaussian : gaussians) {
-            //Mean
-            file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.position.z), sizeof(gaussian.position.z));
-            //Normal
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.x), sizeof(gaussian.normal.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
-            //RGB
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
-
-            //Opacity
-            file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
-
-            //Scale
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.y), sizeof(gaussian.scale.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.z), sizeof(gaussian.scale.z));
-            //Rotation
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.x), sizeof(gaussian.rotation.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.y), sizeof(gaussian.rotation.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.z), sizeof(gaussian.rotation.z));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.w), sizeof(gaussian.rotation.w));
-
-            //---------NEW-----------------------------------------------------
-            //Material properties
-            file.write(reinterpret_cast<const char*>(&gaussian.material.roughnessFactor), sizeof(gaussian.material.roughnessFactor));
-            file.write(reinterpret_cast<const char*>(&gaussian.material.metallicFactor), sizeof(gaussian.material.metallicFactor));
-            //-----------------------------------------------------------------
-        }
-        file.close();
-    }
-
-    void writeBinaryPlyStandardFormatFromSSBO(const std::string& filename, GaussianDataSSBO* gaussians, unsigned int gaussianCount) {
+    void writeBinaryPlyStandardFormat(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians) {
         std::ofstream file(filename, std::ios::binary | std::ios::out);
         //TODO: abstract this header writer away so can be common to all writers
         // Write header in ASCII
         file << "ply\n";
         file << "format binary_little_endian 1.0\n";
-        file << "element vertex " << gaussianCount << "\n";
+        file << "element vertex " << gaussians.size() << "\n";
 
         file << "property float x\n";       // 0
         file << "property float y\n";       // 1
@@ -470,9 +409,7 @@ namespace parsers
         file << "end_header\n";
 
         // Write vertex data in binary
-        for (int i = 0; i < gaussianCount; ++i) {
-            GaussianDataSSBO gaussian = gaussians[i];
-
+        for (auto& gaussian : gaussians) {
             // Mean
             file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
             file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
@@ -483,11 +420,12 @@ namespace parsers
             file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
             file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
 
-            glm::vec3 sh0 = getShFromColor(glm::vec3(gaussian.color.r, gaussian.color.g, gaussian.color.b));
             // RGB
-            file.write(reinterpret_cast<const char*>(&sh0.x), sizeof(sh0.x));
-            file.write(reinterpret_cast<const char*>(&sh0.y), sizeof(sh0.y));
-            file.write(reinterpret_cast<const char*>(&sh0.z), sizeof(sh0.z));
+            glm::vec3 sh0 = getShFromColor(gaussian.color);
+            
+            file.write(reinterpret_cast<const char*>(&sh0.r), sizeof(sh0.r));
+            file.write(reinterpret_cast<const char*>(&sh0.g), sizeof(sh0.g));
+            file.write(reinterpret_cast<const char*>(&sh0.b), sizeof(sh0.b));
 
             // Fill f_rest_0 to f_rest_44 with zeros
             float zero = 0.0f;
@@ -498,83 +436,9 @@ namespace parsers
             // Opacity
             file.write(reinterpret_cast<const char*>(&gaussian.color.a), sizeof(gaussian.color.a));
 
-            // Scale
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.y), sizeof(gaussian.scale.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.scale.z), sizeof(gaussian.scale.z));
-
-            // Rotation
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.x), sizeof(gaussian.rotation.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.y), sizeof(gaussian.rotation.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.z), sizeof(gaussian.rotation.z));
-            file.write(reinterpret_cast<const char*>(&gaussian.rotation.w), sizeof(gaussian.rotation.w));
-        }
-
-        file.close();
-    }
-
-    void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<Gaussian3D>& gaussians) {
-        std::ofstream file(filename, std::ios::binary | std::ios::out);
-        //TODO: abstract this header writer away so can be common to all writers
-        // Write header in ASCII
-        file << "ply\n";
-        file << "format binary_little_endian 1.0\n";
-        file << "element vertex " << gaussians.size() << "\n";
-
-        file << "property float x\n";       // 0
-        file << "property float y\n";       // 1
-        file << "property float z\n";       // 2
-
-        file << "property float nx\n";      // 3
-        file << "property float ny\n";      // 4
-        file << "property float nz\n";      // 5
-
-        file << "property float f_dc_0\n";  // 6
-        file << "property float f_dc_1\n";  // 7
-        file << "property float f_dc_2\n";  // 8
-
-        for (int i = 0; i <= 44; ++i) {
-            file << "property float f_rest_" << i << "\n"; // f_rest_0 to f_rest_44
-        }
-
-        file << "property float opacity\n"; // 45
-
-        file << "property float scale_0\n"; // 46
-        file << "property float scale_1\n"; // 47
-        file << "property float scale_2\n"; // 48
-
-        file << "property float rot_0\n";   // 49
-        file << "property float rot_1\n";   // 50
-        file << "property float rot_2\n";   // 51
-        file << "property float rot_3\n";   // 52
-
-        file << "end_header\n";
-
-        // Write vertex data in binary
-        for (const auto& gaussian : gaussians) {
-            // Mean
-            file.write(reinterpret_cast<const char*>(&gaussian.position.x), sizeof(gaussian.position.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.position.y), sizeof(gaussian.position.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.position.z), sizeof(gaussian.position.z));
-
-            // Normal
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.x), sizeof(gaussian.normal.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.y), sizeof(gaussian.normal.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
-
-            // RGB
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.x), sizeof(gaussian.sh0.x));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.y), sizeof(gaussian.sh0.y));
-            file.write(reinterpret_cast<const char*>(&gaussian.sh0.z), sizeof(gaussian.sh0.z));
-
-            // Fill f_rest_0 to f_rest_44 with zeros
-            float zero = 0.0f;
-            for (int i = 0; i <= 44; ++i) {
-                file.write(reinterpret_cast<const char*>(&zero), sizeof(zero));
-            }
-
-            // Opacity
-            file.write(reinterpret_cast<const char*>(&gaussian.opacity), sizeof(gaussian.opacity));
+            gaussian.scale.x = std::log(gaussian.scale.x);
+            gaussian.scale.y = std::log(gaussian.scale.y);
+            gaussian.scale.z = std::log(gaussian.scale.z);
 
             // Scale
             file.write(reinterpret_cast<const char*>(&gaussian.scale.x), sizeof(gaussian.scale.x));
@@ -650,9 +514,9 @@ namespace parsers
                 gaussian.color.z = rgb_color.b;
                 gaussian.color.w = sigmoid(vertex_opacity[i]);
 
-                gaussian.scale.x = vertex_scale_0[i];
-                gaussian.scale.y = vertex_scale_1[i];
-                gaussian.scale.z = vertex_scale_2[i];
+                gaussian.scale.x = glm::exp(vertex_scale_0[i]);
+                gaussian.scale.y = glm::exp(vertex_scale_1[i]);
+                gaussian.scale.z = glm::exp(vertex_scale_2[i]);
                 gaussian.scale.w = 1.0f;
 
                 gaussian.normal.x = vertex_nx[i];
@@ -676,20 +540,16 @@ namespace parsers
         
     }
 
-    void savePlyVector(std::string outputFileLocation, std::vector<Gaussian3D> gaussians_3D_list, unsigned int FORMAT)
+    void savePlyVector(std::string outputFileLocation, std::vector<GaussianDataSSBO> gaussians_3D_list, unsigned int FORMAT, float scaleMultiplier)
     {
         switch (FORMAT)
         {
+            case 0:
+                writePbrPLY(outputFileLocation, gaussians_3D_list, scaleMultiplier);
+                break;
+    
             case 1:
                 writeBinaryPlyStandardFormat(outputFileLocation, gaussians_3D_list);
-                break;
-    
-            case 2:
-                writePbrPLY(outputFileLocation, gaussians_3D_list);
-                break;
-    
-            case 3:
-                writeBinaryPlyLit(outputFileLocation, gaussians_3D_list);
                 break;
     
             default:

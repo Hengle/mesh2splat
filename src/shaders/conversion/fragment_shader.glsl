@@ -58,12 +58,12 @@ void main() {
     if (hasNormalMap == 1)
     {
         vec3 normalMap_normal = texture(normalTexture, UV).xyz;
-        //https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#_material_normaltextureinfo_scale
-        vec3 retrievedNormal = normalize(normalMap_normal.xyz * 2.0f - 1.0f); //TODO: * vec3(material.normalScale, material.normalScale, 1.0f)); 
-        vec3 bitangent = normalize(cross(Normal, Tangent.xyz)) * Tangent.w; //tangent.w is the bitangent sign
-        mat3 TBN = mat3(Tangent.xyz, bitangent, Normal);
+        vec3 retrievedNormal = normalize(normalMap_normal.xyz * 2.0f - 1.0f); 
 
-        out_Normal = TBN * retrievedNormal;
+        vec3 bitangent = normalize(cross(Normal, Tangent.xyz)) * Tangent.w; //tangent.w is the bitangent sign
+        mat3 TBN = mat3(Tangent.xyz, bitangent, normalize(Normal));
+
+        out_Normal = normalize(TBN * retrievedNormal);
     }
     else {
         out_Normal = Normal;

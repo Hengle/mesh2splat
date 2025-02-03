@@ -10,6 +10,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch)
     WorldUp = up;
     Yaw = yaw;
     Pitch = pitch;
+    Roll = 0;
     updateCameraVectors();
 }
 
@@ -17,7 +18,7 @@ glm::mat4 Camera::GetViewMatrix() const {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-void Camera::ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool upMove, bool downMove) {
+void Camera::ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool upMove, bool downMove, bool rotateLeftFrontVect, bool rotateRightFrontVect) {
     float velocity = MovementSpeed * deltaTime;
     if (forward)
         Position += Front * velocity;
@@ -31,6 +32,12 @@ void Camera::ProcessKeyboard(float deltaTime, bool forward, bool backward, bool 
         Position += WorldUp * velocity;
     if (downMove)
         Position -= WorldUp * velocity;
+    if (rotateRightFrontVect)
+        Roll -= 0.5;
+    if (rotateLeftFrontVect)
+        Roll += 0.5;
+
+    updateCameraVectors();
 }
 
 void Camera::ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch) {
@@ -58,12 +65,22 @@ void Camera::ProcessMouseScroll(float yoffset) {
         FOV = 90.0f;
 }
 
-void Camera::updateCameraVectors() {
+void Camera::updateCameraVectors()
+{
     glm::vec3 front;
     front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     front.y = sin(glm::radians(Pitch));
     front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
     Front = glm::normalize(front);
-    Right = glm::normalize(glm::cross(Front, WorldUp));  // Normalize the vectors
+
+    glm::vec3 baseUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+    //TODO: ideally R and T should rotate the model, rather than rool the camera
+    glm::mat4 rollMat = glm::rotate(glm::mat4(1.0f), glm::radians(Roll), Front);
+    glm::vec3 rolledUp = glm::vec3(rollMat * glm::vec4(baseUp, 0.0f));
+
+    Right = glm::normalize(glm::cross(Front, rolledUp));
+
     Up    = glm::normalize(glm::cross(Right, Front));
 }
+

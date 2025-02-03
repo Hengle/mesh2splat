@@ -12,16 +12,13 @@ namespace parsers
 
 	void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap);
 
-	void writePbrPLY(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
+	void writePbrPLY(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians, float scaleMultiplier);
 
-	void writeBinaryPlyLit(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
-
-	void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<Gaussian3D>& gaussians);
-	void writeBinaryPlyStandardFormatFromSSBO(const std::string& filename, GaussianDataSSBO* gaussians, unsigned int gaussianCount);
+	void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<GaussianDataSSBO>& gaussians);
 
 	void loadPlyFile(std::string plyFileLocation, std::vector<GaussianDataSSBO>& gaussians);
 
-	void savePlyVector(std::string outputFileLocation, std::vector<Gaussian3D> gaussians_3D_list, unsigned int format);
+	void savePlyVector(std::string outputFileLocation, std::vector<GaussianDataSSBO> gaussians_3D_list, unsigned int format, float scaleMultiplier);
 
 	unsigned char* combineMetallicRoughness(const char* path1, const char* path2, int& width, int& height, int& channels);
 

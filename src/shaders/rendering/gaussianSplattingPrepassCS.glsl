@@ -70,7 +70,7 @@ void castQuatToMat3(vec4 quat, out mat3 rotMatrix)
 	);
 }
 
-void computeCov3D(vec4 quat, vec3 scales, out mat3 sigma3d) {
+void computeCov3D(mat3 rotMat, vec3 scales, out mat3 sigma3d) {
 
 	mat3 scaleMatrix = mat3(
 		scales.x , 0, 0, 
@@ -78,10 +78,7 @@ void computeCov3D(vec4 quat, vec3 scales, out mat3 sigma3d) {
 		0, 0, scales.z					
 	);
 
-	mat3 rotMatrix;
-	castQuatToMat3(quat, rotMatrix);
-
-	mat3 mMatrix = scaleMatrix * rotMatrix;
+	mat3 mMatrix = scaleMatrix * rotMat;
 
 	sigma3d = transpose(mMatrix) * mMatrix;
 };
@@ -110,14 +107,13 @@ void main() {
 	//computeCov3D(gaussian.rotation, exp(scaleFiltered) * GAUSSIAN_CUTOFF_SCALE, cov3d);
 	//else
 	//vec3 scale = exp(gaussian.scale.xyz);
-	vec3 scale = vec3(0, 0, 0);
-	if (u_format == 0)
-		scale = gaussian.scale.xyz * u_stdDev * GAUSSIAN_CUTOFF_SCALE;
-	else if(u_format == 1)
-		scale = exp(gaussian.scale.xyz) * GAUSSIAN_CUTOFF_SCALE;
+	float multiplier = u_format == 0 ? u_stdDev : 1.0;
+	vec3 scale = gaussian.scale.xyz * multiplier * GAUSSIAN_CUTOFF_SCALE;
 
 	mat3 cov3d;
-	computeCov3D(gaussian.rotation, scale, cov3d);
+	mat3 rotMatrix;
+	castQuatToMat3(gaussian.rotation, rotMatrix);
+	computeCov3D(rotMatrix, scale, cov3d);
 
 	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
@@ -126,13 +122,24 @@ void main() {
 		outputColor = gaussian.color;
 
 	}
-	else if (u_renderMode == 1)
+	else if (u_renderMode == 1) //Depth
 	{
-		float normalizedDepth = (-gaussian_vs.z - 0.01) / (100.0 - 0.01);
+		float normalizedDepth = (-(gaussian_vs.z) - 0.01) / (100.0 - 0.01); //Hardcoded znear and zfar, 
 		float invertedLinearizedDepth = clamp(normalizedDepth, 0, 1);
 		float expDepthFallof = exp(-10 * invertedLinearizedDepth);
 		float zSq = clamp((expDepthFallof), 0, 1);
 		outputColor = vec4(zSq, zSq, zSq, gaussian.color.a);
+	}
+	else if (u_renderMode == 2) //Normal
+	{
+		if (u_format == 0)
+		{
+			outputColor = vec4((gaussian.normal.xyz / 2.0) + 0.5, gaussian.color.a);
+		}
+		else if (u_format == 1)
+		{
+			outputColor = vec4((rotMatrix[2] / 2.0) + 0.5, gaussian.color.a);
+		}
 	}
 
 	

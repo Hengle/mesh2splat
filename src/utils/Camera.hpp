@@ -6,7 +6,7 @@ public:
     Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch);
 
     glm::mat4 GetViewMatrix() const;
-    void ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool up, bool down);
+    void ProcessKeyboard(float deltaTime, bool forward, bool backward, bool left, bool right, bool upMove, bool downMove, bool rotateLeftFrontVect, bool rotateRightFrontVect);
     void ProcessMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
     void ProcessMouseScroll(float yoffset);
     float GetFOV() const { return FOV; }
@@ -21,6 +21,7 @@ private:
 
     float Yaw;
     float Pitch;
+    float Roll;
 
     float MovementSpeed;
     float MouseSensitivity;

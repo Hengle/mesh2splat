@@ -59,7 +59,11 @@ void GuiRendererConcreteMediator::notify(EventType event)
             
             break;
         }
-         
+        case EventType::SavePLY: {
+            renderer.getSceneManager().exportPly(imguiUI.getMeshFullFilePathDestination());
+            imguiUI.setShouldSavePly(false);
+            break;
+        }
     }
 }
 
@@ -86,6 +90,9 @@ void GuiRendererConcreteMediator::update()
         notify(EventType::RunConversion);
     }
 
+    if (imguiUI.shouldSavePly()) {
+        notify(EventType::SavePLY);
+    }
 
     double gpuFrameTime = renderer.getTotalGpuFrameTimeMs(); // Retrieve GPU frame time
     imguiUI.setFrameMetrics(gpuFrameTime);

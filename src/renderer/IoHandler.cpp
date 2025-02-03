@@ -83,6 +83,9 @@ void IoHandler::processInput(float deltaTime) {
     bool right = keys[GLFW_KEY_D];
     bool upMove = keys[GLFW_KEY_E];
     bool downMove = keys[GLFW_KEY_Q];
+    bool rotateLeftFrontVect = keys[GLFW_KEY_T];
+    bool rotateRightFrontVect = keys[GLFW_KEY_R];
 
-    camera->ProcessKeyboard(deltaTime, forward, backward, left, right, upMove, downMove);
+
+    camera->ProcessKeyboard(deltaTime, forward, backward, left, right, upMove, downMove, rotateLeftFrontVect, rotateRightFrontVect);
 }

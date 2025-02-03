@@ -460,6 +460,34 @@ void SceneManager::loadTextures(const std::vector<Mesh>& meshes)
     
 }
 
+void SceneManager::exportPly(const std::string outputFile)
+{
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
+
+    std::vector<GaussianDataSSBO> cpuData(renderContext.numberOfGaussians);
+
+    glGetBufferSubData(
+        GL_SHADER_STORAGE_BUFFER,
+        0,
+        renderContext.numberOfGaussians * sizeof(GaussianDataSSBO),
+        cpuData.data()
+    );
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    
+    float scaleMultiplier = renderContext.gaussianStd / static_cast<float>(renderContext.resolutionTarget);
+    auto format           = renderContext.format;  
+
+    std::thread(
+        [=, data = std::move(cpuData)]() mutable 
+        {
+            parsers::savePlyVector(outputFile, data, format, scaleMultiplier);
+        }
+    ).detach();
+    
+}
+
+
 void SceneManager::updateMeshes()
 {
 }
