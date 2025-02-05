@@ -17,13 +17,11 @@ struct QuadNdcTransformation {
 };
 
 uniform float u_stdDev;
-uniform vec3 u_hfov_focal;
 uniform mat4 u_worldToView;
 uniform mat4 u_viewToClip;
 uniform vec2 u_resolution;
 uniform vec2 u_nearFar;
 
-uniform vec3 u_camPos;
 uniform int u_renderMode;
 uniform unsigned int u_format;
 uniform int u_gaussianCount;
@@ -32,9 +30,9 @@ layout(std430, binding = 0) readonly buffer GaussianBuffer {
     GaussianVertex gaussians[];
 } gaussianBuffer;
 
-layout(std430, binding = 1) writeonly buffer GaussianBufferOutPostFilter {
-    GaussianVertex gaussians[];
-} gaussianBufferOutPostFilter;
+layout(std430, binding = 1) writeonly buffer GaussianDepthPostFiltering {
+    float depths_vs[];
+} gaussianDepthPostFiltering;
 
 layout(std430, binding = 2) writeonly buffer PerQuadTransformations {
     QuadNdcTransformation ndcTransformations[];
@@ -102,9 +100,10 @@ mat2 inverseMat2(mat2 m)
     return inv;
 }
 
-layout(local_size_x = 256) in;  
+layout(local_size_x = 16, local_size_y = 16) in;  
 void main() {
-	uint gid = gl_GlobalInvocationID.x;
+	uint globalWidth = gl_NumWorkGroups.x * gl_WorkGroupSize.x;
+    uint gid = gl_GlobalInvocationID.y * globalWidth + gl_GlobalInvocationID.x;
 
     if (gid >= u_gaussianCount) return;
 
@@ -157,12 +156,13 @@ void main() {
 	
 	pos2d.xyz = pos2d.xyz / pos2d.w;
 
+	//https://github.com/graphdeco-inria/diff-gaussian-rasterization/blob/59f5f77e3ddbac3ed9db93ec2cfe99ed6c5d121d/cuda_rasterizer/forward.cu#L74 
     float tzSq = gaussian_vs.z * gaussian_vs.z;
-    float jsx = -(u_viewToClip[0][0] * u_resolution.x) / (2.0f * gaussian_vs.z);
-    float jsy = -(u_viewToClip[1][1] * u_resolution.y) / (2.0f * gaussian_vs.z);
-    float jtx = (u_viewToClip[0][0] * gaussian_vs.x * u_resolution.x) / (2.0f * tzSq);
-    float jty = (u_viewToClip[1][1] * gaussian_vs.y * u_resolution.y) / (2.0f * tzSq);
-    float jtz = ((100 - 0.01) * u_viewToClip[3][2]) / (2.0f * tzSq);
+    float jsx = -(u_viewToClip[0][0] * u_resolution.x) / (2 * gaussian_vs.z);
+    float jsy = -(u_viewToClip[1][1] * u_resolution.y) / (2 * gaussian_vs.z);
+    float jtx = (u_viewToClip[0][0] * gaussian_vs.x * u_resolution.x) / (2 * tzSq);
+    float jty = (u_viewToClip[1][1] * gaussian_vs.y * u_resolution.y) / (2 * tzSq);
+    float jtz = ((u_nearFar.y - u_nearFar.x) * u_viewToClip[3][2]) / (2*tzSq);
 
     mat3 J = mat3(vec3(jsx, 0.0f, 0.0f),
                   vec3(0.0f, jsy, 0.0f),
@@ -170,6 +170,7 @@ void main() {
 
     mat3 W = mat3(u_worldToView);
     mat3 JW = J * W;
+
     mat3 V_prime = JW * cov3d * transpose(JW);
 
     mat2 cov2d = mat2(V_prime);
@@ -188,12 +189,11 @@ void main() {
 	if (lambda2 < 0.0) return;
 
     vec2 diagonalVector = normalize(vec2(1, (-cov2d[0][0]+cov2d[0][1]+lambda1)/(cov2d[0][1]-cov2d[1][1]+lambda1)));
-    //I am not sure why but I need to do 6* rather than the classic 3* std dev. Something may be wrong in how I compute the lambdas
-	vec2 majorAxis = min(6 * sqrt(lambda1), 1024.0) * diagonalVector;
-    vec2 minorAxis = min(6 * sqrt(lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
+	vec2 majorAxis = min(3 * sqrt(lambda1), 1024.0) * diagonalVector;
+    vec2 minorAxis = min(3 * sqrt(lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-	vec2 majorAxisMultiplier = majorAxis / u_resolution;
-	vec2 minorAxisMultiplier = minorAxis / u_resolution;
+	vec2 majorAxisMultiplier =  majorAxis / (u_resolution * 0.5); //Tbh: not sure why I need to /2 here or alternatively *6 the sqrt(lambda1/2)
+	vec2 minorAxisMultiplier =  minorAxis / (u_resolution * 0.5);
 
 	uint gaussianIndex = atomicCounterIncrement(g_validCounter);
 
@@ -204,8 +204,6 @@ void main() {
 	mat2 conic = inverseMat2(cov2d);
 	perQuadTransformations.ndcTransformations[gaussianIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], 1.0);
 
-
-	//TODO: I would just need the view space depth here tbh, not the whole gaussian. This would probably make it faster
-	gaussianBufferOutPostFilter.gaussians[gaussianIndex] = gaussian;
+	gaussianDepthPostFiltering.depths_vs[gaussianIndex]							= gaussian_vs.z;
 }
 

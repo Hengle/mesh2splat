@@ -3,9 +3,9 @@
 GaussianSplattingPass::GaussianSplattingPass(RenderContext& renderContext)
 {
     std::vector<float> quadVertices = {
-        -1.0f, -1.0f, 0.0f, // V0
-        -1.0f,  1.0f, 0.0f, // V1
-         1.0f,  1.0f, 0.0f, // V2
+        -1.0f, -1.0f, 0.0f,// V0
+        -1.0f,  1.0f, 0.0f,// V1
+         1.0f,  1.0f, 0.0f,// V2
          1.0f, -1.0f, 0.0f  // V3
     };
 
@@ -41,12 +41,11 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
 
     glUtils::setUniform2f(renderContext.shaderPrograms.renderShaderProgram,     "u_resolution", renderContext.rendererResolution);
 
-    //TODO: this will work once sorting is working
 	glEnable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
 
-    //The correct one: from slide deck of Bernard K.
+    //From deck of Bernard K.: https://3dgstutorial.github.io/3dv_part2.pdf slide 25
 	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
 
     glBindVertexArray(renderContext.vao);
@@ -56,9 +55,11 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
     // memory leak. Should structure renderer architecture
-    unsigned int stride = sizeof(glm::vec4) * 4; //This is the ndc stride
+    unsigned int vec4sPerInstance = 4;
+    unsigned int stride = sizeof(glm::vec4) * vec4sPerInstance; //This is the ndc stride
     
-    for (int i = 1; i <= 4; ++i) {
+    //i=0 is for the per-vertex quad pos, see line 27. Technically we´ll have a byte "hole" between per vertex-data (vec3) and the per-instance one (vec4) considering "(void*)(sizeof(glm::vec4) * (i - 1))" pointer
+    for (int i = 1; i <= vec4sPerInstance; ++i) {
         glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, stride, (void*)(sizeof(glm::vec4) * (i - 1)));
         glEnableVertexAttribArray(i);
         glVertexAttribDivisor(i, 1);

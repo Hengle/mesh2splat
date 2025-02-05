@@ -122,7 +122,7 @@ namespace uvUnwrapping
 	}
 	#endif
 
-	void generateNormalizedUvCoordinatesPerMesh(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<Mesh>& meshes)
+	void generateNormalizedUvCoordinatesPerMesh(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<utils::Mesh>& meshes)
 	{
 		for (auto& mesh : meshes)
 		{
@@ -130,7 +130,7 @@ namespace uvUnwrapping
 		}
 	}
 
-	void generateNormalizedUvCoordinatesPerFace(int& uvSpaceWidth, int& uvSpaceHeight, Mesh& inputMesh)
+	void generateNormalizedUvCoordinatesPerFace(int& uvSpaceWidth, int& uvSpaceHeight, utils::Mesh& inputMesh)
 	{
 		xatlas::MeshDecl meshDecl;
 		std::vector<float> vertexPositions;

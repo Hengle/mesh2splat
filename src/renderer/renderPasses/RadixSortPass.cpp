@@ -22,7 +22,7 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
     glUtils::setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
     glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
 
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBufferPostFiltering);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianDepthPostFiltering);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.valuesBuffer);
 

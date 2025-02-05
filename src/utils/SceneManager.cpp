@@ -12,7 +12,7 @@ SceneManager::~SceneManager() {
 
 
 bool SceneManager::loadModel(const std::string& filePath, const std::string& parentFolder) {
-    std::vector<Mesh> meshes;
+    std::vector<utils::Mesh> meshes;
     if (!parseGltfFile(filePath, parentFolder, meshes)) {
         std::cerr << "Failed to parse GLTF file: " << filePath << std::endl;
         return false;
@@ -53,8 +53,8 @@ const T* SceneManager::getBufferData(const tinygltf::Model& model, int accessorI
     return dataPtr;
 }
 
-TextureInfo SceneManager::parseGltfTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter, std::string base_folder) {
-    TextureInfo info;
+utils::TextureInfo SceneManager::parseGltfTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter, std::string base_folder) {
+    utils::TextureInfo info;
 
     auto it = textureParameter.json_double_value.find("index");
     if (it != textureParameter.json_double_value.end()) {
@@ -86,8 +86,8 @@ TextureInfo SceneManager::parseGltfTextureInfo(const tinygltf::Model& model, con
     return info;
 }
 
-MaterialGltf SceneManager::parseGltfMaterial(const tinygltf::Model& model, int materialIndex, std::string base_folder) {
-    MaterialGltf materialGltf;
+utils::MaterialGltf SceneManager::parseGltfMaterial(const tinygltf::Model& model, int materialIndex, std::string base_folder) {
+    utils::MaterialGltf materialGltf;
 
     if (materialIndex < 0 || materialIndex >= model.materials.size()) {
         return materialGltf;
@@ -186,7 +186,7 @@ MaterialGltf SceneManager::parseGltfMaterial(const tinygltf::Model& model, int m
     return materialGltf;
 }
 
-bool SceneManager::parseGltfFile(const std::string& filePath, const std::string& parentFolder, std::vector<Mesh>& meshes) {
+bool SceneManager::parseGltfFile(const std::string& filePath, const std::string& parentFolder, std::vector<utils::Mesh>& meshes) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string err;
@@ -206,7 +206,7 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
 
     //remember that "when a 3D model is created as GLTF it is already triangulated"
     for (const auto& mesh : model.meshes) {
-        Mesh myMesh(mesh.name);
+        utils::Mesh myMesh(mesh.name);
         
         for (const auto& primitive : mesh.primitives) {
             const tinygltf::Accessor& indicesAccessor = model.accessors[primitive.indices];
@@ -246,7 +246,7 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
 
             //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
             myMesh.faces.resize(indices.size() / 3);
-            Face* dst = myMesh.faces.data();
+            utils::Face* dst = myMesh.faces.data();
             
             for (size_t i = 0, count = indices.size(); i < count; i += 3, ++dst) {             
 
@@ -289,20 +289,20 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
 }
 
 // Generate Normalized UV Coordinates
-void SceneManager::generateNormalizedUvCoordinates(std::vector<Mesh>& meshes)
+void SceneManager::generateNormalizedUvCoordinates(std::vector<utils::Mesh>& meshes)
 {
     uvUnwrapping::generateNormalizedUvCoordinatesPerMesh(renderContext.normalizedUvSpaceWidth, renderContext.normalizedUvSpaceHeight, meshes);
 }
 
 // Setup Mesh Buffers
-void SceneManager::setupMeshBuffers(const std::vector<Mesh>& meshes)
+void SceneManager::setupMeshBuffers(const std::vector<utils::Mesh>& meshes)
 {
 
     renderContext.dataMeshAndGlMesh.clear();
     renderContext.dataMeshAndGlMesh.reserve(meshes.size());
 
     for (auto& mesh : meshes) {
-        GLMesh glMesh;
+        utils::GLMesh glMesh;
         std::vector<float> vertices;  
         
         for (const auto& face : mesh.faces) {
@@ -385,7 +385,7 @@ void SceneManager::setupMeshBuffers(const std::vector<Mesh>& meshes)
 
 }
 
-void SceneManager::loadTextures(const std::vector<Mesh>& meshes)
+void SceneManager::loadTextures(const std::vector<utils::Mesh>& meshes)
 {
     
     for (auto& mesh : meshes)
@@ -411,7 +411,7 @@ void SceneManager::loadTextures(const std::vector<Mesh>& meshes)
             {
                 int channels;
                 unsigned char* metallicRoughnessTextureData = parsers::combineMetallicRoughness(metallicPath.c_str(), roughnessPath.c_str(), renderContext.material.metallicRoughnessTexture.width, renderContext.material.metallicRoughnessTexture.height, channels); 
-                renderContext.textureTypeMap.insert_or_assign(METALLIC_ROUGHNESS_TEXTURE, TextureDataGl(metallicRoughnessTextureData, channels));
+                renderContext.textureTypeMap.insert_or_assign(METALLIC_ROUGHNESS_TEXTURE, utils::TextureDataGl(metallicRoughnessTextureData, channels));
             }
             else {
                 renderContext.textureTypeMap.insert_or_assign(METALLIC_ROUGHNESS_TEXTURE, parsers::loadImageAndBpp(mesh.material.metallicRoughnessTexture.path, renderContext.material.metallicRoughnessTexture.width, renderContext.material.metallicRoughnessTexture.height));
@@ -464,12 +464,12 @@ void SceneManager::exportPly(const std::string outputFile)
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
 
-    std::vector<GaussianDataSSBO> cpuData(renderContext.numberOfGaussians);
+    std::vector<utils::GaussianDataSSBO> cpuData(renderContext.numberOfGaussians);
 
     glGetBufferSubData(
         GL_SHADER_STORAGE_BUFFER,
         0,
-        renderContext.numberOfGaussians * sizeof(GaussianDataSSBO),
+        renderContext.numberOfGaussians * sizeof(utils::GaussianDataSSBO),
         cpuData.data()
     );
 

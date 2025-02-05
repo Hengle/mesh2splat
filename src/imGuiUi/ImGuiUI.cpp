@@ -147,7 +147,7 @@ void ImGuiUI::preframe()
 void ImGuiUI::displayGaussianCount(unsigned int gaussianCount)
 {
     ImGui::Begin("Visible gaussians count:");
-    ImGui::Text("N: %s", formatWithCommas(gaussianCount).c_str());
+    ImGui::Text("N: %s", utils::formatWithCommas(gaussianCount).c_str());
     ImGui::End();
 }
 

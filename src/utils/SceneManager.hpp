@@ -21,12 +21,12 @@ public:
 private:
     RenderContext& renderContext;
 
-    bool parseGltfFile(const std::string& filePath, const std::string& parentFolder, std::vector<Mesh>& meshes);
-    MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex, std::string base_folder);
-    TextureInfo parseGltfTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter, std::string base_folder);
-    void generateNormalizedUvCoordinates(std::vector<Mesh>& meshes);
-    void loadTextures(const std::vector<Mesh>& meshes);
-    void setupMeshBuffers(const std::vector<Mesh>& meshes);
+    bool parseGltfFile(const std::string& filePath, const std::string& parentFolder, std::vector<utils::Mesh>& meshes);
+    utils::MaterialGltf parseGltfMaterial(const tinygltf::Model& model, int materialIndex, std::string base_folder);
+    utils::TextureInfo parseGltfTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter, std::string base_folder);
+    void generateNormalizedUvCoordinates(std::vector<utils::Mesh>& meshes);
+    void loadTextures(const std::vector<utils::Mesh>& meshes);
+    void setupMeshBuffers(const std::vector<utils::Mesh>& meshes);
     template <typename T>
     const T* getBufferData(const tinygltf::Model& model, int accessorIndex);
 };

@@ -2,49 +2,49 @@
 #include "utils.hpp"
 #include "../parsers/parsers.hpp"
 
+#define CONVERTER_VERTEX_SHADER_LOCATION "./src/shaders/conversion/vertex_shader.glsl" 
+#define CONVERTER_TESS_CONTROL_SHADER_LOCATION "./src/shaders/conversion/tess_control.glsl" 
+#define CONVERTER_TESS_EVAL_SHADER_LOCATION "./src/shaders/conversion/tess_evaluation.glsl" 
+#define CONVERTER_GEOM_SHADER_LOCATION "./src/shaders/conversion/geom_shader.glsl" 
+#define EIGENDECOMPOSITION_SHADER_LOCATION "./src/shaders/conversion/eigendecomposition.glsl"
+#define CONVERTER_FRAG_SHADER_LOCATION "./src/shaders/conversion/fragment_shader.glsl" 
+
+#define VOLUMETRIC_SURFACE_VERTEX_SHADER_LOCATION "./src/shaders/volumetric/volumetric_vertex_shader.glsl" 
+#define VOLUMETRIC_SURFACE_GEOM_SHADER_LOCATION "./src/shaders/volumetric/volumetric_geometry_shader.glsl"
+#define VOLUMETRIC_SURFACE_FRAGMENT_SHADER_LOCATION "./src/shaders/volumetric/volumetric_fragment_shader.glsl" 
+#define VOLUMETRIC_SURFACE_COMPUTE_SHADER_LOCATION "./src/shaders/volumetric/compute_shader.glsl" 
+
+#define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
+
+#define RADIX_SORT_PREPASS_SHADER_LOCATION "./src/shaders/rendering/radixSortPrepass.glsl" 
+#define RADIX_SORT_GATHER_SHADER_LOCATION "./src/shaders/rendering/radixSortGather.glsl" 
+
+
+#define RENDERER_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPrepassCS.glsl" 
+
+#define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
+#define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
+
+
 namespace glUtils
 { 
-    #define CONVERTER_VERTEX_SHADER_LOCATION "./src/shaders/conversion/vertex_shader.glsl" 
-    #define CONVERTER_TESS_CONTROL_SHADER_LOCATION "./src/shaders/conversion/tess_control.glsl" 
-    #define CONVERTER_TESS_EVAL_SHADER_LOCATION "./src/shaders/conversion/tess_evaluation.glsl" 
-    #define CONVERTER_GEOM_SHADER_LOCATION "./src/shaders/conversion/geom_shader.glsl" 
-    #define EIGENDECOMPOSITION_SHADER_LOCATION "./src/shaders/conversion/eigendecomposition.glsl"
-    #define CONVERTER_FRAG_SHADER_LOCATION "./src/shaders/conversion/fragment_shader.glsl" 
-
-    #define VOLUMETRIC_SURFACE_VERTEX_SHADER_LOCATION "./src/shaders/volumetric/volumetric_vertex_shader.glsl" 
-    #define VOLUMETRIC_SURFACE_GEOM_SHADER_LOCATION "./src/shaders/volumetric/volumetric_geometry_shader.glsl"
-    #define VOLUMETRIC_SURFACE_FRAGMENT_SHADER_LOCATION "./src/shaders/volumetric/volumetric_fragment_shader.glsl" 
-    #define VOLUMETRIC_SURFACE_COMPUTE_SHADER_LOCATION "./src/shaders/volumetric/compute_shader.glsl" 
-
-    #define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
-
-    #define RADIX_SORT_PREPASS_SHADER_LOCATION "./src/shaders/rendering/radixSortPrepass.glsl" 
-    #define RADIX_SORT_GATHER_SHADER_LOCATION "./src/shaders/rendering/radixSortGather.glsl" 
-
-
-    #define RENDERER_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPrepassCS.glsl" 
-
-    #define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
-    #define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
-
-
 
     GLuint compileShader(const char* source, GLenum type);
 
-    void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap);
+    void generateTextures(utils::MaterialGltf material, std::map<std::string, utils::TextureDataGl>& textureTypeMap);
 
-    void generateMeshesVBO(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh);
+    void generateMeshesVBO(const std::vector<utils::Mesh>& meshes, std::vector<std::pair<utils::Mesh, utils::GLMesh>>& DataMeshAndGlMesh);
 
     void setupTransformFeedback(size_t bufferSize, GLuint& feedbackBuffer, GLuint& feedbackVAO, GLuint& acBuffer, unsigned int totalStride);
 
     GLuint setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int height);
     //GLuint setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int height);
 
-    void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
+    void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, utils::GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
 
     void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
     
-    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<GaussianDataSSBO>& gaussians);
+    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<utils::GaussianDataSSBO>& gaussians);
     void fillGaussianBufferSsbo(GLuint& gaussianBuffer, unsigned int size);
     
     void resetAtomicCounter(GLuint atomicCounterBuffer);

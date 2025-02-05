@@ -6,8 +6,8 @@
 
 namespace uvUnwrapping
 {
-	void generateNormalizedUvCoordinatesPerMesh(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<Mesh>& meshes);
+	void generateNormalizedUvCoordinatesPerMesh(int& uvSpaceWidth, int& uvSpaceHeight, std::vector<utils::Mesh>& meshes);
 
-	void generateNormalizedUvCoordinatesPerFace(int& uvSpaceWidth, int& uvSpaceHeight, Mesh& meshes);
+	void generateNormalizedUvCoordinatesPerFace(int& uvSpaceWidth, int& uvSpaceHeight, utils::Mesh& meshes);
 }
 

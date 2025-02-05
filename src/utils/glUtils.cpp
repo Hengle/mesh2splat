@@ -157,7 +157,7 @@ namespace glUtils
 
 
 //TODO: must return the ID for each texture
-void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl>& textureTypeMap)
+void generateTextures(utils::MaterialGltf material, std::map<std::string, utils::TextureDataGl>& textureTypeMap)
 {
     std::map<std::string, GLenum> textureUnits = {
         { BASE_COLOR_TEXTURE,           GL_TEXTURE0 },
@@ -170,7 +170,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
     for (auto& textureTypeMapEntry : textureTypeMap)
     {
         const std::string& textureName = textureTypeMapEntry.first;
-        TextureDataGl& textureDataGl = textureTypeMapEntry.second;
+        utils::TextureDataGl& textureDataGl = textureTypeMapEntry.second;
         unsigned char* textureData = textureDataGl.textureData;
         
         auto unitIt = textureUnits.find(textureName);
@@ -256,13 +256,13 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
     }
 }
 
-    void generateMeshesVBO(const std::vector<Mesh>& meshes, std::vector<std::pair<Mesh, GLMesh>>& DataMeshAndGlMesh) {
+    void generateMeshesVBO(const std::vector<utils::Mesh>& meshes, std::vector<std::pair<utils::Mesh, utils::GLMesh>>& DataMeshAndGlMesh) {
     
         DataMeshAndGlMesh.clear();
         DataMeshAndGlMesh.reserve(meshes.size());
 
         for (auto& mesh : meshes) {
-            GLMesh glMesh;
+            utils::GLMesh glMesh;
             std::vector<float> vertices;  // Buffer to hold all vertex data
         
             // Convert mesh data to a flat array of floats (position only for this example)
@@ -549,7 +549,7 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         stbi_write_png(filename.c_str(), width, height, channels, imageData.data(), width * channels);
     }
 
-    void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, GaussianDataSSBO*& gaussians, unsigned int& gaussianCount)
+    void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, utils::GaussianDataSSBO*& gaussians, unsigned int& gaussianCount)
     {
         glFinish();
         //TODO: Should read this structs from where they are declared initally or common file, not repeating it like this
@@ -575,26 +575,12 @@ void generateTextures(MaterialGltf material, std::map<std::string, TextureDataGl
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);
         size_t gaussianBufferSize = gaussianCount * sizeof(glm::vec4) * 6; //TODO: ISSUE6
 
-        gaussians = static_cast<GaussianDataSSBO*>(
+        gaussians = static_cast<utils::GaussianDataSSBO*>(
             glMapBufferRange(GL_SHADER_STORAGE_BUFFER, 0, gaussianBufferSize, GL_MAP_READ_BIT));
 
     }
 
-
-    //TODO: this one is a bit different
-    //void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer)
-    //{
-    //    glGenBuffers(1, &(*gaussianBuffer));
-    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, *gaussianBuffer);
-    //    //TODO: I will categorize this hardcoding issue of the number of output float4 params from the SSBO as: ISSUE6
-    //    GLsizeiptr bufferSize = width * height * sizeof(glm::vec4) * 6;
-    //    glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
-    //    unsigned int bindingPos = 5; //TODO: SSBO binding pos, should not hardcode it and should depend on how many drawbuffers from the framebuffer I want to read from
-    //    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingPos, *gaussianBuffer);
-    //    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
-    //}
-
-    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<GaussianDataSSBO>& gaussians)
+    void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<utils::GaussianDataSSBO>& gaussians)
     {
         glGenBuffers(1, &gaussianBuffer);
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, gaussianBuffer);

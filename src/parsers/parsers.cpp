@@ -3,7 +3,7 @@
 namespace parsers
 { 
     //TODO: Careful to remember that the image is saved with its original name, if you change filename after 
-    TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) 
+    utils::TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight) 
     {
         size_t pos = texturePath.rfind('.');
         std::string image_format = texturePath.substr(pos + 1);
@@ -49,15 +49,15 @@ namespace parsers
             stbi_image_free(image);
             std::cout << "\nImage: " << resized_texture_name_location << "  width: " << textureWidth << "  height: " << textureHeight << " BPP:" << bpp << "\n" << std::endl;
     
-            return TextureDataGl(resized_data, bpp);
+            return utils::TextureDataGl(resized_data, bpp);
        
         }
 
-        return TextureDataGl(image, bpp);
+        return utils::TextureDataGl(image, bpp);
     }
 
     //Factors taken from: https://gist.github.com/SubhiH/b34e74ffe4fd1aab046bcf62b7f12408
-    void convertToGrayscale(const unsigned char* src, unsigned char* dst, int width, int height, int channels) {
+    static void convertToGrayscale(const unsigned char* src, unsigned char* dst, int width, int height, int channels) {
         for (int y = 0; y < height; ++y) {
             for (int x = 0; x < width; ++x) {
                 int index = (y * width + x) * channels;
@@ -201,7 +201,7 @@ namespace parsers
         return true;
     }
 
-    void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap)
+    void loadAllTextureMapImagesIntoMap(utils::MaterialGltf& material, std::map<std::string, utils::TextureDataGl>& textureTypeMap)
     {
     
         //BASECOLOR ALBEDO TEXTURE LOAD
@@ -223,7 +223,7 @@ namespace parsers
             {
                 int channels;
                 unsigned char* metallicRoughnessTextureData = combineMetallicRoughness(metallicPath.c_str(), roughnessPath.c_str(), material.metallicRoughnessTexture.width, material.metallicRoughnessTexture.height, channels); 
-                textureTypeMap.emplace(METALLIC_ROUGHNESS_TEXTURE, TextureDataGl(metallicRoughnessTextureData, channels));
+                textureTypeMap.emplace(METALLIC_ROUGHNESS_TEXTURE, utils::TextureDataGl(metallicRoughnessTextureData, channels));
             }
             else {
                 textureTypeMap.emplace(METALLIC_ROUGHNESS_TEXTURE, loadImageAndBpp(material.metallicRoughnessTexture.path, material.metallicRoughnessTexture.width, material.metallicRoughnessTexture.height));
@@ -286,7 +286,7 @@ namespace parsers
         return projectedVertices;
     }
 
-    void writePbrPLY(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians, float scaleMultiplier) {
+    void writePbrPLY(const std::string& filename, std::vector<utils::GaussianDataSSBO>& gaussians, float scaleMultiplier) {
         std::ofstream file(filename, std::ios::binary | std::ios::out);
 
         // Write header in ASCII
@@ -335,7 +335,7 @@ namespace parsers
             //RGB
 
             //TODO: 
-            glm::vec3 sh0 = getShFromColor(gaussian.color);
+            glm::vec3 sh0 = utils::getShFromColor(gaussian.color);
             
             file.write(reinterpret_cast<const char*>(&sh0.r), sizeof(sh0.r));
             file.write(reinterpret_cast<const char*>(&sh0.g), sizeof(sh0.g));
@@ -371,7 +371,7 @@ namespace parsers
         file.close();
     }
 
-    void writeBinaryPlyStandardFormat(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians) {
+    void writeBinaryPlyStandardFormat(const std::string& filename, std::vector<utils::GaussianDataSSBO>& gaussians) {
         std::ofstream file(filename, std::ios::binary | std::ios::out);
         //TODO: abstract this header writer away so can be common to all writers
         // Write header in ASCII
@@ -421,7 +421,7 @@ namespace parsers
             file.write(reinterpret_cast<const char*>(&gaussian.normal.z), sizeof(gaussian.normal.z));
 
             // RGB
-            glm::vec3 sh0 = getShFromColor(gaussian.color);
+            glm::vec3 sh0 = utils::getShFromColor(gaussian.color);
             
             file.write(reinterpret_cast<const char*>(&sh0.r), sizeof(sh0.r));
             file.write(reinterpret_cast<const char*>(&sh0.g), sizeof(sh0.g));
@@ -455,7 +455,7 @@ namespace parsers
         file.close();
     }
 
-    void loadPlyFile(std::string plyFileLocation, std::vector<GaussianDataSSBO>& gaussians)
+    void loadPlyFile(std::string plyFileLocation, std::vector<utils::GaussianDataSSBO>& gaussians)
     {
         try {
             happly::PLYData plyIn(plyFileLocation);
@@ -499,7 +499,7 @@ namespace parsers
             gaussians.clear();
             gaussians.reserve(numVertices);
 
-            GaussianDataSSBO gaussian;
+            utils::GaussianDataSSBO gaussian;
 
             for (size_t i = 0; i < numVertices; ++i) {
                 // Set position (w = 1.0 for homogeneous coordinates)
@@ -508,11 +508,11 @@ namespace parsers
                 gaussian.position.z = vertex_z[i];
                 gaussian.position.w = 1.0f;
 
-                glm::vec3 rgb_color = getColorFromSh(glm::vec3(vertex_f_dc_0[i], vertex_f_dc_1[i], vertex_f_dc_2[i]));
+                glm::vec3 rgb_color = utils::getColorFromSh(glm::vec3(vertex_f_dc_0[i], vertex_f_dc_1[i], vertex_f_dc_2[i]));
                 gaussian.color.x = rgb_color.r;
                 gaussian.color.y = rgb_color.g;
                 gaussian.color.z = rgb_color.b;
-                gaussian.color.w = sigmoid(vertex_opacity[i]);
+                gaussian.color.w = utils::sigmoid(vertex_opacity[i]);
 
                 gaussian.scale.x = glm::exp(vertex_scale_0[i]);
                 gaussian.scale.y = glm::exp(vertex_scale_1[i]);
@@ -540,7 +540,7 @@ namespace parsers
         
     }
 
-    void savePlyVector(std::string outputFileLocation, std::vector<GaussianDataSSBO> gaussians_3D_list, unsigned int FORMAT, float scaleMultiplier)
+    void savePlyVector(std::string outputFileLocation, std::vector<utils::GaussianDataSSBO> gaussians_3D_list, unsigned int FORMAT, float scaleMultiplier)
     {
         switch (FORMAT)
         {

@@ -27,6 +27,8 @@ struct RenderContext {
     glm::mat4 MVP; //TODO: yeah, assumes we will render with one single model mat
     glm::vec3 hfov_focal;
     glm::vec3 camPos;
+    float nearPlane;
+    float farPlane;
     GLFWwindow* rendererGlfwWindow; //TODO: I also need to store this here for now, as I need to reset the viewport DURING the rendering pass as it may ha
 
     struct ShaderPrograms
@@ -51,7 +53,7 @@ struct RenderContext {
     size_t vertexCount;
     GLuint* drawBuffers; //TODO: BEWARE
     GLuint gaussianBuffer;
-    GLuint gaussianBufferPostFiltering;
+    GLuint gaussianDepthPostFiltering;
     GLuint keysBuffer;
     GLuint perQuadTransformationsBuffer;
     GLuint valuesBuffer;
@@ -64,10 +66,10 @@ struct RenderContext {
     GLint numberOfGaussians;
 
     // Data Structures
-    std::vector<std::pair<Mesh, GLMesh>> dataMeshAndGlMesh;
-    std::map<std::string, TextureDataGl> textureTypeMap;
-    MaterialGltf material;
-    std::vector<GaussianDataSSBO> readGaussians;
+    std::vector<std::pair<utils::Mesh, utils::GLMesh>> dataMeshAndGlMesh;
+    std::map<std::string, utils::TextureDataGl> textureTypeMap;
+    utils::MaterialGltf material;
+    std::vector<utils::GaussianDataSSBO> readGaussians;
     
     std::deque<GLuint> queryPool;
 

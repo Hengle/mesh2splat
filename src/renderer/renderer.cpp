@@ -10,7 +10,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     renderPassesOrder = {};
     renderContext = {};
     renderContext.gaussianBuffer                = 0;
-    renderContext.gaussianBufferPostFiltering   = 0;
+    renderContext.gaussianDepthPostFiltering   = 0;
     renderContext.drawIndirectBuffer            = 0;
     renderContext.keysBuffer                    = 0;
 	renderContext.valuesBuffer                  = 0;
@@ -40,7 +40,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glGenBuffers(1, &(renderContext.perQuadTransformationsBuffer));
     glGenBuffers(1, &(renderContext.valuesBuffer));
     glGenBuffers(1, &(renderContext.perQuadTransformationBufferSorted));
-    glGenBuffers(1, &(renderContext.gaussianBufferPostFiltering));
+    glGenBuffers(1, &(renderContext.gaussianDepthPostFiltering));
     glGenBuffers(1, &(renderContext.gaussianBuffer));
 
 
@@ -48,7 +48,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.valuesBuffer, 2);
     glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 4, renderContext.perQuadTransformationBufferSorted, 3);
     glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 4, renderContext.perQuadTransformationsBuffer, 4);
-    glUtils::resizeAndBindToPosSSBO<GaussianDataSSBO>(MAX_GAUSSIANS_TO_SORT, renderContext.gaussianBufferPostFiltering, 5);
+    glUtils::resizeAndBindToPosSSBO<float>(MAX_GAUSSIANS_TO_SORT, renderContext.gaussianDepthPostFiltering, 5);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -109,7 +109,7 @@ Renderer::~Renderer()
     glDeleteBuffers(1, &(renderContext.keysBuffer));
     glDeleteBuffers(1, &(renderContext.valuesBuffer));
     glDeleteBuffers(1, &(renderContext.perQuadTransformationBufferSorted));
-    glDeleteBuffers(1, &(renderContext.gaussianBufferPostFiltering));
+    glDeleteBuffers(1, &(renderContext.gaussianDepthPostFiltering));
 
 
     for (auto& query : renderContext.queryPool) {
@@ -171,11 +171,13 @@ void Renderer::updateTransformations()
     glfwGetFramebufferSize(rendererGlfwWindow, &width, &height);
 
     float fov = camera.GetFOV();
-    float closePlane = 0.01f;
-    float farPlane = 100.0f;
+
+    renderContext.nearPlane = 0.01f;
+    renderContext.farPlane = 100.0f;
+
     renderContext.projMat = glm::perspective(glm::radians(fov),
                                             (float)width / (float)height,
-                                            closePlane, farPlane);
+                                            renderContext.nearPlane, renderContext.farPlane);
     // Set viewport
     glViewport(0, 0, width, height);
 
@@ -266,7 +268,7 @@ void Renderer::updateGaussianBuffer()
     int buffSize = 0;
     glBindBuffer          (GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
     glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &buffSize);
-    renderContext.numberOfGaussians = buffSize / sizeof(GaussianDataSSBO);
+    renderContext.numberOfGaussians = buffSize / sizeof(utils::GaussianDataSSBO);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 

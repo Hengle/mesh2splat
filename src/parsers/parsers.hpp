@@ -8,17 +8,17 @@
 
 namespace parsers
 {
-	TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight);
+	utils::TextureDataGl loadImageAndBpp(std::string texturePath, int& textureWidth, int& textureHeight);
 
-	void loadAllTextureMapImagesIntoMap(MaterialGltf& material, std::map<std::string, TextureDataGl>& textureTypeMap);
+	void loadAllTextureMapImagesIntoMap(utils::MaterialGltf& material, std::map<std::string, utils::TextureDataGl>& textureTypeMap);
 
-	void writePbrPLY(const std::string& filename, std::vector<GaussianDataSSBO>& gaussians, float scaleMultiplier);
+	void writePbrPLY(const std::string& filename, std::vector<utils::GaussianDataSSBO>& gaussians, float scaleMultiplier);
 
-	void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<GaussianDataSSBO>& gaussians);
+	void writeBinaryPlyStandardFormat(const std::string& filename, const std::vector<utils::GaussianDataSSBO>& gaussians);
 
-	void loadPlyFile(std::string plyFileLocation, std::vector<GaussianDataSSBO>& gaussians);
+	void loadPlyFile(std::string plyFileLocation, std::vector<utils::GaussianDataSSBO>& gaussians);
 
-	void savePlyVector(std::string outputFileLocation, std::vector<GaussianDataSSBO> gaussians_3D_list, unsigned int format, float scaleMultiplier);
+	void savePlyVector(std::string outputFileLocation, std::vector<utils::GaussianDataSSBO> gaussians_3D_list, unsigned int format, float scaleMultiplier);
 
 	unsigned char* combineMetallicRoughness(const char* path1, const char* path2, int& width, int& height, int& channels);
 

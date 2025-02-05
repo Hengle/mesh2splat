@@ -9,8 +9,8 @@ void ConversionPass::execute(RenderContext &renderContext)
     //could be done via batch rendering (I guess (?))
     //If we are running the conversion pass means the currently existing framebuffer with respective draw buffers should be deleted before the conversion passes
     for (auto& mesh : renderContext.dataMeshAndGlMesh) {
-        Mesh meshData = std::get<0>(mesh);
-        GLMesh meshGl = std::get<1>(mesh);
+        utils::Mesh meshData = std::get<0>(mesh);
+        utils::GLMesh meshGl = std::get<1>(mesh);
 
         GLuint framebuffer;
         GLuint drawBuffers = glUtils::setupFrameBuffer(framebuffer, renderContext.resolutionTarget, renderContext.resolutionTarget);
@@ -45,7 +45,7 @@ void ConversionPass::execute(RenderContext &renderContext)
 
 
 void ConversionPass::conversion(
-        RenderContext renderContext, std::pair<Mesh, GLMesh> mesh, GLuint dummyFramebuffer
+        RenderContext renderContext, std::pair<utils::Mesh, utils::GLMesh> mesh, GLuint dummyFramebuffer
     ) 
 {
 #ifdef  _DEBUG
