@@ -38,8 +38,17 @@ layout(std430, binding = 2) writeonly buffer PerQuadTransformations {
     QuadNdcTransformation ndcTransformations[];
 } perQuadTransformations;
 
-
 layout(binding = 3) uniform atomic_uint g_validCounter;
+
+//https://github.com/jagracar/webgl-shader-examples/blob/master/shaders/requires/random2d.glsl
+float random2d(vec2 co) {
+    highp float a = 12.9898;
+    highp float b = 78.233;
+    highp float c = 43758.5453;
+    highp float dt = dot(co.xy, vec2(a, b));
+    highp float sn = mod(dt, 3.14);
+    return fract(sin(sn) * c);
+}
 
 void castQuatToMat3(vec4 quat, out mat3 rotMatrix)
 {
@@ -152,6 +161,11 @@ void main() {
 		{
 			outputColor = vec4((rotMatrix[2] / 2.0) + 0.5, gaussian.color.a);
 		}
+	}
+	if (u_renderMode == 3)
+	{
+		outputColor = vec4(random2d(gl_GlobalInvocationID.xy), random2d(gl_GlobalInvocationID.yx), random2d(gl_GlobalInvocationID.yx * 1.234), 1.0);
+
 	}
 	
 	pos2d.xyz = pos2d.xyz / pos2d.w;
