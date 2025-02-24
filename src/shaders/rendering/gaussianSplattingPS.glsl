@@ -8,6 +8,7 @@ in vec3 out_color;
 in float out_opacity;
 in vec2 out_screen;
 in vec3 out_conic;
+in vec3 out_normal;
 
 uniform vec2 u_resolution;
 
@@ -22,6 +23,6 @@ void main() {
     //FragColor = vec4(out_color, out_opacity) * g;
     //FragColor = vec4(out_color, out_opacity) * g;
     gAlbedo = vec4(out_color, out_opacity) * g;
-    gPosition = vec4(1,0,0, 1.0);
-    gNormal   = vec4(0,1,0, 1.0);
+    gPosition = vec4(1, 0 , 0, 1.0);
+    gNormal   = vec4(out_normal, 1.0);
 }

@@ -60,7 +60,7 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
 
     //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
     // memory leak. Should structure renderer architecture
-    unsigned int vec4sPerInstance = 4;
+    unsigned int vec4sPerInstance = 5;
     unsigned int stride = sizeof(glm::vec4) * vec4sPerInstance; //This is the ndc stride
     
     //i=0 is for the per-vertex quad pos, see line 27. Technically we´ll have a byte "hole" between per vertex-data (vec3) and the per-instance one (vec4) considering "(void*)(sizeof(glm::vec4) * (i - 1))" pointer

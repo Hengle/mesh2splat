@@ -8,6 +8,7 @@ layout(location = 1) in vec4 gaussianMean2Ndc;
 layout(location = 2) in vec4 quadScaleNdc;
 layout(location = 3) in vec4 color;
 layout(location = 4) in vec4 conic;
+layout(location = 5) in vec4 normal;
 
 uniform vec2 u_resolution;
 
@@ -15,6 +16,7 @@ out vec3 out_color;
 out vec2 out_screen;
 out float out_opacity;
 out vec3 out_conic;
+out vec3 out_normal;
 
 
 void main() {
@@ -23,4 +25,5 @@ void main() {
     out_color = color.rgb * color.a;
 	out_opacity = color.a;
 	out_screen = vec2((gaussianMean2Ndc.xy + 1) * 0.5 * u_resolution);
+	out_normal = normal.xyz;
 }

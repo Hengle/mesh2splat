@@ -5,8 +5,8 @@ struct QuadNdcTransformation {
     vec4 quadScaleNdc;
     vec4 color;
     vec4 conic;
+    vec4 normal;
 };
-
 
 layout(std430, binding = 0) buffer GaussiansIn  { vec4 in_data[];  };
 layout(std430, binding = 1) buffer GaussiansOut { vec4 out_data[]; };
@@ -30,10 +30,9 @@ void main() {
 
     uint old_index = val[gid]; 
     //I am basically doing a buffer swap based on the values (indices) computed during the radxi sort pass
-    uint vec4ByteStride = 4;
-    uint quadNdcNumVec4s = 4;
+    uint quadNdcNumVec4s = 5;
 
-    for (int j = 0; j < vec4ByteStride; j++) {
+    for (int j = 0; j < quadNdcNumVec4s; j++) {
         out_data[gid * quadNdcNumVec4s + j] = in_data[old_index * quadNdcNumVec4s + j];
     }
 

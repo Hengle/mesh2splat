@@ -15,12 +15,11 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_viewToClip", renderContext.projMat);
     glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_resolution", renderContext.rendererResolution);
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
-    glUtils::setUniform1ui(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_format", renderContext.format);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_modelToWorld", renderContext.modelMat);
+    glUtils::setUniform1ui(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,    "u_format", renderContext.format);
+    glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_modelToWorld", renderContext.modelMat);
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_gaussianCount", renderContext.numberOfGaussians);
     glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_nearFar", glm::vec2(renderContext.nearPlane, renderContext.farPlane));
-
-       
+           
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.gaussianDepthPostFiltering);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, renderContext.perQuadTransformationsBuffer);

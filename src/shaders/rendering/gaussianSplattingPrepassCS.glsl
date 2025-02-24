@@ -14,6 +14,7 @@ struct QuadNdcTransformation {
     vec4 quadScaleNdc;
     vec4 color;
 	vec4 conic;
+	vec4 normal;
 };
 
 uniform float u_stdDev;
@@ -142,6 +143,23 @@ void main() {
 	computeCov3D(rotMatrix, scale, cov3d);
 	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
+	vec4 computedNormal_Ws = vec4(1, 0, 0, 0);
+
+	if (u_format == 0 || u_format == 3)
+	{
+		computedNormal_Ws = vec4((gaussian.normal.xyz * .5) + .5, gaussian.color.a);
+	}
+	else if (u_format == 1)
+	{
+		//Cool trick for min index: https://computergraphics.stackexchange.com/questions/13662/glsl-get-min-max-index-of-vec3
+		uint minCompIndex = uint((gaussian.scale.y < gaussian.scale.z) && (gaussian.scale.y < gaussian.scale.x)) + (uint((gaussian.scale.z < gaussian.scale.y) && (gaussian.scale.z < gaussian.scale.x)) * 2);
+		//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
+		float d = dot(rotMatrix[minCompIndex].xyz, gaussian.position.xyz - normalize(u_viewToClip[3].xyz));
+		vec3 n = d > 0 ? rotMatrix[minCompIndex].xyz : -rotMatrix[minCompIndex].xyz;
+		vec3 rgbN = ((n * .5) + .5);
+		computedNormal_Ws = vec4(rgbN, gaussian.color.a);  
+	}
+
 	if (u_renderMode == 0)
 	{
 		outputColor = gaussian.color;
@@ -157,20 +175,7 @@ void main() {
 	}
 	else if (u_renderMode == 2) //Normal
 	{
-		if (u_format == 0 || u_format == 3)
-		{
-			outputColor = vec4((gaussian.normal.xyz * .5) + .5, gaussian.color.a);
-		}
-		else if (u_format == 1)
-		{
-			//Cool trick for min index: https://computergraphics.stackexchange.com/questions/13662/glsl-get-min-max-index-of-vec3
-			uint minCompIndex = uint((gaussian.scale.y < gaussian.scale.z) && (gaussian.scale.y < gaussian.scale.x)) + (uint((gaussian.scale.z < gaussian.scale.y) && (gaussian.scale.z < gaussian.scale.x)) * 2);
-			//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
-			float d = dot(rotMatrix[minCompIndex].xyz, gaussian.position.xyz - normalize(u_viewToClip[3].xyz));
-			vec3 n = d > 0 ? rotMatrix[minCompIndex].xyz : -rotMatrix[minCompIndex].xyz;
-			vec3 rgbN = ((n * .5) + .5);
-			outputColor = vec4(rgbN, gaussian.color.a);  
-		}
+		outputColor = computedNormal_Ws;
 	}
 	if (u_renderMode == 3)
 	{
@@ -227,6 +232,9 @@ void main() {
 
 	mat2 conic = inverseMat2(cov2d);
 	perQuadTransformations.ndcTransformations[gaussianIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], 1.0);
+
+	perQuadTransformations.ndcTransformations[gaussianIndex].normal				= computedNormal_Ws;
+
 
 	gaussianDepthPostFiltering.depths_vs[gaussianIndex]							= gaussian_vs.z;
 }
