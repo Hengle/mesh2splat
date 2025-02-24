@@ -53,6 +53,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
             renderer.enableRenderPass(gaussiansPrePassName);
             renderer.enableRenderPass(radixSortPassName);
             renderer.enableRenderPass(gaussianSplattingPassName);
+            renderer.enableRenderPass(gaussianSplattingRelightingPassName);
 
             break;
         }

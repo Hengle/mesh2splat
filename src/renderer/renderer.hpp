@@ -38,6 +38,8 @@ public:
 	void gaussianBufferFromSize(unsigned int size);
 	void setRenderMode(ImGuiUI::VisualizationOption renderMode);
 	void resetModelMatrices();
+	void createGBuffer();
+
 
 
 
@@ -58,6 +60,7 @@ private:
 	std::vector<std::pair<std::string, GLenum>> radixSortGatherPassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsComputePrepassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
+	std::vector<std::pair<std::string, GLenum>> deferredRelightingShaderInfo;
 
 	double lastShaderCheckTime;
 

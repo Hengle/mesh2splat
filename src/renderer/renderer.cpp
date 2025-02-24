@@ -29,7 +29,8 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
         shaderFiles,
         converterShadersInfo, computeShadersInfo,
         radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
-        rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo
+        rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo,
+        deferredRelightingShaderInfo
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
     updateShadersIfNeeded(true);
@@ -103,6 +104,8 @@ Renderer::~Renderer()
     glDeleteProgram(renderContext.shaderPrograms.computeShaderProgram);
     glDeleteProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
     glDeleteProgram(renderContext.shaderPrograms.radixSortGatherProgram);
+    glDeleteProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
+
 
     glDeleteBuffers(1, &(renderContext.gaussianBuffer));
     glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
@@ -119,17 +122,23 @@ Renderer::~Renderer()
 
 void Renderer::initialize() {
 
-    renderPasses[conversionPassName]            = std::make_unique<ConversionPass>();
-    renderPasses[gaussiansPrePassName]          = std::make_unique<GaussiansPrepass>();
-    renderPasses[radixSortPassName]             = std::make_unique<RadixSortPass>();
-    renderPasses[gaussianSplattingPassName]     = std::make_unique<GaussianSplattingPass>(renderContext);
+    renderPasses[conversionPassName]                    = std::make_unique<ConversionPass>();
+    renderPasses[gaussiansPrePassName]                  = std::make_unique<GaussiansPrepass>();
+    renderPasses[radixSortPassName]                     = std::make_unique<RadixSortPass>();
+    renderPasses[gaussianSplattingPassName]             = std::make_unique<GaussianSplattingPass>(renderContext);
+    renderPasses[gaussianSplattingRelightingPassName]   = std::make_unique<GaussianRelightingPass>();
+
 
     renderPassesOrder = {
         conversionPassName,
         gaussiansPrePassName,
         radixSortPassName,
-        gaussianSplattingPassName
+        gaussianSplattingPassName,
+        gaussianSplattingRelightingPassName
     };
+
+    createGBuffer();
+
 }
 
 void Renderer::renderFrame()
@@ -268,6 +277,57 @@ void Renderer::resetModelMatrices()
     renderContext.modelMat = glm::mat4(1.0f);
 }
 
+void Renderer::createGBuffer()
+{
+    //The gbuffer should be re-created only when resizing the window
+
+    resetRendererViewportResolution();
+    glGenFramebuffers(1, &renderContext.gBufferFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderContext.gBufferFBO);
+
+    // G-Buffer
+    glGenTextures(1, &renderContext.gPosition);
+    glBindTexture(GL_TEXTURE_2D, renderContext.gPosition);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderContext.gPosition, 0);
+
+    glGenTextures(1, &renderContext.gNormal);
+    glBindTexture(GL_TEXTURE_2D, renderContext.gNormal);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, renderContext.gNormal, 0);
+
+    glGenTextures(1, &renderContext.gAlbedo);
+    glBindTexture(GL_TEXTURE_2D, renderContext.gAlbedo);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderContext.gAlbedo, 0);
+
+    glGenRenderbuffers(1, &renderContext.rboDepth);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderContext.rboDepth);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderContext.rboDepth);
+
+    std::vector<GLenum> attachments = {
+        GL_COLOR_ATTACHMENT0,
+        GL_COLOR_ATTACHMENT1,
+        GL_COLOR_ATTACHMENT2
+    };
+
+    glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data());
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cerr << "GBuffer FBO not complete!" << std::endl;
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 
 void Renderer::updateGaussianBuffer()
 {
@@ -300,6 +360,8 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
             this->renderContext.shaderPrograms.renderShaderProgram      = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
             
             this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram      = glUtils::reloadShaderPrograms(rendering3dgsComputePrepassShadersInfo, this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
+
+            this->renderContext.shaderPrograms.deferredRelightingShaderProgram   = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);
 
             return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others
             //TODO P1: investigate this, I am not sure I dont think I need to recreate all programs, I am now convinced I can just do reloadShaderPrograms(info, --> ) need to know how it is saved within the map

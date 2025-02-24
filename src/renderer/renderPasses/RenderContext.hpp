@@ -26,6 +26,9 @@ struct RenderContext {
     glm::mat4 viewMat = glm::mat4(1);
     glm::mat4 projMat = glm::mat4(1);
     glm::mat4 MVP; //TODO: yeah, assumes we will render with one single model mat
+
+    glm::mat4 pointLightModel = glm::mat4(1.0); //For now supports only one light source
+    
     glm::vec3 hfov_focal;
     glm::vec3 camPos;
     float nearPlane;
@@ -40,6 +43,7 @@ struct RenderContext {
         GLuint renderShaderProgram;
         GLuint radixSortPrepassProgram;
         GLuint radixSortGatherProgram;
+        GLuint deferredRelightingShaderProgram;
     } shaderPrograms;
 
     int normalizedUvSpaceWidth;
@@ -75,4 +79,15 @@ struct RenderContext {
     std::deque<GLuint> queryPool;
 
     unsigned int renderMode; //0: color, 1: depth
+
+
+    //Gbuffer
+    GLuint gBufferFBO = 0;
+
+    GLuint gPosition = 0;
+    GLuint gNormal = 0;
+    GLuint gAlbedo = 0;
+
+    GLuint rboDepth = 0;
+
 };

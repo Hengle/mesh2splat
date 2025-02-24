@@ -31,6 +31,8 @@ GaussianSplattingPass::GaussianSplattingPass(RenderContext& renderContext)
 
 void GaussianSplattingPass::execute(RenderContext& renderContext)
 {
+    glBindFramebuffer(GL_FRAMEBUFFER, renderContext.gBufferFBO);
+
     glViewport(0, 0, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
 
 #ifdef  _DEBUG
@@ -44,6 +46,9 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
 	glEnable(GL_BLEND);
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
+    
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //From deck of Bernard K.: https://3dgstutorial.github.io/3dv_part2.pdf slide 25
 	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
@@ -70,10 +75,12 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, 0);
 
     glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+
 #ifdef  _DEBUG
     glPopDebugGroup();
 #endif 
     
     glBindVertexArray(0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
 }

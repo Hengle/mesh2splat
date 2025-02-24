@@ -1,5 +1,8 @@
 #version 460 core
 
+layout(location = 0) out vec4 gPosition; 
+layout(location = 1) out vec4 gNormal;   
+layout(location = 2) out vec4 gAlbedo;   
 
 in vec3 out_color;
 in float out_opacity;
@@ -17,5 +20,8 @@ void main() {
     float g = exp(alpha);
 
     //FragColor = vec4(out_color, out_opacity) * g;
-    FragColor = vec4(out_color, out_opacity) * g;
+    //FragColor = vec4(out_color, out_opacity) * g;
+    gAlbedo = vec4(out_color, out_opacity) * g;
+    gPosition = vec4(1,0,0, 1.0);
+    gNormal   = vec4(0,1,0, 1.0);
 }

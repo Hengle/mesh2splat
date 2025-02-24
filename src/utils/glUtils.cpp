@@ -47,7 +47,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherPassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo) {
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
+        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShadersInfo) {
 
         shaderFiles["converterVert"]                = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
         shaderFiles["converterGeom"]                = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
@@ -63,6 +64,9 @@ namespace glUtils
         shaderFiles["rendererComputePrepass"]       = { fs::last_write_time(RENDERER_PREPASS_COMPUTE_SHADER_LOCATION),   RENDERER_PREPASS_COMPUTE_SHADER_LOCATION };
         shaderFiles["renderer3dgsVert"]             = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
         shaderFiles["renderer3dgsFrag"]             = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
+
+        shaderFiles["deferredRelightingVert"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION };
+        shaderFiles["deferredRelightingFrag"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION };
 
         converterShadersInfo = {
             { CONVERTER_VERTEX_SHADER_LOCATION,     GL_VERTEX_SHADER   },
@@ -82,7 +86,6 @@ namespace glUtils
             { RADIX_SORT_GATHER_SHADER_LOCATION,    GL_COMPUTE_SHADER }
         };
 
-
         
         rendering3dgsComputePrepassShadersInfo = {
             { RENDERER_PREPASS_COMPUTE_SHADER_LOCATION,      GL_COMPUTE_SHADER },
@@ -92,6 +95,12 @@ namespace glUtils
             { RENDERER_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
             { RENDERER_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
         };
+
+        deferredRelightingShadersInfo = {
+            { RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
+            { RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
+        };
+
     }
 
     bool shaderFileChanged(const ShaderFileInfo& info) {

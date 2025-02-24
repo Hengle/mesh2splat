@@ -11,11 +11,9 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     float std_dev = (renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
 
     glUtils::setUniform1f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_stdDev", std_dev);
-    //glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_hfov_focal", renderContext.hfov_focal);
     glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_worldToView", renderContext.viewMat);
     glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,   "u_viewToClip", renderContext.projMat);
     glUtils::setUniform2f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_resolution", renderContext.rendererResolution);
-    //glUtils::setUniform3f(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_camPos", renderContext.camPos);
     glUtils::setUniform1i(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_renderMode", renderContext.renderMode);
     glUtils::setUniform1ui(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_format", renderContext.format);
     glUtils::setUniformMat4(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram,     "u_modelToWorld", renderContext.modelMat);

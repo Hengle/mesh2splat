@@ -25,6 +25,9 @@
 #define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
 #define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
 
+#define RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredVS.glsl" 
+#define RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredPS.glsl" 
+
 
 namespace glUtils
 { 
@@ -77,7 +80,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo
+        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
+        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShaderInfo
     );
 
     bool shaderFileChanged(const ShaderFileInfo& info);
