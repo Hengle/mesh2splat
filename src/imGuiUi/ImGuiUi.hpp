@@ -23,7 +23,7 @@ public:
     bool shouldSavePly() const;
     bool wasMeshLoaded() const;
     bool shouldLoadPly() const;
-
+    bool isLightSelected() const;
     bool wasPlyLoaded() const;
 
     std::string getMeshFilePath() const;
@@ -91,6 +91,8 @@ private:
 
     bool hasPlyBeenLoaded;
     bool hasMeshBeenLoaded;
+
+    bool lightSelected;
     
     bool savePly;
 

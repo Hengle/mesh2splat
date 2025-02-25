@@ -70,6 +70,8 @@ void ImGuiUI::renderUI()
         }
     }
 
+    ImGui::Checkbox("Select Light", &lightSelected);
+
     ImGui::ColorEdit4("Background Color", &sceneBackgroundColor.x);
     ImGui::Combo("Render Mode", &renderIndex, renderLabels, IM_ARRAYSIZE(renderLabels));
 
@@ -139,11 +141,9 @@ void ImGuiUI::renderGizmoUi(glm::mat4& glmViewMat, glm::mat4& glmProjMat, glm::m
         glmModelMat = glm::make_mat4(model);
     }
 
-    if (ImGuizmo::IsOver())
-        std::cout << "Gizmo is hovered this frame!\n";
-    else
-        std::cout << "Gizmo NOT hovered.\n";
 }
+
+
 
 void ImGuiUI::renderGpuFrametime()
 {
@@ -252,6 +252,9 @@ void ImGuiUI::setFrameMetrics(double gpuFrameTime) {
 
     frameTimeHistory.push_back(this->gpuFrameTime);
 }
+
+bool ImGuiUI::isLightSelected() const { return lightSelected; };
+
 
 
 

@@ -278,9 +278,8 @@ void Renderer::resetModelMatrices()
 
 void Renderer::createGBuffer()
 {
-    //The gbuffer should be re-created only when resizing the window
-
     resetRendererViewportResolution();
+
     glGenFramebuffers(1, &renderContext.gBufferFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, renderContext.gBufferFBO);
 
@@ -325,6 +324,28 @@ void Renderer::createGBuffer()
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Renderer::deleteGBuffer()
+{
+    glDeleteFramebuffers(1, &renderContext.gBufferFBO);
+    glDeleteTextures(1, &renderContext.gPosition);
+    glDeleteTextures(1, &renderContext.gNormal);
+    glDeleteTextures(1, &renderContext.gAlbedo);
+    glDeleteRenderbuffers(1, &renderContext.rboDepth);
+
+    renderContext.gBufferFBO = 0;
+    renderContext.gPosition   = 0;
+    renderContext.gNormal     = 0;
+    renderContext.gAlbedo     = 0;
+    renderContext.rboDepth    = 0;
+}
+
+bool Renderer::hasWindowSizeChanged()
+{
+    int width, height;
+    glfwGetFramebufferSize(rendererGlfwWindow, &width, &height);
+    return renderContext.rendererResolution !=  glm::ivec2(width, height);
 }
 
 

@@ -39,7 +39,9 @@ public:
 	void setRenderMode(ImGuiUI::VisualizationOption renderMode);
 	void resetModelMatrices();
 	void createGBuffer();
+	void deleteGBuffer();
 
+	bool hasWindowSizeChanged();
 
 
 

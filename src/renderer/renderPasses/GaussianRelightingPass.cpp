@@ -60,6 +60,12 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
     glBindTexture(GL_TEXTURE_2D, renderContext.gAlbedo);
     glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gAlbedo"), 2);
 
+    glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_LightPosition", glm::vec3(renderContext.pointLightModel[3]));
+
+    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_clipToView", glm::inverse(renderContext.projMat));
+    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_viewToWorld", glm::inverse(renderContext.viewMat));
+
+
     glBindVertexArray(m_fullscreenQuadVAO);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

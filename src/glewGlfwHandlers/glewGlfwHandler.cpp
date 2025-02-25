@@ -17,6 +17,12 @@ GlewGlfwHandler::GlewGlfwHandler(glm::ivec2 windowDimensions, std::string window
     }
 }
 
+void GlewGlfwHandler::updateResize()
+{
+    glfwSetFramebufferSizeCallback(this->window, GlewGlfwHandler::framebuffer_size_callback);
+}
+
+
 int GlewGlfwHandler::init()
 {
     glfwMakeContextCurrent(this->window);

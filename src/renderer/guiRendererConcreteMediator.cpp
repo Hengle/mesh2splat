@@ -57,6 +57,14 @@ void GuiRendererConcreteMediator::notify(EventType event)
             renderer.enableRenderPass(gaussianSplattingPassName);
             renderer.enableRenderPass(gaussianSplattingRelightingPassName);
 
+            glm::mat4& modelM = imguiUI.isLightSelected() ? renderer.getRenderContext()->pointLightModel : renderer.getRenderContext()->modelMat;
+            
+            imguiUI.renderGizmoUi(
+                renderer.getRenderContext()->viewMat,
+                renderer.getRenderContext()->projMat,
+                modelM
+            );
+
             break;
         }
         case EventType::CheckShaderUpdate: {
@@ -68,6 +76,11 @@ void GuiRendererConcreteMediator::notify(EventType event)
         case EventType::SavePLY: {
             renderer.getSceneManager().exportPly(imguiUI.getMeshFullFilePathDestination(), imguiUI.getFormatOption());
             imguiUI.setShouldSavePly(false);
+            break;
+        }
+        case EventType::ResizedWindow: {
+            renderer.deleteGBuffer();
+            renderer.createGBuffer();
             break;
         }
     }
@@ -99,7 +112,14 @@ void GuiRendererConcreteMediator::update()
     if (imguiUI.shouldSavePly()) {
         notify(EventType::SavePLY);
     }
-    
+
+    if (renderer.hasWindowSizeChanged())
+    {
+        notify(EventType::ResizedWindow);
+    }
+
+
+
     double gpuFrameTime = renderer.getTotalGpuFrameTimeMs(); // Retrieve GPU frame time
     imguiUI.setFrameMetrics(gpuFrameTime);
 }

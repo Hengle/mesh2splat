@@ -36,6 +36,8 @@ int main(int argc, char** argv) {
 
         glfwPollEvents();
 
+        glewGlfwHandler.updateResize();
+        
         ioHandler.processInput(deltaTime);
 
         renderer.clearingPrePass(ImGuiUI.getSceneBackgroundColor());
@@ -44,12 +46,6 @@ int main(int argc, char** argv) {
         ImGuiUI.renderUI();
         
         guiRendererMediator.update();
-
-        ImGuiUI.renderGizmoUi(
-            renderer.getRenderContext()->viewMat,
-            renderer.getRenderContext()->projMat,
-            renderer.getRenderContext()->modelMat
-        );
 
         renderer.updateTransformations();
 

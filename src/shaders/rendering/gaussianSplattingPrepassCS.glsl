@@ -154,8 +154,8 @@ void main() {
 		//Cool trick for min index: https://computergraphics.stackexchange.com/questions/13662/glsl-get-min-max-index-of-vec3
 		uint minCompIndex = uint((gaussian.scale.y < gaussian.scale.z) && (gaussian.scale.y < gaussian.scale.x)) + (uint((gaussian.scale.z < gaussian.scale.y) && (gaussian.scale.z < gaussian.scale.x)) * 2);
 		//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
-		float d = dot(rotMatrix[minCompIndex].xyz, gaussian.position.xyz - normalize(u_viewToClip[3].xyz));
-		vec3 n = d > 0 ? rotMatrix[minCompIndex].xyz : -rotMatrix[minCompIndex].xyz;
+		//float d = dot(rotMatrix[minCompIndex].xyz, gaussian.position.xyz - normalize(u_viewToClip[3].xyz));
+		vec3 n = rotMatrix[minCompIndex].xyz;
 		vec3 rgbN = ((n * .5) + .5);
 		computedNormal_Ws = vec4(rgbN, gaussian.color.a);  
 	}

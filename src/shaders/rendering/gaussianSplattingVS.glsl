@@ -17,7 +17,7 @@ out vec2 out_screen;
 out float out_opacity;
 out vec3 out_conic;
 out vec3 out_normal;
-
+out vec3 out_ndcPos;
 
 void main() {
 	gl_Position = vec4(gaussianMean2Ndc.xy + (vertexPos.x * quadScaleNdc.xy + vertexPos.y * quadScaleNdc.zw) , 0, 1);
@@ -26,4 +26,5 @@ void main() {
 	out_opacity = color.a;
 	out_screen = vec2((gaussianMean2Ndc.xy + 1) * 0.5 * u_resolution);
 	out_normal = normal.xyz;
+	out_ndcPos = gaussianMean2Ndc.xyz;
 }

@@ -7,5 +7,6 @@ enum class EventType {
     RunConversion,
     SavePLY,
     EnableGaussianRendering,
-    CheckShaderUpdate
+    CheckShaderUpdate,
+    ResizedWindow
 };
