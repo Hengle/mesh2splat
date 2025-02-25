@@ -15,25 +15,20 @@ out vec4 FragColor;
 void main()
 {
     vec3 lightColor = vec3(1,1,1);     
-    float lightIntensity = 1.0f; 
+    float lightIntensity = 5.0f; 
     float ambientFactor = 0.2f; 
 
     // Fetch data from the G-buffer:
     vec3 positionData = texture(gPosition, fragUV).xyz;  // world-space position
-
-    vec4 ndcPos = vec4(positionData, 1.0);
-    vec4 viewPos = u_clipToView * ndcPos;
-    viewPos /= viewPos.w;
-    vec3 worldPos = (u_viewToWorld * viewPos).xyz;
 
     vec3 normalData   = texture(gNormal,   fragUV).xyz;  // world-space normal
     vec3 albedoData   = texture(gAlbedo,   fragUV).rgb;  // base color
 
     vec3 N = normalize(normalData);
 
-    vec3 L = normalize(u_LightPosition - worldPos);
+    vec3 L = normalize(u_LightPosition - positionData);
 
-    float distance = length(u_LightPosition - worldPos);
+    float distance = length(u_LightPosition - positionData);
     float attenuation = 1.0 / (distance * distance); // simple inverse-square law
 
     float NdotL = max(dot(N, L), 0.0);

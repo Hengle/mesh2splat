@@ -15,6 +15,7 @@ struct QuadNdcTransformation {
     vec4 color;
 	vec4 conic;
 	vec4 normal;
+	vec4 wsPos;
 };
 
 uniform float u_stdDev;
@@ -140,6 +141,15 @@ void main() {
 	mat3 cov3d;
 	mat3 rotMatrix;
 	castQuatToMat3(gaussian.rotation, rotMatrix);
+
+	mat3 modelRotation = mat3(
+			u_modelToWorld[0].xyz,
+			u_modelToWorld[1].xyz,
+			u_modelToWorld[2].xyz
+		);
+    
+	rotMatrix = rotMatrix * inverse(modelRotation);
+    
 	computeCov3D(rotMatrix, scale, cov3d);
 	//TODO: probably better with shader permutation (?)
 	vec4 outputColor = vec4(0, 0, 0, 0);
@@ -151,12 +161,10 @@ void main() {
 	}
 	else if (u_format == 1)
 	{
+		//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
 		//Cool trick for min index: https://computergraphics.stackexchange.com/questions/13662/glsl-get-min-max-index-of-vec3
 		uint minCompIndex = uint((gaussian.scale.y < gaussian.scale.z) && (gaussian.scale.y < gaussian.scale.x)) + (uint((gaussian.scale.z < gaussian.scale.y) && (gaussian.scale.z < gaussian.scale.x)) * 2);
-		//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
-		//float d = dot(rotMatrix[minCompIndex].xyz, gaussian.position.xyz - normalize(u_viewToClip[3].xyz));
-		vec3 n = rotMatrix[minCompIndex].xyz;
-		vec3 rgbN = ((n * .5) + .5);
+		vec3 rgbN = ((rotMatrix[minCompIndex].xyz * .5) + .5);
 		computedNormal_Ws = vec4(rgbN, gaussian.color.a);  
 	}
 
@@ -234,6 +242,8 @@ void main() {
 	perQuadTransformations.ndcTransformations[gaussianIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], 1.0);
 
 	perQuadTransformations.ndcTransformations[gaussianIndex].normal				= computedNormal_Ws;
+	perQuadTransformations.ndcTransformations[gaussianIndex].wsPos				= gaussianWs;
+
 
 
 	gaussianDepthPostFiltering.depths_vs[gaussianIndex]							= gaussian_vs.z;
