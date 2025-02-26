@@ -29,7 +29,6 @@ void main() {
     if (gid >= u_count) return;
 
     uint old_index = val[gid]; 
-    //I am basically doing a buffer swap based on the values (indices) computed during the radxi sort pass
     uint quadNdcNumVec4s = 6;
 
     for (int j = 0; j < quadNdcNumVec4s; j++) {

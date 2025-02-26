@@ -305,15 +305,28 @@ void Renderer::createGBuffer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderContext.gAlbedo, 0);
 
-    glGenRenderbuffers(1, &renderContext.rboDepth);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderContext.rboDepth);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderContext.rboDepth);
+    //I need to use my own blending function for depth
+    glGenTextures(1, &renderContext.gDepth);
+    glBindTexture(GL_TEXTURE_2D, renderContext.gDepth);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, renderContext.gDepth, 0);
+
+    glGenTextures(1, &renderContext.gMetallicRoughness);
+    glBindTexture(GL_TEXTURE_2D, renderContext.gMetallicRoughness);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, renderContext.gMetallicRoughness, 0);
+    
 
     std::vector<GLenum> attachments = {
         GL_COLOR_ATTACHMENT0,
         GL_COLOR_ATTACHMENT1,
-        GL_COLOR_ATTACHMENT2
+        GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3,
+        GL_COLOR_ATTACHMENT4
     };
 
     glDrawBuffers(static_cast<GLsizei>(attachments.size()), attachments.data());
@@ -332,13 +345,13 @@ void Renderer::deleteGBuffer()
     glDeleteTextures(1, &renderContext.gPosition);
     glDeleteTextures(1, &renderContext.gNormal);
     glDeleteTextures(1, &renderContext.gAlbedo);
-    glDeleteRenderbuffers(1, &renderContext.rboDepth);
+    glDeleteRenderbuffers(1, &renderContext.gDepth);
 
     renderContext.gBufferFBO = 0;
     renderContext.gPosition   = 0;
     renderContext.gNormal     = 0;
     renderContext.gAlbedo     = 0;
-    renderContext.rboDepth    = 0;
+    renderContext.gDepth    = 0;
 }
 
 bool Renderer::hasWindowSizeChanged()

@@ -27,10 +27,7 @@ layout(std430, binding = 0) buffer GaussianBuffer {
 layout(binding = 1) uniform atomic_uint g_validCounter;
 
 // Inputs from the geometry shader
-in vec3 V1;
-in vec3 V2;
-in vec3 V3;
-in vec3 Barycentric;
+in vec3 Position;
 in vec3 Scale;
 in vec2 UV;
 in vec4 Tangent;
@@ -56,33 +53,31 @@ void main() {
         vec3 normalMap_normal = texture(normalTexture, UV).xyz;
         vec3 retrievedNormal = normalize(normalMap_normal.xyz * 2.0f - 1.0f); 
 
-        vec3 bitangent = normalize(cross(Normal, Tangent.xyz)) * Tangent.w; //tangent.w is the bitangent sign
+        vec3 bitangent = normalize(cross(Normal, Tangent.xyz)) * Tangent.w;
         mat3 TBN = mat3(Tangent.xyz, bitangent, normalize(Normal));
 
-        out_Normal = normalize(TBN * retrievedNormal);
+        out_Normal = normalize(TBN * retrievedNormal); //in model space
     }
     else {
         out_Normal = Normal;
     }
 
     //METALLIC-ROUGHNESS MAP
-    vec2 MetallicRoughness;
+    vec2 metallicRoughness;
     if (hasMetallicRoughnessMap == 1)
     {
-        vec2 metalRough = texture(metallicRoughnessTexture, UV).bg; //Blue contains metallic and Green roughness
-        MetallicRoughness = vec2(metalRough.x, metalRough.y);
+        vec2 metalRough = texture(metallicRoughnessTexture, UV).bg; //b contains metallic and g roughness
+        metallicRoughness = vec2(metalRough.x, metalRough.y);
     }
     else {
-        MetallicRoughness = vec2(0.1f, 0.5f); //Set these defaults from uniforms
+        metallicRoughness = vec2(0.1f, 0.5f); //Set these defaults from uniforms
     }
 
-    vec3 pos = V1 * Barycentric.x + V2 * Barycentric.y + V3 * Barycentric.z;
     // Pack Gaussian parameters into the output fragments
-
-    gaussianBuffer.vertices[index].position = vec4(pos, 1);
+    gaussianBuffer.vertices[index].position = vec4(Position.xyz, 1);
     gaussianBuffer.vertices[index].color = vec4(out_Color.rgb, 1);
     gaussianBuffer.vertices[index].scale = vec4(Scale, 0.0);
     gaussianBuffer.vertices[index].normal = vec4(out_Normal, 0.0);
     gaussianBuffer.vertices[index].rotation = Quaternion;
-    gaussianBuffer.vertices[index].pbr = vec4(MetallicRoughness, 0, 1);
+    gaussianBuffer.vertices[index].pbr = vec4(metallicRoughness, 0, 1);
 }

@@ -17,10 +17,7 @@ in VS_OUT{
     vec3 scale;
 } gs_in[];
 
-flat out vec3 V1;
-flat out vec3 V2;
-flat out vec3 V3;
-out vec3 Barycentric;
+out vec3 Position;
 flat out vec3 Scale;
 out vec2 UV;
 out vec4 Tangent;
@@ -234,7 +231,6 @@ mat2 inverse2x2(mat2 m) {
     return inverse;
 }
 
-//2x3 means 2 columns and 3 rows (in normal notation it would be 3x2 * 2x2)  ------------------- checked
 mat2x3 multiplyMat2x3WithMat2x2(mat2x3 matA, mat2 matB) {
     mat2x3 result;
 
@@ -267,7 +263,6 @@ mat3x2 multiplyMat2x2WithMat3x2(mat2 matA, mat3x2 matB) {
 mat3 multiplyMat2x3WithMat3x2(mat2x3 matA, mat3x2 matB) {
     mat3 result;
 
-    // Perform the matrix multiplication
     result[0][0] = matA[0][0] * matB[0][0] + matA[1][0] * matB[0][1];
     result[1][0] = matA[0][0] * matB[1][0] + matA[1][0] * matB[1][1];
     result[2][0] = matA[0][0] * matB[2][0] + matA[1][0] * matB[2][1];
@@ -405,9 +400,6 @@ void main() {
     vec4 q = quat_cast(rotationMatrix);
     vec4 quaternion = vec4(q.w, q.x, q.y, q.z);
 
-    //This matrix can be constructed on CPU 
-    //mat2 cov2d = construct2DCovMatrix(sigma_x, sigma_y);
-
     mat2x3 J;
 
     vec3 true_vertices3D[3] = { gs_in[0].position, gs_in[1].position, gs_in[2].position };
@@ -417,14 +409,13 @@ void main() {
       
     mat3x2 J_T;
     transpose2x3(J, J_T);
-    //mat3 cov3d = multiplyMat2x3WithMat3x2(J, multiplyMat2x2WithMat3x2(cov2d, J_T));
 
     //TODO: add uniform flag to control if to make them isotropic or anisotropic along the tangent plane
     vec3 Ju = vec3(J_T[0][0], J_T[1][0], J_T[2][0]); 
     vec3 Jv = vec3(J_T[0][1], J_T[1][1], J_T[2][1]); 
 
-    float gaussian_scale_x = length(Ju); //* u_sigma_x;
-    float gaussian_scale_y = length(Jv); //* u_sigma_y;
+    float gaussian_scale_x = length(Ju); 
+    float gaussian_scale_y = length(Jv); 
 
     //Due to numerical error, I cannot pack this into log
     float packed_s_x    = gaussian_scale_x;
@@ -433,16 +424,10 @@ void main() {
 
     Scale = vec3(packed_s_x, packed_s_y, packed_s_z);
 
-    vec3 positions[3] = vec3[3](vec3(1,0,0), vec3(0,1,0), vec3(0,0,1));
-
     for (int i = 0; i < 3; i++)
     {
         Tangent                 = gs_in[i].tangent;       
-        V1                      = gs_in[0].position;
-        V2                      = gs_in[1].position;
-        V3                      = gs_in[2].position;
-
-        Barycentric             = positions[i];
+        Position                = gs_in[i].position;
         Normal                  = gs_in[i].normal;
         UV                      = gs_in[i].uv;
         Quaternion              = quaternion;

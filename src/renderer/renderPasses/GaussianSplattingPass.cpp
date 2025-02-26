@@ -3,10 +3,10 @@
 GaussianSplattingPass::GaussianSplattingPass(RenderContext& renderContext)
 {
     std::vector<float> quadVertices = {
-        -1.0f, -1.0f, 0.0f,// V0
-        -1.0f,  1.0f, 0.0f,// V1
-         1.0f,  1.0f, 0.0f,// V2
-         1.0f, -1.0f, 0.0f  // V3
+        -1.0f, -1.0f, 0.0f,
+        -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,
+         1.0f, -1.0f, 0.0f 
     };
 
     std::vector<GLuint> quadIndices = {
@@ -58,8 +58,7 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     //per-instance (per quad) data
     glBindBuffer(GL_ARRAY_BUFFER, renderContext.perQuadTransformationBufferSorted);
 
-    //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run, and we need to free the data to avoid
-    // memory leak. Should structure renderer architecture
+    //We need to redo this vertex attrib binding as the buffer could have been deleted if the compute/conversion pass was run
     unsigned int vec4sPerInstance = 6;
     unsigned int stride = sizeof(glm::vec4) * vec4sPerInstance; //This is the ndc stride
     

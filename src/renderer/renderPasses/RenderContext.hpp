@@ -87,7 +87,7 @@ struct RenderContext {
     GLuint gPosition = 0;
     GLuint gNormal = 0;
     GLuint gAlbedo = 0;
-
-    GLuint rboDepth = 0;
+    GLuint gDepth = 0;
+    GLuint gMetallicRoughness = 0;
 
 };

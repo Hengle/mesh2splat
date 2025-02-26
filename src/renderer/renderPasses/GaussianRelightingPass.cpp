@@ -48,22 +48,18 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
 
     glUseProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, renderContext.gPosition);
-    glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gPosition"), 0);
+    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gPosition", renderContext.gPosition, 0);
+    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gNormal", renderContext.gNormal, 1);
+    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gAlbedo", renderContext.gAlbedo, 2);
+    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gDepth", renderContext.gDepth, 3);
+    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gMetallicRoughness", renderContext.gMetallicRoughness, 4);
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, renderContext.gNormal);
-    glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gNormal"), 1);
-
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, renderContext.gAlbedo);
-    glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gAlbedo"), 2);
 
     glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_LightPosition", glm::vec3(renderContext.pointLightModel[3]));
-
     glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_clipToView", glm::inverse(renderContext.projMat));
-    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_viewToWorld", glm::inverse(renderContext.viewMat));
+    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_worldToView", renderContext.viewMat);
+    glUtils::setUniform2i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_camPos", renderContext.camPos);
 
 
     glBindVertexArray(m_fullscreenQuadVAO);

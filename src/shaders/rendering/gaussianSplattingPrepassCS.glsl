@@ -151,14 +151,22 @@ void main() {
 	rotMatrix = rotMatrix * inverse(modelRotation);
     
 	computeCov3D(rotMatrix, scale, cov3d);
-	//TODO: probably better with shader permutation (?)
+
 	vec4 outputColor = vec4(0, 0, 0, 0);
 	vec4 computedNormal_Ws = vec4(1, 0, 0, 0);
 
+	float normalizedDepth = (-(gaussian_vs.z) - u_nearFar.x) / (u_nearFar.y - u_nearFar.x); 
+	float invertedLinearizedDepth = clamp(normalizedDepth, 0, 1);
+	float expDepthFallof = exp(-20.0f * invertedLinearizedDepth);
+	float computedDepth = clamp((expDepthFallof), 0, 1);
+	
+
 	if (u_format == 0 || u_format == 3)
 	{
-		computedNormal_Ws = vec4((gaussian.normal.xyz * .5) + .5, gaussian.color.a);
+		vec3 normalWs = (transpose(inverse(u_modelToWorld)) * vec4(gaussian.normal.xyz, 1.0f)).xyz;
+		computedNormal_Ws = vec4((normalWs * .5) + .5, gaussian.color.a); //remember to decode this when using in the gbuffer
 	}
+
 	else if (u_format == 1)
 	{
 		//Shortest axis direction normal observation made at page 4 of https://arxiv.org/pdf/2311.17977
@@ -173,25 +181,24 @@ void main() {
 		outputColor = gaussian.color;
 
 	}
-	else if (u_renderMode == 1) //Depth
+	else if (u_renderMode == 1) 
 	{
-		float normalizedDepth = (-(gaussian_vs.z) - 0.01) / (100.0 - 0.01); //Hardcoded znear and zfar, 
-		float invertedLinearizedDepth = clamp(normalizedDepth, 0, 1);
-		float expDepthFallof = exp(-10 * invertedLinearizedDepth);
-		float zSq = clamp((expDepthFallof), 0, 1);
-		outputColor = vec4(zSq, zSq, zSq, gaussian.color.a);
+		outputColor = vec4(vec3(computedDepth), gaussian.color.a);
 	}
-	else if (u_renderMode == 2) //Normal
+	else if (u_renderMode == 2)
 	{
 		outputColor = computedNormal_Ws;
 	}
 	if (u_renderMode == 3)
 	{
 		outputColor = vec4(random2d(gl_GlobalInvocationID.xy), random2d(gl_GlobalInvocationID.yx), random2d(gl_GlobalInvocationID.yx * 1.234), 1.0);
-
 	}
 	
 	pos2d.xyz = pos2d.xyz / pos2d.w;
+
+	float z_n = 2.0 * pos2d.z - 1.0;
+    float linearDepth = 2.0 * u_nearFar.x * u_nearFar.y / (u_nearFar.y + u_nearFar.x - z_n * (u_nearFar.y - u_nearFar.x));
+
 
 	//https://github.com/graphdeco-inria/diff-gaussian-rasterization/blob/59f5f77e3ddbac3ed9db93ec2cfe99ed6c5d121d/cuda_rasterizer/forward.cu#L74 
     float tzSq = gaussian_vs.z * gaussian_vs.z;
@@ -229,7 +236,7 @@ void main() {
 	vec2 majorAxis = min(3 * sqrt(lambda1), 1024.0) * diagonalVector;
     vec2 minorAxis = min(3 * sqrt(lambda2), 1024.0) * vec2(diagonalVector.y, -diagonalVector.x);
 
-	vec2 majorAxisMultiplier =  majorAxis / (u_resolution * 0.5); //Tbh: not sure why I need to /2 here or alternatively *6 the sqrt(lambda1/2)
+	vec2 majorAxisMultiplier =  majorAxis / (u_resolution * 0.5);
 	vec2 minorAxisMultiplier =  minorAxis / (u_resolution * 0.5);
 
 	uint gaussianIndex = atomicCounterIncrement(g_validCounter);
@@ -239,12 +246,10 @@ void main() {
 	perQuadTransformations.ndcTransformations[gaussianIndex].color				= outputColor;
 
 	mat2 conic = inverseMat2(cov2d);
-	perQuadTransformations.ndcTransformations[gaussianIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], 1.0);
+	perQuadTransformations.ndcTransformations[gaussianIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], pos2d.z ); //I embed the depth here, easier (for now) and cheaper
 
-	perQuadTransformations.ndcTransformations[gaussianIndex].normal				= computedNormal_Ws;
-	perQuadTransformations.ndcTransformations[gaussianIndex].wsPos				= gaussianWs;
-
-
+	perQuadTransformations.ndcTransformations[gaussianIndex].normal				= vec4(computedNormal_Ws.xyz, gaussian.pbr.x);
+	perQuadTransformations.ndcTransformations[gaussianIndex].wsPos				= vec4(gaussianWs.xyz, gaussian.pbr.y);
 
 	gaussianDepthPostFiltering.depths_vs[gaussianIndex]							= gaussian_vs.z;
 }

@@ -20,6 +20,8 @@ out float out_opacity;
 out vec3 out_conic;
 out vec3 out_normal;
 out vec3 out_wsPos;
+out float out_depth;
+out vec2 metallicRoughness;
 
 void main() {
 	gl_Position = vec4(gaussianMean2Ndc.xy + (vertexPos.x * quadScaleNdc.xy + vertexPos.y * quadScaleNdc.zw) , 0, 1);
@@ -29,4 +31,6 @@ void main() {
 	out_screen = vec2((gaussianMean2Ndc.xy + 1) * 0.5 * u_resolution);
 	out_normal = normal.xyz;
 	out_wsPos = gaussianWsPos.xyz;
+	out_depth = conic.w; //I just added the depth value here, easier
+	metallicRoughness = vec2(normal.w, gaussianWsPos.w);
 }
