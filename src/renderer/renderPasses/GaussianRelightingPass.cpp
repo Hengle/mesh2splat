@@ -32,7 +32,6 @@ GaussianRelightingPass::GaussianRelightingPass()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    //glBindVertexArray(0);
 }
 
 void GaussianRelightingPass::execute(RenderContext& renderContext)
@@ -53,6 +52,10 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
     glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gAlbedo", renderContext.gAlbedo, 2);
     glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gDepth", renderContext.gDepth, 3);
     glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gMetallicRoughness", renderContext.gMetallicRoughness, 4);
+    
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, renderContext.m_shadowCubemap);
+    glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_shadowCubemap"), 5);
 
 
     glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_LightPosition", glm::vec3(renderContext.pointLightModel[3]));
@@ -61,7 +64,7 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
     glUtils::setUniform2i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_resolution", renderContext.rendererResolution);
     glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_camPos", renderContext.camPos);
     glUtils::setUniform1i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_isLightingEnalbed", renderContext.lightingEnabled);
-
+    glUtils::setUniform1f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_farPlane", renderContext.farPlane);
 
 
     glBindVertexArray(m_fullscreenQuadVAO);

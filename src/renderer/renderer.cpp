@@ -30,10 +30,10 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
         converterShadersInfo, computeShadersInfo,
         radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
         rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo,
-        deferredRelightingShaderInfo
+        deferredRelightingShaderInfo, shadowsComputeShaderInfo, shadowsRenderCubemapShaderInfo
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
-    updateShadersIfNeeded(true);
+    updateShadersIfNeeded(true); //Forcing compilation
     
     glGenVertexArrays(1, &(renderContext.vao));
     
@@ -105,7 +105,9 @@ Renderer::~Renderer()
     glDeleteProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
     glDeleteProgram(renderContext.shaderPrograms.radixSortGatherProgram);
     glDeleteProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
-
+    glDeleteProgram(renderContext.shaderPrograms.shadowPassShaderProgram);
+    glDeleteProgram(renderContext.shaderPrograms.shadowPassCubemapRender);
+    
 
     glDeleteBuffers(1, &(renderContext.gaussianBuffer));
     glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
@@ -127,13 +129,14 @@ void Renderer::initialize() {
     renderPasses[radixSortPassName]                     = std::make_unique<RadixSortPass>();
     renderPasses[gaussianSplattingPassName]             = std::make_unique<GaussianSplattingPass>(renderContext);
     renderPasses[gaussianSplattingRelightingPassName]   = std::make_unique<GaussianRelightingPass>();
-
+    renderPasses[gaussianSplattingShadowsPassName]      = std::make_unique<GaussianShadowPass>(renderContext);
 
     renderPassesOrder = {
         conversionPassName,
         gaussiansPrePassName,
         radixSortPassName,
         gaussianSplattingPassName,
+        gaussianSplattingShadowsPassName,
         gaussianSplattingRelightingPassName
     };
 
@@ -153,7 +156,7 @@ void Renderer::renderFrame()
         if (passPtr->isEnabled())
         {
             passPtr->execute(renderContext);
-            passPtr->setIsEnabled(false); //Default to false for next render pass
+            passPtr->setIsEnabled(false); //Default to false for next frame
         }
     }
 
@@ -404,6 +407,10 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
 
             this->renderContext.shaderPrograms.deferredRelightingShaderProgram   = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);
 
+            this->renderContext.shaderPrograms.shadowPassShaderProgram   = glUtils::reloadShaderPrograms(shadowsComputeShaderInfo, this->renderContext.shaderPrograms.shadowPassShaderProgram);
+            this->renderContext.shaderPrograms.shadowPassCubemapRender   = glUtils::reloadShaderPrograms(shadowsRenderCubemapShaderInfo, this->renderContext.shaderPrograms.shadowPassCubemapRender);
+
+            
             return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others
             //TODO P1: investigate this, I am not sure I dont think I need to recreate all programs, I am now convinced I can just do reloadShaderPrograms(info, --> ) need to know how it is saved within the map
             //TODO --> adopt convention in naming of entries in map such that in the "shaderFiles" they are named as the shaderInfo for consistency

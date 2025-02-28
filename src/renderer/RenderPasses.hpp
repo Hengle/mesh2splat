@@ -9,10 +9,12 @@
 #include "renderPasses/RadixSortPass.hpp"
 #include "renderPasses/GaussianSplattingPass.hpp"
 #include "renderPasses/GaussianRelightingPass.hpp"
+#include "renderPasses/GaussianShadowPass.hpp"
 
 
-static std::string conversionPassName			= "conversion";
-static std::string gaussiansPrePassName			= "gaussianPrepass";
-static std::string radixSortPassName			= "radixSort";
-static std::string gaussianSplattingPassName	= "gaussianSplatting";
+static std::string conversionPassName					= "conversion";
+static std::string gaussiansPrePassName					= "gaussianPrepass";
+static std::string radixSortPassName					= "radixSort";
+static std::string gaussianSplattingPassName			= "gaussianSplatting";
 static std::string gaussianSplattingRelightingPassName	= "gaussianSplattingDeferredLighting";
+static std::string gaussianSplattingShadowsPassName		= "gaussianSplattingShadows";

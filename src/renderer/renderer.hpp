@@ -63,6 +63,10 @@ private:
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsComputePrepassShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> deferredRelightingShaderInfo;
+	std::vector<std::pair<std::string, GLenum>> shadowsComputeShaderInfo;
+	std::vector<std::pair<std::string, GLenum>> shadowsRenderCubemapShaderInfo;
+
+
 
 	double lastShaderCheckTime;
 

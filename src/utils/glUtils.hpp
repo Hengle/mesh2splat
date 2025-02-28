@@ -26,7 +26,12 @@
 #define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
 
 #define RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredVS.glsl" 
-#define RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredPS.glsl" 
+#define RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredPS.glsl"
+
+#define SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianPointShadowMappingCS.glsl" 
+#define SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianPointLightCubeMapShadowVS.glsl" 
+#define SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianPointLightCubeMapShadowPS.glsl" 
+
 
 
 namespace glUtils
@@ -44,8 +49,6 @@ namespace glUtils
     //GLuint setupFrameBuffer(GLuint& framebuffer, unsigned int width, unsigned int height);
 
     void read3dgsDataFromSsboBuffer(GLuint& indirectDrawCommandBuffer, GLuint& gaussianBuffer, utils::GaussianDataSSBO*& gaussians, unsigned int& gaussianCount);
-
-    void setupGaussianBufferSsbo(unsigned int width, unsigned int height, GLuint* gaussianBuffer);
     
     void fillGaussianBufferSsbo(GLuint& gaussianBuffer, std::vector<utils::GaussianDataSSBO>& gaussians);
     void fillGaussianBufferSsbo(GLuint& gaussianBuffer, unsigned int size);
@@ -81,7 +84,9 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShaderInfo
+        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShaderInfo,
+        std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
+        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo
     );
 
     bool shaderFileChanged(const ShaderFileInfo& info);
@@ -97,9 +102,11 @@ namespace glUtils
     void setUniform1f(GLuint shaderProgram, std::string uniformName, float uniformValue);
     void setUniform1i(GLuint shaderProgram, std::string uniformName, int uniformValue);
     void setUniform1ui(GLuint shaderProgram, std::string uniformName, unsigned int uniformValue);
+    void setUniform1uiv(GLuint shaderProgram, std::string uniformName, unsigned int* uniformValue, int count);
     void setUniform3f(GLuint shaderProgram, std::string uniformName, glm::vec3 uniformValue);
     void setUniform2f(GLuint shaderProgram, std::string uniformName, glm::vec2 uniformValue);
     void setUniform2i(GLuint shaderProgram, std::string uniformName, glm::ivec2 uniformValue);
     void setUniformMat4(GLuint shaderProgram, std::string uniformName, glm::mat4 matrix);
+    void setUniformMat4v(GLuint shaderProgram, std::string uniformName, std::vector<glm::mat4> matrices, unsigned int count);
     void setTexture2D(GLuint shaderProgram, std::string textureUniformName, GLuint texture, unsigned int textureUnitNumber);
 }

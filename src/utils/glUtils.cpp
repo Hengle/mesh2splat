@@ -48,25 +48,36 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& radixSortGatherPassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShadersInfo) {
+        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShadersInfo,
+        std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
+        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo)
+    {
 
+        //CONVERSION PASS
         shaderFiles["converterVert"]                = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
         shaderFiles["converterGeom"]                = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
         shaderFiles["converterFrag"]                = { fs::last_write_time(CONVERTER_FRAG_SHADER_LOCATION),   CONVERTER_FRAG_SHADER_LOCATION };
-    
         shaderFiles["readerCompute"]                = { fs::last_write_time(TRANSFORM_COMPUTE_SHADER_LOCATION),   TRANSFORM_COMPUTE_SHADER_LOCATION };
     
-        //TODO: add postPass
+        //RADIX SORT PASS
         shaderFiles["radixSortPrepassCompute"]      = { fs::last_write_time(RADIX_SORT_PREPASS_SHADER_LOCATION),   RADIX_SORT_PREPASS_SHADER_LOCATION };
         shaderFiles["radixSortGatherCompute"]       = { fs::last_write_time(RADIX_SORT_GATHER_SHADER_LOCATION),   RADIX_SORT_GATHER_SHADER_LOCATION };
     
-
+        //3DGS RENDERING
         shaderFiles["rendererComputePrepass"]       = { fs::last_write_time(RENDERER_PREPASS_COMPUTE_SHADER_LOCATION),   RENDERER_PREPASS_COMPUTE_SHADER_LOCATION };
         shaderFiles["renderer3dgsVert"]             = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
         shaderFiles["renderer3dgsFrag"]             = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
 
+        //DEFERRED LIGHTING PASS
         shaderFiles["deferredRelightingVert"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION };
         shaderFiles["deferredRelightingFrag"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION };
+
+        //SHADOW PASS
+        shaderFiles["shadowPrepassCompute"]             = { fs::last_write_time(SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION),   SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION };
+
+        shaderFiles["shadowCubemapVert"]                = { fs::last_write_time(SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION),   SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION };
+        shaderFiles["shadowCubemapFrag"]                = { fs::last_write_time(SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION),   SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION };
+
 
         converterShadersInfo = {
             { CONVERTER_VERTEX_SHADER_LOCATION,     GL_VERTEX_SHADER   },
@@ -99,6 +110,17 @@ namespace glUtils
         deferredRelightingShadersInfo = {
             { RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
             { RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
+        };
+
+
+
+        shadowsComputeShaderInfo = {
+            { SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION,      GL_COMPUTE_SHADER   }
+        };
+
+        shadowsRenderCubemapShaderInfo = {
+            { SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION,       GL_VERTEX_SHADER    },
+            { SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION,     GL_FRAGMENT_SHADER  }
         };
 
     }
@@ -486,6 +508,17 @@ void generateTextures(utils::MaterialGltf material, std::map<std::string, utils:
         glUniform1ui(uniformLocation, uniformValue);
     }
 
+    void setUniform1uiv(GLuint shaderProgram, std::string uniformName, unsigned int* uniformValue, int count)
+    {
+        GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+        if (uniformLocation == -1) {
+            std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+        }
+
+        glUniform1uiv(uniformLocation, count, &uniformValue[0]);
+    }
+
     void setUniform3f(GLuint shaderProgram, std::string uniformName, glm::vec3 uniformValue)
     {
         GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
@@ -529,6 +562,18 @@ void generateTextures(utils::MaterialGltf material, std::map<std::string, utils:
         }
 
         glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, &matrix[0][0]);
+    }
+
+    
+    void setUniformMat4v(GLuint shaderProgram, std::string uniformName, std::vector<glm::mat4> matrices, unsigned int count)
+    {
+        GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+        if (uniformLocation == -1) {
+            std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+        }
+
+        glUniformMatrix4fv(uniformLocation, count, GL_FALSE, glm::value_ptr(matrices[0]));
     }
 
     void setTexture2D(GLuint shaderProgram, std::string textureUniformName, GLuint texture, unsigned int textureUnitNumber)

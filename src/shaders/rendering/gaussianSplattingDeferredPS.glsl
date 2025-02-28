@@ -14,6 +14,10 @@ uniform vec2 u_resolution;
 uniform vec3 u_LightPosition;
 uniform vec3 u_camPos;
 uniform bool u_isLightingEnalbed;
+uniform float u_farPlane;
+
+
+uniform samplerCube u_shadowCubemap;
 
 in vec2 fragUV;
 out vec4 FragColor;
@@ -68,12 +72,12 @@ void main() {
     vec3 albedo         = texture(gAlbedo, fragUV).rgb;
     vec3 depth         = texture(gDepth, fragUV).rgb;
 
-
     if (!u_isLightingEnalbed)
     {
         FragColor = vec4(albedo, 1.0f);
         return;
     }
+
 
     vec2 pbr            = texture(gMetallicRoughness, fragUV).xy; 
     float metallic      = pbr.x;
@@ -83,21 +87,12 @@ void main() {
 
     vec3 N              = normalize(texture(gNormal, fragUV).xyz * 2.0 - 1.0);
 
-    vec3 dx = dFdxFine(pos);
-    vec3 dy = dFdyFine(pos);
-    float magDx = length(dx);
-    float magDy = length(dy);
-
-    // define a threshold for "unreasonably large"
-    float threshold = 10.0; // depends on your scene scale
-
-    if (magDx > threshold || magDy > threshold) {
-        // fallback to something simpler (e.g. old normal or a default)
-        dx = vec3(0, 0, 0);
-        dy = vec3(0, 0, 1);
-    }
-
-    vec3 n = normalize(cross(dx, dy));
+    //Shadow mapping part
+    vec3 lightDir       = pos - u_LightPosition;
+    float currentDepth  = length(lightDir) ;
+    vec3 sampleDir      = normalize(lightDir);
+    float closestDepth  = texture(u_shadowCubemap, sampleDir).r * 100;
+    float shadow        = currentDepth - 0.05 > closestDepth ? 1.0 : 0.0;
 
     albedo              = vec3(pow(albedo.x, 2.2f), pow(albedo.y, 2.2f), pow(albedo.z, 2.2f)); //linear to srgb, should probably just specify the albedo texture as srgband let sampler directly convert
 
@@ -105,7 +100,6 @@ void main() {
     vec3 L = normalize(u_LightPosition.xyz - pos);
     vec3 V = normalize(u_camPos - pos);
 
-    //if(dot(V, N)  0) N*=-1;
 
     vec3 H = normalize(V + L);
 
@@ -129,7 +123,7 @@ void main() {
     kD *= 1.0 - metallic;
 
     float NdotL = max(dot(N, L), 0.0);
-    vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;
+    vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);
 
     vec3 ambient = vec3(.3) * albedo;
     vec3 color = ambient + Lo;

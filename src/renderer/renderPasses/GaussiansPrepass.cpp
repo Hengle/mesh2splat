@@ -29,7 +29,7 @@ void GaussiansPrepass::execute(RenderContext& renderContext)
     
     unsigned int totalInvocations = renderContext.numberOfGaussians;
 
-    unsigned int threadsPerGroup = 16 * 16; // = 256
+    unsigned int threadsPerGroup = 256;
     unsigned int totalGroupsNeeded = (totalInvocations + threadsPerGroup - 1) / threadsPerGroup;
     unsigned int groupsX = (unsigned int)ceil(sqrt((float)totalGroupsNeeded));
     unsigned int groupsY = (totalGroupsNeeded + groupsX - 1) / groupsX; 

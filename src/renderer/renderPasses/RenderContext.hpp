@@ -30,6 +30,15 @@ struct RenderContext {
     glm::mat4 pointLightModel = glm::mat4(1.0); //For now supports only one light source
     bool lightingEnabled;
 
+    struct PointLightData
+    {
+        GLuint gaussianDepthPostFilteringUnified;
+        GLuint perQuadTransformationsUnified;
+        GLuint atomicCounterBufferPerFace[6];
+    } pointLightData;
+
+    GLuint m_shadowCubemap;
+
     glm::vec3 hfov_focal;
     glm::vec3 camPos;
     float nearPlane;
@@ -45,6 +54,8 @@ struct RenderContext {
         GLuint radixSortPrepassProgram;
         GLuint radixSortGatherProgram;
         GLuint deferredRelightingShaderProgram;
+        GLuint shadowPassShaderProgram;
+        GLuint shadowPassCubemapRender;
     } shaderPrograms;
 
     int normalizedUvSpaceWidth;
@@ -90,5 +101,7 @@ struct RenderContext {
     GLuint gAlbedo = 0;
     GLuint gDepth = 0;
     GLuint gMetallicRoughness = 0;
+
+
 
 };
