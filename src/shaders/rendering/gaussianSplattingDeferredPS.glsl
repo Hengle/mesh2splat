@@ -8,7 +8,6 @@ uniform sampler2D gDepth;
 uniform sampler2D gNormal;
 uniform sampler2D gMetallicRoughness;
 
-uniform mat4 u_clipToView;
 uniform mat4 u_worldToView;
 uniform vec2 u_resolution;
 uniform vec3 u_LightPosition;
@@ -16,17 +15,10 @@ uniform vec3 u_camPos;
 uniform bool u_isLightingEnalbed;
 uniform float u_farPlane;
 
-
 uniform samplerCube u_shadowCubemap;
 
 in vec2 fragUV;
 out vec4 FragColor;
-
-vec3 getViewPosition(vec2 uv, float depth) {
-    vec3 ndc = vec3(uv * 2.0 - 1.0, depth);
-    vec4 viewPos = u_clipToView * vec4(ndc, 1.0);
-    return viewPos.xyz / viewPos.w;
-}
 
 //Very simple GGX pbr shader to show the material properties
 
@@ -68,6 +60,37 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
     return ggx1 * ggx2;
 }
 
+float computeShadowFactor(vec3 pos)
+{
+    vec3 sampleOffsetDirections[20] = vec3[]
+    (
+       vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+       vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+       vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+       vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+       vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+    );
+
+
+    vec3 lightDir       = pos - u_LightPosition;
+    float currentDepth  = length(lightDir) ;
+    vec3 sampleDir      = normalize(lightDir);
+
+    float shadowFact    = 0;
+    float bias          = 0.05;
+    int samples         = 20;
+    float diskRadius    = 0.025;
+
+    //simple pcf
+    for (int i = 0; i < samples; ++i)
+    {
+        float closestDepth  = texture(u_shadowCubemap, sampleDir + sampleOffsetDirections[i] * diskRadius).r * u_farPlane;
+        shadowFact += currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    }
+    return shadowFact / float(samples);
+
+}
+
 void main() {
     vec3 albedo         = texture(gAlbedo, fragUV).rgb;
     vec3 depth         = texture(gDepth, fragUV).rgb;
@@ -87,19 +110,13 @@ void main() {
 
     vec3 N              = normalize(texture(gNormal, fragUV).xyz * 2.0 - 1.0);
 
-    //Shadow mapping part
-    vec3 lightDir       = pos - u_LightPosition;
-    float currentDepth  = length(lightDir) ;
-    vec3 sampleDir      = normalize(lightDir);
-    float closestDepth  = texture(u_shadowCubemap, sampleDir).r * 100;
-    float shadow        = currentDepth - 0.05 > closestDepth ? 1.0 : 0.0;
+    float shadow        = computeShadowFactor(pos);
 
     albedo              = vec3(pow(albedo.x, 2.2f), pow(albedo.y, 2.2f), pow(albedo.z, 2.2f)); //linear to srgb, should probably just specify the albedo texture as srgband let sampler directly convert
 
     //Lighting
     vec3 L = normalize(u_LightPosition.xyz - pos);
     vec3 V = normalize(u_camPos - pos);
-
 
     vec3 H = normalize(V + L);
 
@@ -129,7 +146,6 @@ void main() {
     vec3 color = ambient + Lo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2)); 
-
 
     FragColor = vec4(color, 1.0);
 }

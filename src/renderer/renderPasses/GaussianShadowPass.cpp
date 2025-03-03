@@ -160,6 +160,8 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
                                   "u_resolution", glm::ivec2(SHADOW_CUBEMAP_SIZE, SHADOW_CUBEMAP_SIZE));
 
         glUtils::setUniform3f(renderContext.shaderPrograms.shadowPassCubemapRender,     "u_lightPos", glm::vec3(renderContext.pointLightModel[3]));
+        glUtils::setUniform1f(renderContext.shaderPrograms.shadowPassCubemapRender,     "u_farPlane", renderContext.farPlane);
+
 
 
 	    glDisable(GL_BLEND);
