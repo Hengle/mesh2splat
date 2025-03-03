@@ -365,6 +365,11 @@ void Renderer::setLightingEnabled(bool isEnabled)
     renderContext.lightingEnabled = isEnabled;
 }
 
+void Renderer::setLightIntensity(float lightIntensity)
+{
+    renderContext.lightIntensity = lightIntensity;
+}
+
 bool Renderer::hasWindowSizeChanged()
 {
     int width, height;

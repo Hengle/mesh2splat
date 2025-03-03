@@ -60,7 +60,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
 
             glm::mat4& modelM = imguiUI.isLightSelected() ? renderer.getRenderContext()->pointLightModel : renderer.getRenderContext()->modelMat;
             renderer.setLightingEnabled(imguiUI.isLightingEnabled());
-
+            renderer.setLightIntensity(imguiUI.getLightIntensity());
 
             imguiUI.renderGizmoUi(
                 renderer.getRenderContext()->viewMat,

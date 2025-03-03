@@ -37,6 +37,8 @@ struct RenderContext {
         GLuint atomicCounterBufferPerFace[6];
     } pointLightData;
 
+    float lightIntensity;
+
     GLuint m_shadowCubemap;
 
     glm::vec3 hfov_focal;
@@ -90,7 +92,7 @@ struct RenderContext {
     
     std::deque<GLuint> queryPool;
 
-    unsigned int renderMode; //0: color, 1: depth
+    unsigned int renderMode; //0: color, 1: depth, 2: normal, 3: geometry
 
 
     //Gbuffer
@@ -101,7 +103,5 @@ struct RenderContext {
     GLuint gAlbedo = 0;
     GLuint gDepth = 0;
     GLuint gMetallicRoughness = 0;
-
-
 
 };

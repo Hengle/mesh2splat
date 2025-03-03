@@ -14,6 +14,7 @@ uniform vec3 u_LightPosition;
 uniform vec3 u_camPos;
 uniform bool u_isLightingEnalbed;
 uniform float u_farPlane;
+uniform float u_lightIntensity;
 
 uniform samplerCube u_shadowCubemap;
 
@@ -122,8 +123,7 @@ void main() {
 
     float d = length(u_LightPosition.xyz - pos);
     float attenuation = 1.0 / (d * d);
-    float lightIntensity = 140.0;
-    vec3 radiance = vec3(1, 1, 1) * lightIntensity * attenuation;
+    vec3 radiance = vec3(1, 1, 1) * u_lightIntensity * attenuation;
 
     vec3 F0 = vec3(0.04); 
     F0      = mix(F0, albedo, metallic);

@@ -52,7 +52,9 @@ public:
 
     void renderGpuFrametime();
     void renderLightingSettings();
+    float getLightIntensity() const;
     
+
     enum class VisualizationOption
     {
         COLOR = 0,
@@ -83,6 +85,7 @@ private:
     const char* renderLabels[4] = { "Color", "Depth", "Normals", "Geometry"};
 
     float gaussian_std;
+    float lightIntensity;
     float quality;
     bool runConversionFlag;
     bool loadNewMesh;
@@ -109,6 +112,8 @@ private:
 
     const float minStd = 0.1f;
     const float maxStd = 3.0f;
+    const float minLightIntensity = 0.0;
+    const float maxLightIntensity = 1000.0;
     const int maxRes = 2048;
     const int minRes = 16;
 

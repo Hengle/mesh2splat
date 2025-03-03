@@ -41,6 +41,7 @@ public:
 	void createGBuffer();
 	void deleteGBuffer();
 	void setLightingEnabled(bool isEnabled);
+	void setLightIntensity(float lightIntensity);
 	bool hasWindowSizeChanged();
 
 

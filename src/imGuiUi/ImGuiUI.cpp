@@ -197,7 +197,12 @@ void ImGuiUI::renderLightingSettings()
     ImGui::Checkbox("Enable lighting", &lightingEnabled);
     
     if (lightingEnabled)
+    {
         ImGui::Checkbox("Select Light", &lightSelected);
+        ImGui::SliderFloat("Light intensity", &lightIntensity, minLightIntensity, maxLightIntensity, "%2.0f");
+    }
+ 
+
     else
         lightSelected = false;
 
@@ -271,6 +276,8 @@ void ImGuiUI::setFrameMetrics(double gpuFrameTime) {
 
 bool ImGuiUI::isLightSelected() const { return lightSelected; };
 bool ImGuiUI::isLightingEnabled() const { return lightingEnabled; };
+float ImGuiUI::getLightIntensity() const { return lightIntensity; };
+
 
 
 
