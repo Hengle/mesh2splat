@@ -59,6 +59,20 @@ GaussianShadowPass::GaussianShadowPass(RenderContext& renderContext)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
     glEnableVertexAttribArray(0);
 
+    glGenBuffers(1, &m_indirectDrawBuffer);
+    glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectDrawBuffer);
+
+    DrawElementsIndirectCommand cmds[6];
+    for (int face = 0; face < 6; face++) {
+        cmds[face].count         = 6; 
+        cmds[face].instanceCount = 0;
+        cmds[face].first         = 0;  
+        cmds[face].baseVertex    = 0;
+        cmds[face].baseInstance  = 0;
+    }
+
+    glBufferData(GL_DRAW_INDIRECT_BUFFER, 6 * sizeof(DrawElementsIndirectCommand), cmds, GL_DYNAMIC_DRAW);
+
 }
 
 void GaussianShadowPass::execute(RenderContext& renderContext)
@@ -90,7 +104,7 @@ void GaussianShadowPass::execute(RenderContext& renderContext)
 
 
     #ifdef  _DEBUG
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_PREPASS, -1, "GAUSSIAN_SPLATTING_SHADOW_PREPASS");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_SHADOW_PREPASS, -1, "GAUSSIAN_SPLATTING_SHADOW_PREPASS");
 #endif 
     glUseProgram(renderContext.shaderPrograms.shadowPassShaderProgram);
 
@@ -114,16 +128,10 @@ void GaussianShadowPass::execute(RenderContext& renderContext)
     size_t transformationBufferSize = MAX_GAUSSIANS_TO_SORT * sizeof(glm::vec4) * 6;
     glBufferData(GL_SHADER_STORAGE_BUFFER, transformationBufferSize, nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.pointLightData.perQuadTransformationsUnified);
-
-    for (int face = 0; face < 6; face++) {
-        uint32_t zeroVal = 0;
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderContext.pointLightData.atomicCounterBufferPerFace[face]);
-        glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(uint32_t), &zeroVal);
-        glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 2 + face, renderContext.pointLightData.atomicCounterBufferPerFace[face]);
-    }
     
-    unsigned int totalInvocations = renderContext.numberOfGaussians;
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, m_indirectDrawBuffer);
 
+    unsigned int totalInvocations = renderContext.numberOfGaussians;
     unsigned int threadsPerGroup = 256;
     unsigned int totalGroupsNeeded = (totalInvocations + threadsPerGroup - 1) / threadsPerGroup;
     unsigned int groupsX = (unsigned int)ceil(sqrt((float)totalGroupsNeeded));
@@ -142,9 +150,10 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
 {
     const int SHADOW_CUBEMAP_SIZE = 1024;
 #ifdef  _DEBUG
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_PREPASS, -1, "GAUSSIAN_SPLATTING_SHADOW_CUBEMAP_PASS");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_SHADOW_CUBEMAP, -1, "GAUSSIAN_SPLATTING_SHADOW_CUBEMAP_PASS");
 #endif 
 
+    //Can be improved by only having one draw call with a vs-gs-ps setup, gs switches the cubemap face
     for(int face=0; face < 6; face++)
     {
         //I will assume fully opaque gaussians for the sake of simplicity, we would need something like deep-shadow maps for that (I guess?)
@@ -179,7 +188,6 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
         const size_t instanceStride = 6 * sizeof(glm::vec4);
         size_t faceOffset = face * instancesPerFace * instanceStride;
         
-        // For each per-instance attribute (locations 1 .. 6), set the pointer with the face offset.
         const int vec4sPerInstance = 6;
 
         for (int i = 1; i <= vec4sPerInstance; ++i) {
@@ -189,15 +197,27 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
             glVertexAttribDivisor(i, 1);
         }
 
-        uint32_t validCount = 0;
-        glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderContext.pointLightData.atomicCounterBufferPerFace[face]);
-        glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(uint32_t), &validCount);
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectDrawBuffer);
 
-        glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, validCount);
+        glDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (void*)(face * sizeof(DrawElementsIndirectCommand)));
     
         glBindVertexArray(0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-     }
+    }
+
+    //Reset the drawIndirectbuffer
+    for (int i = 0; i < 6; i++)
+    {
+        DrawElementsIndirectCommand cmd;
+        cmd.count         = 6; 
+        cmd.instanceCount = 0; 
+        cmd.first         = 0;
+        cmd.baseVertex    = 0;
+        cmd.baseInstance  = 0;
+
+        glBindBuffer(GL_DRAW_INDIRECT_BUFFER, m_indirectDrawBuffer);
+        glBufferSubData(GL_DRAW_INDIRECT_BUFFER, sizeof(DrawElementsIndirectCommand)*i, sizeof(DrawElementsIndirectCommand), &cmd);
+    }
 
 #ifdef  _DEBUG
     glPopDebugGroup();

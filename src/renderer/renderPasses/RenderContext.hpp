@@ -5,13 +5,18 @@
 
 enum PassesDebugIDs
 {
-    CONVERSION_PASS                 = 0,
-    CONVERSION_AGGREGATION_PASS     = 1,
-    RADIX_SORT_KEYSVALUE            = 2,
-    RADIX_SORT_MAIN                 = 3,
-    RADIX_SORT_GATHER               = 4,
-    GAUSSIAN_SPLATTING_PREPASS      = 5,
-    GAUSSIAN_SPLATTING_RENDER       = 6
+    CONVERSION_PASS                     = 0,
+    CONVERSION_AGGREGATION_PASS         = 1,
+    RADIX_SORT_KEYSVALUE                = 2,
+    RADIX_SORT_MAIN                     = 3,
+    RADIX_SORT_GATHER                   = 4,
+    GAUSSIAN_SPLATTING_PREPASS          = 5,
+    GAUSSIAN_SPLATTING_RENDER           = 6,
+    GAUSSIAN_SPLATTING_RELIGHTING       = 7,
+    GAUSSIAN_SPLATTING_SHADOW_PREPASS   = 8,
+    GAUSSIAN_SPLATTING_SHADOW_CUBEMAP   = 9,
+
+
 };
 
 //TODO: split up in sub contexts

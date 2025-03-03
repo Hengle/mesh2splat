@@ -40,7 +40,7 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
     glViewport(0, 0, renderContext.rendererResolution.x, renderContext.rendererResolution.y);
 
 #ifdef  _DEBUG
-    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_RENDER, -1, "GAUSSIAN_SPLATTING_DEFERRED_PASS");
+    glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_RELIGHTING, -1, "GAUSSIAN_SPLATTING_DEFERRED_PASS");
 #endif 
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
