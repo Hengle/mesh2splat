@@ -123,7 +123,6 @@ void GuiRendererConcreteMediator::update()
     }
 
 
-
     double gpuFrameTime = renderer.getTotalGpuFrameTimeMs(); // Retrieve GPU frame time
     imguiUI.setFrameMetrics(gpuFrameTime);
 }

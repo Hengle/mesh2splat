@@ -61,6 +61,7 @@ public:
         DEPTH = 1,
         NORMAL = 2,
         GEOMETRY = 3,
+        OVERDRAW = 4
     };
     
     ImGuiUI::VisualizationOption selectedRenderMode() const ;
@@ -76,13 +77,14 @@ private:
     const char* formatLabels[3] = { "PLY Standard Format", "PLY PBR", "PLY Compressed PBR"};
 
     int renderIndex;
-    const ImGuiUI::VisualizationOption renderOptions[4] = {
+    const ImGuiUI::VisualizationOption renderOptions[5] = {
         ImGuiUI::VisualizationOption::COLOR,
         ImGuiUI::VisualizationOption::DEPTH,
         ImGuiUI::VisualizationOption::NORMAL,
-        ImGuiUI::VisualizationOption::GEOMETRY
+        ImGuiUI::VisualizationOption::GEOMETRY,
+        ImGuiUI::VisualizationOption::OVERDRAW,
     };
-    const char* renderLabels[4] = { "Color", "Depth", "Normals", "Geometry"};
+    const char* renderLabels[5] = { "Color", "Depth", "Normals", "Geometry", "Overdraw"};
 
     float gaussian_std;
     float lightIntensity;

@@ -42,6 +42,8 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glUseProgram(renderContext.shaderPrograms.renderShaderProgram);
 
     glUtils::setUniform2f(renderContext.shaderPrograms.renderShaderProgram,     "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform1i(renderContext.shaderPrograms.renderShaderProgram,     "u_renderMode", renderContext.renderMode);
+
 
 	glEnable(GL_BLEND);
     glDisable(GL_CULL_FACE);
@@ -51,11 +53,12 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     //From deck of Bernard K.: https://3dgstutorial.github.io/3dv_part2.pdf slide 25
-	glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+    if(renderContext.renderMode == 5) //overdraw
+	    glBlendFunc(GL_ONE, GL_ONE);
+    else
+	    glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE);
 
     glBindVertexArray(renderContext.vao);
-
-    //TOOD: as the VS and PS are extremelly simple here, I could think of splitting this into two subpasses
 
     //per-instance (per quad) data
     glBindBuffer(GL_ARRAY_BUFFER, renderContext.perQuadTransformationBufferSorted);

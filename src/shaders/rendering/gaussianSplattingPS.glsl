@@ -17,6 +17,7 @@ in float out_depth;
 in vec2 metallicRoughness;
 
 uniform vec2 u_resolution;
+uniform int u_renderMode;
 
 out vec4 FragColor;
 
@@ -25,7 +26,11 @@ void main() {
     float alpha = dot(out_conic.xzy, vec3(d*d, d.x*d.y));
     float g = exp(alpha);
 
-    gAlbedo             = vec4(out_color, out_opacity) * g;
+    if (u_renderMode == 4)
+        gAlbedo = vec4(.01, .005, 0, .01);
+    else
+        gAlbedo = vec4(out_color, out_opacity) * g;
+
     gPosition           = vec4(out_wsPos, 1.0) * g;
     gNormal             = vec4(out_normal, out_opacity) * g;
     

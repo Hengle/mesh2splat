@@ -10,7 +10,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     renderPassesOrder = {};
     renderContext = {};
     renderContext.gaussianBuffer                = 0;
-    renderContext.gaussianDepthPostFiltering   = 0;
+    renderContext.gaussianDepthPostFiltering    = 0;
     renderContext.drawIndirectBuffer            = 0;
     renderContext.keysBuffer                    = 0;
 	renderContext.valuesBuffer                  = 0;
