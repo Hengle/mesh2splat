@@ -125,7 +125,7 @@ void GaussianShadowPass::execute(RenderContext& renderContext)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.pointLightData.perQuadTransformationsUnified);
-    size_t transformationBufferSize = MAX_GAUSSIANS_TO_SORT * sizeof(glm::vec4) * 6;
+    size_t transformationBufferSize = MAX_GAUSSIANS_TO_SORT * sizeof(glm::vec4) * 3;
     glBufferData(GL_SHADER_STORAGE_BUFFER, transformationBufferSize, nullptr, GL_DYNAMIC_DRAW);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.pointLightData.perQuadTransformationsUnified);
     
@@ -185,10 +185,10 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
         glBindBuffer(GL_ARRAY_BUFFER, renderContext.pointLightData.perQuadTransformationsUnified);
 
         const size_t instancesPerFace = MAX_GAUSSIANS_TO_SORT / 6;
-        const size_t instanceStride = 6 * sizeof(glm::vec4);
+        const size_t instanceStride = 3 * sizeof(glm::vec4);
         size_t faceOffset = face * instancesPerFace * instanceStride;
         
-        const int vec4sPerInstance = 6;
+        const int vec4sPerInstance = 3;
 
         for (int i = 1; i <= vec4sPerInstance; ++i) {
             size_t attribOffset = faceOffset + (i - 1) * sizeof(glm::vec4);

@@ -21,10 +21,7 @@ struct GaussianVertex {
 struct QuadNdcTransformation {
     vec4 gaussianMean2dNdc;
     vec4 quadScaleNdc;
-    vec4 color;
-	vec4 conic;
-	vec4 normal;
-	vec4 wsPos;
+    vec4 wsPos;
 };
 
 uniform float u_stdDev;
@@ -269,12 +266,6 @@ void main() {
 
 	perQuadTransformations.ndcTransformations[globalIndex].gaussianMean2dNdc	= pos2d;
 	perQuadTransformations.ndcTransformations[globalIndex].quadScaleNdc			= vec4(majorAxisMultiplier, minorAxisMultiplier);
-	perQuadTransformations.ndcTransformations[globalIndex].color				= gaussianWs; 
-
-	mat2 conic = inverseMat2(cov2d);
-	perQuadTransformations.ndcTransformations[globalIndex].conic				= vec4(conic[0][0], conic[0][1], conic[1][1], gaussian_vs.z); //I embed the depth here, easier (for now) and cheaper
-
-	perQuadTransformations.ndcTransformations[globalIndex].normal				= vec4(computedNormal_Ws.xyz, gaussian.pbr.x);
-	perQuadTransformations.ndcTransformations[globalIndex].wsPos				= vec4(gaussianWs.xyz, gaussian.pbr.y);
+	perQuadTransformations.ndcTransformations[globalIndex].wsPos				= gaussianWs;
 }
 
