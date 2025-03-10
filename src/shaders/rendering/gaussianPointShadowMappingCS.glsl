@@ -47,32 +47,9 @@ layout(std430, binding = 1) writeonly buffer PerQuadTransformations {
     QuadNdcTransformation ndcTransformations[];
 } perQuadTransformations;
 
-
-//TODO: not really the best approach...
 layout(std430, binding = 2) buffer Face0Indirect {
     DrawElementsIndirectCommand cmds[6];
 };
-
-//layout(std430, binding = 3) buffer Face1Indirect {
-//    DrawElementsIndirectCommand face1Cmd;
-//};
-//
-//layout(std430, binding = 4) buffer Face2Indirect {
-//    DrawElementsIndirectCommand face2Cmd;
-//};
-//
-//layout(std430, binding = 5) buffer Face3Indirect {
-//    DrawElementsIndirectCommand face3Cmd;
-//};
-//
-//layout(std430, binding = 6) buffer Face4Indirect {
-//    DrawElementsIndirectCommand face4Cmd;
-//};
-//
-//layout(std430, binding = 7) buffer Face5Indirect {
-//    DrawElementsIndirectCommand face5Cmd;
-//};
-
 
 //https://github.com/jagracar/webgl-shader-examples/blob/master/shaders/requires/random2d.glsl
 float random2d(vec2 co) {
@@ -285,15 +262,8 @@ void main() {
 	vec2 minorAxisMultiplier =  minorAxis / (u_resolution * 0.5);
 	
 	uint localGaussianIndex = 0;
-	//if(face == 0)		localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-	//else if(face == 1)	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-	//else if(face == 2)	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-	//else if(face == 3)	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-	//else if(face == 4)	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-	//else if(face == 5)	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
 
 	localGaussianIndex = atomicAdd(cmds[face].instanceCount, 1u);
-
 	
 	uint globalIndex = uint(face) * (MAX_GAUSSIANS_PER_FACE / 6) + localGaussianIndex;
 

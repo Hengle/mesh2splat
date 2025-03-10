@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
 
     ioHandler.setupCallbacks();
 
-    ImGuiUI ImGuiUI(3, 0, 0.1f, 0.5f); //TODO: give a meaning to these params
+    ImGuiUI ImGuiUI(3, 0, 0.65f, 0.5f); //TODO: give a meaning to these params
     ImGuiUI.initialize(glewGlfwHandler.getWindow());
 
     Renderer renderer(glewGlfwHandler.getWindow(), camera);

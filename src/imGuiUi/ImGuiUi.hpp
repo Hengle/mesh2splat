@@ -115,7 +115,7 @@ private:
     char destinationFilePathBuffer[256];
 
     const float minStd = 0.1f;
-    const float maxStd = 3.0f;
+    const float maxStd = 2.0f;
     const float minLightIntensity = 0.0;
     const float maxLightIntensity = 1000.0;
     const int maxRes = 2048;
