@@ -187,71 +187,88 @@ namespace glUtils
     }
 
 
-    //TODO: must return the ID for each texture
-    void generateTextures(std::map<std::string, utils::TextureDataGl>& textureTypeMap)
+GLenum mapTextureTypeToUnit(const std::string &textureType)
+{
+    if (textureType == "baseColorTexture")
+        return GL_TEXTURE0;
+    else if (textureType == "normalTexture")
+        return GL_TEXTURE1;
+    else if (textureType == "metallicRoughnessTexture")
+        return GL_TEXTURE2;
+    else if (textureType == "occlusionTexture")
+        return GL_TEXTURE3;
+    else if (textureType == "emissiveTexture")
+        return GL_TEXTURE4;
+    return GL_TEXTURE0; 
+}
+
+void generateTextures(std::map<std::string, std::map<std::string, utils::TextureDataGl>>& meshToTextureData)
+{
+    // For each mesh entry in meshToTextureData
+    for (auto &meshEntry : meshToTextureData)
     {
-        std::map<std::string, GLenum> textureUnits = {
-            { BASE_COLOR_TEXTURE,           GL_TEXTURE0 },
-            { NORMAL_TEXTURE,               GL_TEXTURE1 },
-            { METALLIC_ROUGHNESS_TEXTURE,   GL_TEXTURE2 },
-            { AO_TEXTURE,                   GL_TEXTURE3 },
-            { EMISSIVE_TEXTURE,             GL_TEXTURE4 }
-        };
+        const std::string& meshName = meshEntry.first;
+        auto &textureMap = meshEntry.second; // map<string, TextureDataGl>
 
-        for (auto& textureTypeMapEntry : textureTypeMap)
+        // For each texture type in that mesh's texture map
+        for (auto &texturePair : textureMap)
         {
-            const std::string& textureName = textureTypeMapEntry.first;
-            utils::TextureDataGl& textureDataGl = textureTypeMapEntry.second;
-            unsigned char* textureData = reinterpret_cast<unsigned char*>(textureDataGl.textureData.data());
-        
-            auto unitIt = textureUnits.find(textureName);
-            if (unitIt == textureUnits.end())
-                continue;
+            const std::string &textureType = texturePair.first;      
+            utils::TextureDataGl &textureDataGl = texturePair.second;
 
-            GLenum textureUnit = unitIt->second;
+            // If we want to pick a texture unit based on "textureType", do that here
+            // If you want each mesh to have separate sets of texture units, you might do that differently.
+            GLenum textureUnit = mapTextureTypeToUnit(textureType);
 
             // Delete existing texture if it exists
-            if (textureDataGl.glTextureID != 0)
-            {
+            if (textureDataGl.glTextureID != 0) {
                 glDeleteTextures(1, &textureDataGl.glTextureID);
                 textureDataGl.glTextureID = 0;
             }
 
-            // Skip if the material doesn't have this texture or data is invalid
-            if (textureDataGl.width <= 0 || textureDataGl.height <= 0 || textureData == nullptr)
+            // Skip if no data
+            if (textureDataGl.width <= 0 ||
+                textureDataGl.height <= 0 ||
+                textureDataGl.textureData.empty())
+            {
                 continue;
+            }
 
+            // Now create and upload to GL
             GLuint texture;
             glActiveTexture(textureUnit);
             glGenTextures(1, &texture);
             glBindTexture(GL_TEXTURE_2D, texture);
+
             textureDataGl.glTextureID = texture;
 
-            GLenum internalFormat = textureDataGl.channels == 4 ? GL_RGBA : GL_RGB;
+            GLenum internalFormat = (textureDataGl.channels == 4) ? GL_RGBA : GL_RGB;
             GLenum format = internalFormat;
 
-            glTexImage2D(
-                GL_TEXTURE_2D,
-                0, internalFormat,
-                textureDataGl.width, textureDataGl.height,
-                0, format,
-                GL_UNSIGNED_BYTE,
-                textureData
-            );
+            glTexImage2D(GL_TEXTURE_2D,
+                         0,
+                         internalFormat,
+                         textureDataGl.width,
+                         textureDataGl.height,
+                         0,
+                         format,
+                         GL_UNSIGNED_BYTE,
+                         textureDataGl.textureData.data());
 
             glGenerateMipmap(GL_TEXTURE_2D);
 
+            // Set wrapping/filtering
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4); // Reduced from 40 to a reasonable level
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
 
-        
             glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
+}
 
     void generateMeshesVBO(const std::vector<utils::Mesh>& meshes, std::vector<std::pair<utils::Mesh, utils::GLMesh>>& DataMeshAndGlMesh) {
     

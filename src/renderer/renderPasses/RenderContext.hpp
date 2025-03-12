@@ -91,6 +91,9 @@ struct RenderContext {
     // Data Structures
     std::vector<std::pair<utils::Mesh, utils::GLMesh>> dataMeshAndGlMesh;
     std::map<std::string, utils::TextureDataGl> textureTypeMap;
+
+    std::map<std::string, std::map<std::string, utils::TextureDataGl>> meshToTextureData;
+
     utils::MaterialGltf material;
     std::vector<utils::GaussianDataSSBO> readGaussians;
     

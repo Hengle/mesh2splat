@@ -44,7 +44,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     glGenBuffers(1, &(renderContext.gaussianDepthPostFiltering));
     glGenBuffers(1, &(renderContext.gaussianBuffer));
 
-
+    glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 6, renderContext.gaussianBuffer, 0);
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.keysBuffer, 1);
     glUtils::resizeAndBindToPosSSBO<unsigned int>(MAX_GAUSSIANS_TO_SORT, renderContext.valuesBuffer, 2);
     glUtils::resizeAndBindToPosSSBO<glm::vec4>(MAX_GAUSSIANS_TO_SORT * 6, renderContext.perQuadTransformationBufferSorted, 3);
@@ -240,7 +240,7 @@ void Renderer::enableRenderPass(std::string renderPassName)
 
 void Renderer::setViewportResolutionForConversion(int resolutionTarget)
 {
-    renderContext.resolutionTarget = resolutionTarget;
+    renderContext.resolutionTarget = int(resolutionTarget / renderContext.dataMeshAndGlMesh.size());
 }
 
             

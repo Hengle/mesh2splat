@@ -39,7 +39,7 @@ namespace glUtils
 
     GLuint compileShader(const char* source, GLenum type);
 
-    void generateTextures(std::map<std::string, utils::TextureDataGl>& textureTypeMap);
+    void generateTextures(std::map<std::string, std::map<std::string, utils::TextureDataGl>>& meshToTextureData);
 
     void generateMeshesVBO(const std::vector<utils::Mesh>& meshes, std::vector<std::pair<utils::Mesh, utils::GLMesh>>& DataMeshAndGlMesh);
 

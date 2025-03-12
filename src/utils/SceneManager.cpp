@@ -21,7 +21,7 @@ bool SceneManager::loadModel(const std::string& filePath, const std::string& par
     generateNormalizedUvCoordinates(meshes);
     setupMeshBuffers(meshes);
     loadTextures(meshes);
-    glUtils::generateTextures(renderContext.textureTypeMap);
+    glUtils::generateTextures(renderContext.meshToTextureData);
 
     return true;
 }
@@ -203,8 +203,12 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
     }
 
     //remember that "when a 3D model is created as GLTF it is already triangulated"
+    int index = 0;
+
     for (const auto& mesh : model.meshes) {
-        utils::Mesh myMesh(mesh.name);
+        std::string baseName = "mesh";
+        utils::Mesh myMesh(baseName.append(std::to_string(index)));
+        ++index;
         
         for (const auto& primitive : mesh.primitives) {
             const tinygltf::Accessor& indicesAccessor = model.accessors[primitive.indices];
@@ -387,29 +391,30 @@ void SceneManager::loadTextures(const std::vector<utils::Mesh>& meshes)
 {
     for (auto& mesh : meshes)
     {
+        std::map<std::string, utils::TextureDataGl> textureMapForThisMesh;
         //TODO!!!: the render context supports only one mesh
         //BASECOLOR ALBEDO TEXTURE LOAD
         if (mesh.material.baseColorTexture.path != EMPTY_TEXTURE)
         {
             utils::TextureDataGl tdgl(mesh.material.baseColorTexture);
-            renderContext.textureTypeMap.insert_or_assign(BASE_COLOR_TEXTURE, tdgl);
+            textureMapForThisMesh.insert_or_assign(BASE_COLOR_TEXTURE, tdgl);
         }
         else {
             renderContext.material.baseColorTexture.width = MAX_RESOLUTION_TARGET;
             renderContext.material.baseColorTexture.height = MAX_RESOLUTION_TARGET;
-            renderContext.textureTypeMap.erase(BASE_COLOR_TEXTURE);
+            textureMapForThisMesh.erase(BASE_COLOR_TEXTURE);
         }
 
         //METALLIC-ROUGHNESS TEXTURE LOAD
         if (mesh.material.metallicRoughnessTexture.path != EMPTY_TEXTURE)
         {
             utils::TextureDataGl tdgl(mesh.material.metallicRoughnessTexture);
-            renderContext.textureTypeMap.insert_or_assign(METALLIC_ROUGHNESS_TEXTURE, tdgl);
+            textureMapForThisMesh.insert_or_assign(METALLIC_ROUGHNESS_TEXTURE, tdgl);
         }
         else {
             renderContext.material.metallicRoughnessTexture.width = MAX_RESOLUTION_TARGET;
             renderContext.material.metallicRoughnessTexture.height = MAX_RESOLUTION_TARGET;
-            renderContext.textureTypeMap.erase(METALLIC_ROUGHNESS_TEXTURE);
+            textureMapForThisMesh.erase(METALLIC_ROUGHNESS_TEXTURE);
         }
 
         //NORMAL TEXTURE LOAD
@@ -417,12 +422,12 @@ void SceneManager::loadTextures(const std::vector<utils::Mesh>& meshes)
         {
             
             utils::TextureDataGl tdgl(mesh.material.normalTexture);
-            renderContext.textureTypeMap.insert_or_assign(NORMAL_TEXTURE, tdgl);
+            textureMapForThisMesh.insert_or_assign(NORMAL_TEXTURE, tdgl);
         }
         else {
             renderContext.material.normalTexture.width = MAX_RESOLUTION_TARGET;
             renderContext.material.normalTexture.height = MAX_RESOLUTION_TARGET;
-            renderContext.textureTypeMap.erase(NORMAL_TEXTURE);
+            textureMapForThisMesh.erase(NORMAL_TEXTURE);
 
         }
 
@@ -430,25 +435,28 @@ void SceneManager::loadTextures(const std::vector<utils::Mesh>& meshes)
         if (mesh.material.occlusionTexture.path != EMPTY_TEXTURE)
         {
             utils::TextureDataGl tdgl(mesh.material.occlusionTexture);
-            renderContext.textureTypeMap.insert_or_assign(AO_TEXTURE, tdgl);
+            textureMapForThisMesh.insert_or_assign(AO_TEXTURE, tdgl);
         }
         else {
             renderContext.material.occlusionTexture.width = MAX_RESOLUTION_TARGET;
             renderContext.material.occlusionTexture.height = MAX_RESOLUTION_TARGET;
-            renderContext.textureTypeMap.erase(AO_TEXTURE);
+            textureMapForThisMesh.erase(AO_TEXTURE);
         }
 
         //EMISSIVE TEXTURE LOAD
         if (mesh.material.emissiveTexture.path != EMPTY_TEXTURE)
         {
             utils::TextureDataGl tdgl(mesh.material.emissiveTexture);
-            renderContext.textureTypeMap.insert_or_assign(EMISSIVE_TEXTURE, tdgl);
+            textureMapForThisMesh.insert_or_assign(EMISSIVE_TEXTURE, tdgl);
         }
         else {
             renderContext.material.emissiveTexture.width = MAX_RESOLUTION_TARGET;
             renderContext.material.emissiveTexture.height = MAX_RESOLUTION_TARGET;
-            renderContext.textureTypeMap.erase(EMISSIVE_TEXTURE);
+            textureMapForThisMesh.erase(EMISSIVE_TEXTURE);
         }
+
+        renderContext.meshToTextureData.insert_or_assign(mesh.name, textureMapForThisMesh);
+
     }
     
 }
