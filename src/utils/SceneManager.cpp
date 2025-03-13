@@ -223,6 +223,7 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
                     indices[i] = buf[i];
                 }
             }
+
             else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
                 const uint32_t* buf = reinterpret_cast<const uint32_t*>(indexData);
                 for (size_t i = 0; i < indicesAccessor.count; i++) {
@@ -297,16 +298,18 @@ void SceneManager::generateNormalizedUvCoordinates(std::vector<utils::Mesh>& mes
 }
 
 // Setup Mesh Buffers
-void SceneManager::setupMeshBuffers(const std::vector<utils::Mesh>& meshes)
+void SceneManager::setupMeshBuffers(std::vector<utils::Mesh>& meshes)
 {
 
     renderContext.dataMeshAndGlMesh.clear();
     renderContext.dataMeshAndGlMesh.reserve(meshes.size());
 
+    float totalSurface = 0;
+
     for (auto& mesh : meshes) {
         utils::GLMesh glMesh;
         std::vector<float> vertices;  
-        
+        float meshSurface = 0;
         for (const auto& face : mesh.faces) {
             for (int i = 0; i < 3; ++i) { // Assuming each face is a triangle (and it must be as we are only reading .gltf/.glb files)
                 // Position
@@ -339,8 +342,13 @@ void SceneManager::setupMeshBuffers(const std::vector<utils::Mesh>& meshes)
                 vertices.push_back(face.scale.z);
 
             }
-            
+
+            mesh.surfaceArea += utils::triangleArea(face.pos[0], face.pos[1], face.pos[2]);
+        
         }
+        
+        renderContext.totalSurfaceArea += mesh.surfaceArea;
+
         unsigned int floatsPerVertex = 17;
         glMesh.vertexCount = vertices.size() / floatsPerVertex; // Number of vertices
 

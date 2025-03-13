@@ -25,7 +25,7 @@ private:
     void parseGltfTextureInfo(const tinygltf::Model& model, const tinygltf::Parameter& textureParameter, std::string base_folder, std::string name, utils::TextureInfo& info);
     void generateNormalizedUvCoordinates(std::vector<utils::Mesh>& meshes);
     void loadTextures(const std::vector<utils::Mesh>& meshes);
-    void setupMeshBuffers(const std::vector<utils::Mesh>& meshes);
+    void setupMeshBuffers(std::vector<utils::Mesh>& meshes);
     template <typename T>
     const T* getBufferData(const tinygltf::Model& model, int accessorIndex);
 };

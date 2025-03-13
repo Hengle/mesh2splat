@@ -3,19 +3,16 @@
 
 void ConversionPass::execute(RenderContext &renderContext)
 {
-    
-    //TODO: If model has many meshes this is probably not the most efficient approach.
-    //For how the mesh2splat method currently works, we still need to generate a separate frame and drawbuffer per mesh, but the gpu conversion
-    //could be done via batch rendering
-    //If we are running the conversion pass means the currently existing framebuffer with respective draw buffers should be deleted before the conversion passes
+
     renderContext.numberOfGaussians = 0;
     glUtils::resetAtomicCounter(renderContext.atomicCounterBufferConversionPass);
 
-    GLsizeiptr bufferSize = renderContext.resolutionTarget * renderContext.resolutionTarget * renderContext.dataMeshAndGlMesh.size() * sizeof(glm::vec4) * 6;
+    GLsizeiptr bufferSize = renderContext.resolutionTarget * renderContext.resolutionTarget * sizeof(glm::vec4) * 6;
     GLint currentSize;
 
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);    
     glGetBufferParameteriv(GL_SHADER_STORAGE_BUFFER, GL_BUFFER_SIZE, &currentSize);
+    
     if (currentSize != bufferSize) {
         glBufferData(GL_SHADER_STORAGE_BUFFER, bufferSize, nullptr, GL_DYNAMIC_DRAW);
     }
@@ -23,8 +20,9 @@ void ConversionPass::execute(RenderContext &renderContext)
     for (auto& mesh : renderContext.dataMeshAndGlMesh) {
         GLuint framebuffer;
         GLuint drawBuffers = glUtils::setupFrameBuffer(framebuffer, renderContext.resolutionTarget, renderContext.resolutionTarget);
+        float surfaceOccupance = sqrt(mesh.first.surfaceArea / renderContext.totalSurfaceArea);
 
-        conversion(renderContext, mesh, framebuffer);
+        conversion(renderContext, mesh, framebuffer, surfaceOccupance);
         glFinish();
         glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderContext.atomicCounterBufferConversionPass);
         uint32_t numGs;
@@ -38,18 +36,17 @@ void ConversionPass::execute(RenderContext &renderContext)
 
 
 void ConversionPass::conversion(
-        RenderContext renderContext, std::pair<utils::Mesh, utils::GLMesh> mesh, GLuint dummyFramebuffer
+        RenderContext renderContext, std::pair<utils::Mesh, utils::GLMesh> mesh, GLuint dummyFramebuffer, float surfaceOccupance
     ) 
 {
+
 #ifdef  _DEBUG
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::CONVERSION_PASS, -1, "CONVERSION_VS_GS_PS_PASS");
 #endif 
-    // Use shader program and perform tessellation
-    glUseProgram(renderContext.shaderPrograms.converterShaderProgram);
-    glViewport(0, 0, renderContext.resolutionTarget, renderContext.resolutionTarget);
 
-    //-------------------------------SET UNIFORMS-------------------------------   
-    //Textures
+    glUseProgram(renderContext.shaderPrograms.converterShaderProgram);
+    glViewport(0, 0, int(renderContext.resolutionTarget * surfaceOccupance), int(renderContext.resolutionTarget * surfaceOccupance));
+
     if (renderContext.meshToTextureData.find(mesh.first.name) != renderContext.meshToTextureData.end())
     {
         auto& textureMap = renderContext.meshToTextureData.at(mesh.first.name);
@@ -78,7 +75,7 @@ void ConversionPass::conversion(
             glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "emissiveTexture", textureMap.at(EMISSIVE_TEXTURE).glTextureID,     4);
         }
     }
-
+    glUtils::setUniform1f(renderContext.shaderPrograms.converterShaderProgram, "u_meshFactorScale", 1.0f / surfaceOccupance);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);    
     glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 1, renderContext.atomicCounterBufferConversionPass);
     glBindVertexArray(mesh.second.vao);

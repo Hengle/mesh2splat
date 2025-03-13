@@ -75,7 +75,7 @@ void main() {
 
     // Pack Gaussian parameters into the output fragments
     gaussianBuffer.vertices[index].position = vec4(Position.xyz, 1);
-    gaussianBuffer.vertices[index].color = vec4(out_Color.rgb, 1);
+    gaussianBuffer.vertices[index].color = out_Color;
     gaussianBuffer.vertices[index].scale = vec4(Scale, 0.0);
     gaussianBuffer.vertices[index].normal = vec4(out_Normal, 0.0);
     gaussianBuffer.vertices[index].rotation = Quaternion;

@@ -15,8 +15,6 @@ enum PassesDebugIDs
     GAUSSIAN_SPLATTING_RELIGHTING       = 7,
     GAUSSIAN_SPLATTING_SHADOW_PREPASS   = 8,
     GAUSSIAN_SPLATTING_SHADOW_CUBEMAP   = 9,
-
-
 };
 
 //TODO: split up in sub contexts
@@ -66,8 +64,7 @@ struct RenderContext {
 
     int normalizedUvSpaceWidth;
     int normalizedUvSpaceHeight;
-    unsigned int referenceResolution;
-    unsigned int resolutionTarget; //TODO: confusing with already the
+    unsigned int resolutionTarget; 
     unsigned int format; //0: from mesh2splat, 1: classic .ply 3dgs, 2: compressedPBR
 
     // Resources
@@ -91,6 +88,7 @@ struct RenderContext {
     // Data Structures
     std::vector<std::pair<utils::Mesh, utils::GLMesh>> dataMeshAndGlMesh;
     std::map<std::string, utils::TextureDataGl> textureTypeMap;
+    float totalSurfaceArea = 0;
 
     std::map<std::string, std::map<std::string, utils::TextureDataGl>> meshToTextureData;
 

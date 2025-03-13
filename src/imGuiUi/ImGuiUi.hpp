@@ -123,7 +123,7 @@ private:
     const float maxStd = 2.0f;
     const float minLightIntensity = 0.0;
     const float maxLightIntensity = 1000.0;
-    const int maxRes = 2048;
+    const int maxRes = 4096;
     const int minRes = 16;
 
     //Gpu timing data

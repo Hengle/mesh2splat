@@ -146,7 +146,8 @@ namespace utils
     struct Mesh { //TODO: 
         std::string name;
         std::vector<Face> faces; // Tuple of vertex indices, uv indices and normalIndices
-        MaterialGltf material;
+        MaterialGltf material; 
+        float surfaceArea = 0;
 
         Mesh(const std::string& name = "Unnamed") : name(name) {}
     };
@@ -241,5 +242,7 @@ namespace utils
     std::string formatWithCommas(int value);
 
     ModelFileExtension getFileExtension(const std::string& filename);
+
+    float triangleArea(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C);
 
 }

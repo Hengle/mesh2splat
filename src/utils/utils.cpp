@@ -438,4 +438,12 @@ namespace utils
         return ModelFileExtension::NONE;
     }
 
+    float triangleArea(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C) {
+        return 0.5 * std::abs(
+            A.x * (B.y - C.y) +
+            B.x * (C.y - A.y) +
+            C.x * (A.y - B.y)
+        );
+}
+
 }

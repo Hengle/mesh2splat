@@ -55,11 +55,12 @@ void GuiRendererConcreteMediator::notify(EventType event)
             renderer.enableRenderPass(gaussiansPrePassName);
             renderer.enableRenderPass(radixSortPassName);
             renderer.enableRenderPass(gaussianSplattingPassName);
+        
+            renderer.setLightingEnabled(imguiUI.isLightingEnabled());
 
             if (imguiUI.isLightingEnabled())
             {
                 renderer.enableRenderPass(gaussianSplattingShadowsPassName);
-                renderer.setLightingEnabled(imguiUI.isLightingEnabled());
                 renderer.setLightIntensity(imguiUI.getLightIntensity());
                 renderer.setLightColor(imguiUI.getLightColor());
             }
