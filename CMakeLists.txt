@@ -79,10 +79,3 @@ set_target_properties(Mesh2Splat PROPERTIES
     LIBRARY_OUTPUT_DIRECTORY_DEBUG ${CMAKE_SOURCE_DIR}/lib/Debug
     LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_SOURCE_DIR}/lib/Release
 )
-
-add_custom_command(TARGET Mesh2Splat POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        "${CMAKE_SOURCE_DIR}/src/shaders"
-        "$<TARGET_FILE_DIR:Mesh2Splat>/shaders"
-    COMMENT "Copying shaders to output directory..."
-)

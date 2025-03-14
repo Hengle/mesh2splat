@@ -4,7 +4,31 @@ namespace glUtils
 {
     ShaderLocations shaderLocations;
 
+    void copyShadersToExeDirIfNeeded()
+    {
+        fs::path exeDir(utils::getExecutableDir());
+        fs::path destination = exeDir / "shaders";
+
+        fs::path source = fs::path(__FILE__).parent_path() / "../shaders";
+
+        if (!fs::exists(source)) {
+            throw std::runtime_error("Source shader directory doesn't exist: " + source.string());
+        }
+
+        if (!fs::exists(destination)) {
+            try {
+                fs::copy(source, destination, fs::copy_options::recursive);
+                std::cout << "Shader folder copied to exe directory." << std::endl;
+            } catch (fs::filesystem_error &e) {
+                std::cerr << "Failed to copy shaders: " << e.what() << std::endl;
+            }
+        } 
+    }
+
     void initializeShaderLocations() {
+
+        copyShadersToExeDirIfNeeded();
+
         fs::path exeDir(utils::getExecutableDir());
         fs::path shadersBase = exeDir / "shaders"; //Todo: rather move the shader files relative to the exe loc
     
