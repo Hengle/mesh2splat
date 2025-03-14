@@ -11,7 +11,7 @@
 
 class ImGuiUI {
 public:
-    ImGuiUI(float defaultResolutionIndex, int defaultFormat, float defaultGaussianStd, float defaultMesh2SPlatQuality);
+    ImGuiUI(float defaultGaussianStd, float defaultMesh2SPlatQuality);
     ~ImGuiUI();
 
     void preframe();
@@ -72,7 +72,7 @@ public:
 
 
 private:
-    int resolutionIndex;
+    int resolutionIndex = 0;
     const int resolutionOptions[3] = { 1024, 2048, 4096 };
     const char* resolutionLabels[3] = { "1024", "2048", "4096" };
     

@@ -1,8 +1,8 @@
 #include "ImGuiUI.hpp"
 
-ImGuiUI::ImGuiUI(float defaultResolutionIndex, int defaultFormat, float defaultGaussianStd, float defaultMesh2SPlatQuality)
-    : resolutionIndex(defaultResolutionIndex),
-      formatIndex(defaultFormat),
+ImGuiUI::ImGuiUI(float defaultGaussianStd, float defaultMesh2SPlatQuality)
+    : resolutionIndex(0),
+      formatIndex(0),
       gaussian_std(defaultGaussianStd),
       quality(defaultMesh2SPlatQuality),
       runConversionFlag(false),
@@ -29,7 +29,6 @@ void ImGuiUI::initialize(GLFWwindow* window)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460"); // Use appropriate GLSL version
 }
-
 
 
 void ImGuiUI::renderUI()
