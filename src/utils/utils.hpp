@@ -6,8 +6,8 @@
 #include <string>
 #include <vector>
 #include <deque>
-#include <glm.hpp>
-#include <gtc/type_ptr.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <thread>
 #include <map>
@@ -25,8 +25,8 @@
 #include <experimental/filesystem>
 #define EMPTY_TEXTURE "empty_texture"
 #define GLM_ENABLE_EXPERIMENTAL
-#include <gtx/string_cast.hpp>
-#include <gtx/norm.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/norm.hpp>
 #include "params.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"

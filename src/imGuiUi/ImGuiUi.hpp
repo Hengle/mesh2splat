@@ -3,7 +3,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include <glm.hpp>
+#include <glm/glm.hpp>
 #include "../utils/utils.hpp"
 #include "../../thirdParty/imguizmo/Imguizmo.hpp"
 #include "../../thirdParty/ImGuiFileDialog/ImGuiFileDialog.h"
