@@ -124,9 +124,11 @@ void ImGuiUI::renderUI()
 
     ImGui::SetNextItemWidth(comboWidth);
     ImGui::Combo("##Combobox", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
+    
     if (ImGui::Button("Save splat")) {
         savePly = true;
     }
+
     ImGui::End();
 
     ImGui::Begin("Properties");
@@ -144,6 +146,7 @@ void ImGuiUI::renderUI()
     if (ImGui::Combo("(Max quality tweak)", &resolutionIndex, resolutionLabels, IM_ARRAYSIZE(resolutionLabels)))
     {
         maxRes = resolutionOptions[resolutionIndex];
+        runConversionFlag = true;
     }
 
     ImGui::Dummy(ImVec2(0,2.0f));
