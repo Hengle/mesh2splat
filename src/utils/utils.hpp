@@ -32,6 +32,15 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 
 static void CheckOpenGLError(const char* stmt, const char* fname, int line)
 {
@@ -52,8 +61,11 @@ static void CheckOpenGLError(const char* stmt, const char* fname, int line)
     #define GL_CHECK(stmt) stmt
 #endif
 
+namespace fs = std::experimental::filesystem;
+
 namespace utils
 {
+
     struct Material {
         glm::vec3 ambient;       // Ka
         glm::vec3 diffuse;       // Kd
@@ -255,4 +267,9 @@ namespace utils
 
     float triangleArea(const glm::vec3& A, const glm::vec3& B, const glm::vec3& C);
 
+    std::string getExecutablePath();
+
+    std::string getExecutableDir();
+
+    fs::path relative(fs::path p, fs::path base);
 }

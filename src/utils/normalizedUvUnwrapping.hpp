@@ -1,8 +1,8 @@
 #pragma once
 #include "utils.hpp"
-#include "../parsers/parsers.hpp"
-#include "../../thirdParty/xatlas/xatlas.h"
-#include "../../thirdParty/stb_image_write.h"
+#include "parsers/parsers.hpp"
+#include "xatlas/xatlas.h"
+#include "stb_image_write.h"
 
 namespace uvUnwrapping
 {

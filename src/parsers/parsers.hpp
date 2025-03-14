@@ -1,10 +1,10 @@
 #pragma once
-#include "../../thirdParty/tiny_gltf.h"
-#include "../../thirdParty/stb_image.h"   
-#include "../../thirdParty/stb_image_resize.h"
-#include "../../thirdParty/stb_image_write.h"
-#include "../../thirdParty/happly.h"
-#include "../utils/utils.hpp"
+#include "tiny_gltf.h"
+#include "stb_image.h"   
+#include "stb_image_resize.h"
+#include "stb_image_write.h"
+#include "happly.h"
+#include "utils/utils.hpp"
 
 namespace parsers
 {

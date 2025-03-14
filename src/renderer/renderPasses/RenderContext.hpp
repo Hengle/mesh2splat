@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../utils/utils.hpp"
-#include "../../utils/glUtils.hpp"
+#include "utils/utils.hpp"
+#include "utils/glUtils.hpp"
 
 enum PassesDebugIDs
 {

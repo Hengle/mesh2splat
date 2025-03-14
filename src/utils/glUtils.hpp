@@ -1,18 +1,11 @@
 #pragma once
 #include "utils.hpp"
-#include "../parsers/parsers.hpp"
+#include "parsers/parsers.hpp"
 
 #define CONVERTER_VERTEX_SHADER_LOCATION "./src/shaders/conversion/vertex_shader.glsl" 
-#define CONVERTER_TESS_CONTROL_SHADER_LOCATION "./src/shaders/conversion/tess_control.glsl" 
-#define CONVERTER_TESS_EVAL_SHADER_LOCATION "./src/shaders/conversion/tess_evaluation.glsl" 
 #define CONVERTER_GEOM_SHADER_LOCATION "./src/shaders/conversion/geom_shader.glsl" 
 #define EIGENDECOMPOSITION_SHADER_LOCATION "./src/shaders/conversion/eigendecomposition.glsl"
 #define CONVERTER_FRAG_SHADER_LOCATION "./src/shaders/conversion/fragment_shader.glsl" 
-
-#define VOLUMETRIC_SURFACE_VERTEX_SHADER_LOCATION "./src/shaders/volumetric/volumetric_vertex_shader.glsl" 
-#define VOLUMETRIC_SURFACE_GEOM_SHADER_LOCATION "./src/shaders/volumetric/volumetric_geometry_shader.glsl"
-#define VOLUMETRIC_SURFACE_FRAGMENT_SHADER_LOCATION "./src/shaders/volumetric/volumetric_fragment_shader.glsl" 
-#define VOLUMETRIC_SURFACE_COMPUTE_SHADER_LOCATION "./src/shaders/volumetric/compute_shader.glsl" 
 
 #define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
 
@@ -36,6 +29,34 @@
 
 namespace glUtils
 { 
+    struct ShaderLocations
+    {
+        std::string converterVertexShaderLocation;
+        std::string converterGeomShaderLocation;
+        std::string eigenDecompositionShaderLocation;
+        std::string converterFragShaderLocation;
+
+        std::string transformComputeShaderLocation;
+
+        std::string radixSortPrepassShaderLocation;
+        std::string radixSortGatherShaderLocation;
+
+        std::string rendererPrepassComputeShaderLocation;
+
+        std::string rendererVertexShaderLocation;
+        std::string rendererFragmentShaderLocation;
+
+        std::string rendererDeferredRelightingVertexShaderLocation;
+        std::string rendererDeferredRelightingFragmentShaderLocation;
+
+        std::string shadowsPrepassComputeShaderLocation;
+        std::string shadowsCubemapVertexShaderLocation;
+        std::string shadowsCubemapFragmentShaderLocation;
+    };
+
+    extern ShaderLocations shaderLocations;
+
+    void initializeShaderLocations();
 
     GLuint compileShader(const char* source, GLenum type);
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "RenderPass.hpp"
-#include "../../radixSort/RadixSort.hpp"
+#include "RadixSort.hpp"
 
 class RadixSortPass : public IRenderPass {
 public:

@@ -25,6 +25,8 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
 
     lastShaderCheckTime      = glfwGetTime();
     //TODO: should this maybe live in the Renderer rather than shader utils? Probably yes
+    glUtils::initializeShaderLocations();
+    
     glUtils::initializeShaderFileMonitoring(
         shaderFiles,
         converterShadersInfo, computeShadersInfo,

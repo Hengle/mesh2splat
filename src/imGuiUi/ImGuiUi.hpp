@@ -4,9 +4,9 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <glm/glm.hpp>
-#include "../utils/utils.hpp"
-#include "../../thirdParty/imguizmo/Imguizmo.hpp"
-#include "../../thirdParty/ImGuiFileDialog/ImGuiFileDialog.h"
+#include "utils/utils.hpp"
+#include "Imguizmo.hpp"
+#include "ImGuiFileDialog.h"
 
 
 class ImGuiUI {
@@ -76,11 +76,11 @@ private:
     const int resolutionOptions[3] = { 1024, 2048, 4096 };
     const char* resolutionLabels[3] = { "1024", "2048", "4096" };
     
-    int formatIndex;
+    int formatIndex = 0;
     const unsigned int formatOptions[3] = { 0, 1, 2 };
     const char* formatLabels[3] = { "PLY Standard Format", "PLY PBR", "PLY Compressed PBR"};
 
-    int renderIndex;
+    int renderIndex = 0;
     const ImGuiUI::VisualizationOption renderOptions[6] = {
         ImGuiUI::VisualizationOption::ALBEDO,
         ImGuiUI::VisualizationOption::DEPTH,
@@ -92,22 +92,22 @@ private:
     const char* renderLabels[6] = { "Albedo", "Depth", "Normals", "Geometry", "Overdraw", "PBR (metallic-roughness)"};
 
     float gaussian_std;
-    float lightIntensity;
+    float lightIntensity = 0;
     float quality;
-    bool runConversionFlag;
-    bool loadNewMesh;
-    bool loadNewPly;
+    bool runConversionFlag = false;
+    bool loadNewMesh = false;
+    bool loadNewPly = false;
 
     //Rendering flags
-    bool hasRenderModeChanged;
+    bool hasRenderModeChanged = false;
 
-    bool hasPlyBeenLoaded;
-    bool hasMeshBeenLoaded;
+    bool hasPlyBeenLoaded = false;
+    bool hasMeshBeenLoaded = false;
 
-    bool lightSelected;
-    bool lightingEnabled;
+    bool lightSelected = false;
+    bool lightingEnabled = false;
 
-    bool savePly;
+    bool savePly = false;
 
     std::string meshFilePath;
     std::string meshParentFolder;

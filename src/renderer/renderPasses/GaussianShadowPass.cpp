@@ -1,5 +1,5 @@
 #include "GaussianShadowPass.hpp"
-#include "../../radixSort/RadixSort.hpp"
+#include "RadixSort.hpp"
 
 GaussianShadowPass::GaussianShadowPass(RenderContext& renderContext)
 {

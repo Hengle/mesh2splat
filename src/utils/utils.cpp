@@ -444,6 +444,39 @@ namespace utils
             B.x * (C.y - A.y) +
             C.x * (A.y - B.y)
         );
-}
+    }
 
+    std::string getExecutablePath() {
+        char buffer[MAX_PATH];
+        GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+        return std::string(buffer);
+    }
+
+    std::string getExecutableDir() {
+        std::experimental::filesystem::path exePath(getExecutablePath());
+        return exePath.parent_path().string();
+    }
+
+    //https://stackoverflow.com/questions/63899489/c-experimental-filesystem-has-no-relative-function
+    fs::path relative(fs::path p, fs::path base)
+    {
+        p = fs::absolute(p);
+        base = fs::absolute(base);
+
+        auto mismatched = std::mismatch(p.begin(), p.end(), base.begin(), base.end());
+
+        if (mismatched.first == p.end() && mismatched.second == base.end())
+            return ".";
+
+        auto it_p = mismatched.first;
+        auto it_base = mismatched.second;
+
+        fs::path ret;
+
+        for (; it_base != base.end(); ++it_base)  ret /= ".."; 
+
+        for (; it_p != p.end(); ++it_p) ret /= *it_p; 
+
+        return ret;
+    }
 }

@@ -1,0 +1,3 @@
+C:/Users/sscolari/source/repos/Converter/build/CMakeFiles/Mesh2Splat.dir
+C:/Users/sscolari/source/repos/Converter/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/sscolari/source/repos/Converter/build/CMakeFiles/ZERO_CHECK.dir

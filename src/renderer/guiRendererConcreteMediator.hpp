@@ -1,7 +1,7 @@
 #pragma once
 #include "Mediator.hpp"
 #include "Renderer.hpp"
-#include "../imGuiUi/ImGuiUi.hpp"
+#include "imGuiUi/ImGuiUi.hpp"
 
 class GuiRendererConcreteMediator : public IMediator {
 public:

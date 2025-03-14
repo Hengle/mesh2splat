@@ -1,5 +1,5 @@
 #pragma once
-#include "../utils/Camera.hpp"
+#include "utils/Camera.hpp"
 
 class IoHandler {
 public:

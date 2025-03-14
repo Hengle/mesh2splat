@@ -1,13 +1,13 @@
 #pragma once
-#include "../utils/utils.hpp"
+#include "utils/utils.hpp"
 #include "ioHandler.hpp"
-#include "../imGuiUi/ImGuiUi.hpp"
-#include "../parsers/parsers.hpp"
-#include "../utils/glUtils.hpp"
-#include "../radixSort/RadixSort.hpp"
+#include "imGuiUi/ImGuiUi.hpp"
+#include "parsers/parsers.hpp"
+#include "utils/glUtils.hpp"
+#include "RadixSort.hpp"
 #include "renderPasses/RenderContext.hpp"
 #include "RenderPasses.hpp"
-#include "../utils/SceneManager.hpp"
+#include "utils/SceneManager.hpp"
 
 class Renderer {
 public:
@@ -16,8 +16,8 @@ public:
 	~Renderer();
 
 	void initialize();
-	void renderFrame();        // Execute all enabled render passes
-	void clearingPrePass(glm::vec4 clearColor); //TODO: hmmm
+	void renderFrame();        
+	void clearingPrePass(glm::vec4 clearColor); 
 	void updateTransformations();
 
 	//TODO: For now not using this, will implement a render-pass based structure and change how the render-loop is implemented

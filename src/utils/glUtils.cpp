@@ -2,6 +2,34 @@
 
 namespace glUtils 
 {
+    ShaderLocations shaderLocations;
+
+    void initializeShaderLocations() {
+        fs::path exeDir(utils::getExecutableDir());
+        fs::path shadersBase = exeDir / "shaders"; //Todo: rather move the shader files relative to the exe loc
+    
+        shaderLocations.converterVertexShaderLocation = (shadersBase / "conversion" / "vertex_shader.glsl").string();
+        shaderLocations.converterGeomShaderLocation = (shadersBase / "conversion" / "geom_shader.glsl").string();
+        shaderLocations.eigenDecompositionShaderLocation = (shadersBase / "conversion" / "eigendecomposition.glsl").string();
+        shaderLocations.converterFragShaderLocation = (shadersBase / "conversion" / "fragment_shader.glsl").string();
+
+        shaderLocations.transformComputeShaderLocation = (shadersBase / "rendering" / "frameBufferReaderCS.glsl").string();
+
+        shaderLocations.radixSortPrepassShaderLocation = (shadersBase / "rendering" / "radixSortPrepass.glsl").string();
+        shaderLocations.radixSortGatherShaderLocation = (shadersBase / "rendering" / "radixSortGather.glsl").string();
+
+        shaderLocations.rendererPrepassComputeShaderLocation = (shadersBase / "rendering" / "gaussianSplattingPrepassCS.glsl").string();
+
+        shaderLocations.rendererVertexShaderLocation = (shadersBase / "rendering" / "gaussianSplattingVS.glsl").string();
+        shaderLocations.rendererFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingPS.glsl").string();
+
+        shaderLocations.rendererDeferredRelightingVertexShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredVS.glsl").string();
+        shaderLocations.rendererDeferredRelightingFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredPS.glsl").string();
+
+        shaderLocations.shadowsPrepassComputeShaderLocation = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
+        shaderLocations.shadowsCubemapVertexShaderLocation = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
+        shaderLocations.shadowsCubemapFragmentShaderLocation = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
+    }
 
     GLuint compileShader(const char* source, GLenum type) {
         GLint success;
@@ -52,77 +80,85 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
         std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo)
     {
+        // CONVERSION PASS
+        shaderFiles["converterVert"] = { fs::last_write_time(shaderLocations.converterVertexShaderLocation),
+                                         shaderLocations.converterVertexShaderLocation };
+        shaderFiles["converterGeom"] = { fs::last_write_time(shaderLocations.converterGeomShaderLocation),
+                                         shaderLocations.converterGeomShaderLocation };
+        shaderFiles["converterFrag"] = { fs::last_write_time(shaderLocations.converterFragShaderLocation),
+                                         shaderLocations.converterFragShaderLocation };
+        shaderFiles["readerCompute"] = { fs::last_write_time(shaderLocations.transformComputeShaderLocation),
+                                         shaderLocations.transformComputeShaderLocation };
 
-        //CONVERSION PASS
-        shaderFiles["converterVert"]                = { fs::last_write_time(CONVERTER_VERTEX_SHADER_LOCATION), CONVERTER_VERTEX_SHADER_LOCATION };
-        shaderFiles["converterGeom"]                = { fs::last_write_time(CONVERTER_GEOM_SHADER_LOCATION),   CONVERTER_GEOM_SHADER_LOCATION };
-        shaderFiles["converterFrag"]                = { fs::last_write_time(CONVERTER_FRAG_SHADER_LOCATION),   CONVERTER_FRAG_SHADER_LOCATION };
-        shaderFiles["readerCompute"]                = { fs::last_write_time(TRANSFORM_COMPUTE_SHADER_LOCATION),   TRANSFORM_COMPUTE_SHADER_LOCATION };
-    
-        //RADIX SORT PASS
-        shaderFiles["radixSortPrepassCompute"]      = { fs::last_write_time(RADIX_SORT_PREPASS_SHADER_LOCATION),   RADIX_SORT_PREPASS_SHADER_LOCATION };
-        shaderFiles["radixSortGatherCompute"]       = { fs::last_write_time(RADIX_SORT_GATHER_SHADER_LOCATION),   RADIX_SORT_GATHER_SHADER_LOCATION };
-    
-        //3DGS RENDERING
-        shaderFiles["rendererComputePrepass"]       = { fs::last_write_time(RENDERER_PREPASS_COMPUTE_SHADER_LOCATION),   RENDERER_PREPASS_COMPUTE_SHADER_LOCATION };
-        shaderFiles["renderer3dgsVert"]             = { fs::last_write_time(RENDERER_VERTEX_SHADER_LOCATION),   RENDERER_VERTEX_SHADER_LOCATION };
-        shaderFiles["renderer3dgsFrag"]             = { fs::last_write_time(RENDERER_FRAGMENT_SHADER_LOCATION),   RENDERER_FRAGMENT_SHADER_LOCATION };
+        // RADIX SORT PASS
+        shaderFiles["radixSortPrepassCompute"] = { fs::last_write_time(shaderLocations.radixSortPrepassShaderLocation),
+                                                   shaderLocations.radixSortPrepassShaderLocation };
+        shaderFiles["radixSortGatherCompute"] = { fs::last_write_time(shaderLocations.radixSortGatherShaderLocation),
+                                                  shaderLocations.radixSortGatherShaderLocation };
 
-        //DEFERRED LIGHTING PASS
-        shaderFiles["deferredRelightingVert"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION };
-        shaderFiles["deferredRelightingFrag"]             = { fs::last_write_time(RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION),   RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION };
+        // 3DGS RENDERING
+        shaderFiles["rendererComputePrepass"] = { fs::last_write_time(shaderLocations.rendererPrepassComputeShaderLocation),
+                                                  shaderLocations.rendererPrepassComputeShaderLocation };
+        shaderFiles["renderer3dgsVert"] = { fs::last_write_time(shaderLocations.rendererVertexShaderLocation),
+                                            shaderLocations.rendererVertexShaderLocation };
+        shaderFiles["renderer3dgsFrag"] = { fs::last_write_time(shaderLocations.rendererFragmentShaderLocation),
+                                            shaderLocations.rendererFragmentShaderLocation };
 
-        //SHADOW PASS
-        shaderFiles["shadowPrepassCompute"]             = { fs::last_write_time(SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION),   SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION };
+        // DEFERRED LIGHTING PASS
+        shaderFiles["deferredRelightingVert"] = { fs::last_write_time(shaderLocations.rendererDeferredRelightingVertexShaderLocation),
+                                                  shaderLocations.rendererDeferredRelightingVertexShaderLocation };
+        shaderFiles["deferredRelightingFrag"] = { fs::last_write_time(shaderLocations.rendererDeferredRelightingFragmentShaderLocation),
+                                                  shaderLocations.rendererDeferredRelightingFragmentShaderLocation };
 
-        shaderFiles["shadowCubemapVert"]                = { fs::last_write_time(SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION),   SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION };
-        shaderFiles["shadowCubemapFrag"]                = { fs::last_write_time(SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION),   SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION };
+        // SHADOW PASS
+        shaderFiles["shadowPrepassCompute"] = { fs::last_write_time(shaderLocations.shadowsPrepassComputeShaderLocation),
+                                                shaderLocations.shadowsPrepassComputeShaderLocation };
+        shaderFiles["shadowCubemapVert"] = { fs::last_write_time(shaderLocations.shadowsCubemapVertexShaderLocation),
+                                             shaderLocations.shadowsCubemapVertexShaderLocation };
+        shaderFiles["shadowCubemapFrag"] = { fs::last_write_time(shaderLocations.shadowsCubemapFragmentShaderLocation),
+                                             shaderLocations.shadowsCubemapFragmentShaderLocation };
 
-
+        // Update the shader info vectors
         converterShadersInfo = {
-            { CONVERTER_VERTEX_SHADER_LOCATION,     GL_VERTEX_SHADER   },
-            { CONVERTER_GEOM_SHADER_LOCATION,       GL_GEOMETRY_SHADER },
-            { CONVERTER_FRAG_SHADER_LOCATION,       GL_FRAGMENT_SHADER }
+            { shaderLocations.converterVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.converterGeomShaderLocation,   GL_GEOMETRY_SHADER },
+            { shaderLocations.converterFragShaderLocation,   GL_FRAGMENT_SHADER }
         };
 
         computeShadersInfo = {
-            { TRANSFORM_COMPUTE_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+            { shaderLocations.transformComputeShaderLocation, GL_COMPUTE_SHADER }
         };
 
         radixSortPrePassShadersInfo = {
-            { RADIX_SORT_PREPASS_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+            { shaderLocations.radixSortPrepassShaderLocation, GL_COMPUTE_SHADER }
         };
 
         radixSortGatherPassShadersInfo = {
-            { RADIX_SORT_GATHER_SHADER_LOCATION,    GL_COMPUTE_SHADER }
+            { shaderLocations.radixSortGatherShaderLocation, GL_COMPUTE_SHADER }
         };
 
-        
         rendering3dgsComputePrepassShadersInfo = {
-            { RENDERER_PREPASS_COMPUTE_SHADER_LOCATION,      GL_COMPUTE_SHADER },
+            { shaderLocations.rendererPrepassComputeShaderLocation, GL_COMPUTE_SHADER }
         };
 
         rendering3dgsShadersInfo = {
-            { RENDERER_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
-            { RENDERER_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
+            { shaderLocations.rendererVertexShaderLocation,   GL_VERTEX_SHADER },
+            { shaderLocations.rendererFragmentShaderLocation, GL_FRAGMENT_SHADER }
         };
 
         deferredRelightingShadersInfo = {
-            { RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION,      GL_VERTEX_SHADER },
-            { RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION,    GL_FRAGMENT_SHADER }
+            { shaderLocations.rendererDeferredRelightingVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.rendererDeferredRelightingFragmentShaderLocation, GL_FRAGMENT_SHADER }
         };
 
-
-
         shadowsComputeShaderInfo = {
-            { SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION,      GL_COMPUTE_SHADER   }
+            { shaderLocations.shadowsPrepassComputeShaderLocation, GL_COMPUTE_SHADER }
         };
 
         shadowsRenderCubemapShaderInfo = {
-            { SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION,       GL_VERTEX_SHADER    },
-            { SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION,     GL_FRAGMENT_SHADER  }
+            { shaderLocations.shadowsCubemapVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.shadowsCubemapFragmentShaderLocation, GL_FRAGMENT_SHADER }
         };
-
     }
 
     bool shaderFileChanged(const ShaderFileInfo& info) {

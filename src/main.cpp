@@ -1,4 +1,4 @@
-﻿#include "./utils/normalizedUvUnwrapping.hpp"
+﻿#include "utils/normalizedUvUnwrapping.hpp"
 #include "renderer/renderer.hpp"
 #include "glewGlfwHandlers/glewGlfwHandler.hpp"
 #include "renderer/guiRendererConcreteMediator.hpp"

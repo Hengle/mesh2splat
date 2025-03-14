@@ -1,9 +1,9 @@
 #pragma once
 #include "utils.hpp"
-#include "../renderer/renderPasses/RenderContext.hpp"
-#include "./normalizedUvUnwrapping.hpp"
-#include "../parsers/parsers.hpp"
-#include "../renderer/RenderPasses.hpp"
+#include "renderer/renderPasses/RenderContext.hpp"
+#include "normalizedUvUnwrapping.hpp"
+#include "parsers/parsers.hpp"
+#include "renderer/RenderPasses.hpp"
 
 class SceneManager {
 public:
