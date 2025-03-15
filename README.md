@@ -1,4 +1,7 @@
 # Mesh2Splat
+<div style="text-align: center;">
+    <img src="./res/mesh2splatPipeline.jpg" width="550px">
+</div>
 **Mesh2Splat** is a fast surface splatting approach used to convert convert 3D meshes into 3DGS [(3D Gaussian Splatting)](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/) models by exploiting the rasterizer's interpolator the comes with a 3DGS renderer to view the results.<br>
 What if we wanted to represent a synthetic object (3D model) in 3DGS format?<br>
 Currently, the only way to do so is to generate a synthetic dataset (camera poses, image renders and initial sparse point cloud) of the 3D model, and then feed this into the 3DGS pipeline. This process can take several minutes, depending on the specific 3DGS pipeline and model used.<br>
@@ -26,7 +29,8 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
 - Do texture fetches and set this data per gaussian in Fragment Shader. 
 - The `.ply` file format was modified in order to account for roughness and metallic properties
 
-## Converter features
+## Features
+### Converter
 
 - **Direct 3D Model Processing**: Directly obtain a 3DGS model from a 3D mesh.
 - **Sampling density**: you can easily tweak the sampling density (conversion quality) in the settings via a slider.
@@ -40,7 +44,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
     <img src="./res/conversion.gif" width="550px">
 </div>
 
-## 3DGS Renderer features
+### 3DGS Renderer
 
 - **Visualization options**: albedo, normals, depth, geometry, overdraw and pbr properties.
 - **Gaussian shading**: supports PBR based shading.
@@ -92,7 +96,7 @@ Before you can contribute, EA must have a Contributor License Agreement (CLA) on
 
 # License
 
-The source code is released under an open license as detailed in [LICENSE.md](./LICENSE.md)
+The source code is released under an open license as detailed in [LICENSE.txt](./LICENSE.txt)
 
 
 
