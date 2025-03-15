@@ -4,55 +4,31 @@ namespace glUtils
 {
     ShaderLocations shaderLocations;
 
-    void copyShadersToExeDirIfNeeded()
-    {
-        fs::path exeDir(utils::getExecutableDir());
-        fs::path destination = exeDir / "shaders";
-
-        fs::path source = fs::path(__FILE__).parent_path() / "../shaders";
-
-        if (!fs::exists(source)) {
-            throw std::runtime_error("Source shader directory doesn't exist: " + source.string());
-        }
-
-        if (!fs::exists(destination)) {
-            try {
-                fs::copy(source, destination, fs::copy_options::recursive);
-                std::cout << "Shader folder copied to exe directory." << std::endl;
-            } catch (fs::filesystem_error &e) {
-                std::cerr << "Failed to copy shaders: " << e.what() << std::endl;
-            }
-        } 
-    }
-
     void initializeShaderLocations() {
 
-        copyShadersToExeDirIfNeeded();
-
-        fs::path exeDir(utils::getExecutableDir());
-        fs::path shadersBase = exeDir / "shaders"; //Todo: rather move the shader files relative to the exe loc
+        fs::path shadersBase = fs::path(__FILE__).parent_path() / "../shaders"; //Todo: rather move the shader files relative to the exe loc
     
-        shaderLocations.converterVertexShaderLocation = (shadersBase / "conversion" / "vertex_shader.glsl").string();
-        shaderLocations.converterGeomShaderLocation = (shadersBase / "conversion" / "geom_shader.glsl").string();
-        shaderLocations.eigenDecompositionShaderLocation = (shadersBase / "conversion" / "eigendecomposition.glsl").string();
-        shaderLocations.converterFragShaderLocation = (shadersBase / "conversion" / "fragment_shader.glsl").string();
+        shaderLocations.converterVertexShaderLocation                   = (shadersBase / "conversion" / "vertex_shader.glsl").string();
+        shaderLocations.converterGeomShaderLocation                     = (shadersBase / "conversion" / "geom_shader.glsl").string();
+        shaderLocations.eigenDecompositionShaderLocation                = (shadersBase / "conversion" / "eigendecomposition.glsl").string();
+        shaderLocations.converterFragShaderLocation                     = (shadersBase / "conversion" / "fragment_shader.glsl").string();
 
-        shaderLocations.transformComputeShaderLocation = (shadersBase / "rendering" / "frameBufferReaderCS.glsl").string();
+        shaderLocations.transformComputeShaderLocation                  = (shadersBase / "rendering" / "frameBufferReaderCS.glsl").string();
 
-        shaderLocations.radixSortPrepassShaderLocation = (shadersBase / "rendering" / "radixSortPrepass.glsl").string();
-        shaderLocations.radixSortGatherShaderLocation = (shadersBase / "rendering" / "radixSortGather.glsl").string();
+        shaderLocations.radixSortPrepassShaderLocation                  = (shadersBase / "rendering" / "radixSortPrepass.glsl").string();
+        shaderLocations.radixSortGatherShaderLocation                   = (shadersBase / "rendering" / "radixSortGather.glsl").string();
 
-        shaderLocations.rendererPrepassComputeShaderLocation = (shadersBase / "rendering" / "gaussianSplattingPrepassCS.glsl").string();
+        shaderLocations.rendererPrepassComputeShaderLocation            = (shadersBase / "rendering" / "gaussianSplattingPrepassCS.glsl").string();
 
-        shaderLocations.rendererVertexShaderLocation = (shadersBase / "rendering" / "gaussianSplattingVS.glsl").string();
-        shaderLocations.rendererFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingPS.glsl").string();
+        shaderLocations.rendererVertexShaderLocation                    = (shadersBase / "rendering" / "gaussianSplattingVS.glsl").string();
+        shaderLocations.rendererFragmentShaderLocation                  = (shadersBase / "rendering" / "gaussianSplattingPS.glsl").string();
 
-        shaderLocations.rendererDeferredRelightingVertexShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredVS.glsl").string();
+        shaderLocations.rendererDeferredRelightingVertexShaderLocation  = (shadersBase / "rendering" / "gaussianSplattingDeferredVS.glsl").string();
         shaderLocations.rendererDeferredRelightingFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredPS.glsl").string();
 
-        shaderLocations.shadowsPrepassComputeShaderLocation = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
-        shaderLocations.shadowsCubemapVertexShaderLocation = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
-        shaderLocations.shadowsCubemapFragmentShaderLocation = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
+        shaderLocations.shadowsPrepassComputeShaderLocation             = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
+        shaderLocations.shadowsCubemapVertexShaderLocation              = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
+        shaderLocations.shadowsCubemapFragmentShaderLocation            = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
     }
 
     GLuint compileShader(const char* source, GLenum type) {

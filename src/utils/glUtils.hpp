@@ -56,8 +56,6 @@ namespace glUtils
 
     extern ShaderLocations shaderLocations;
 
-    void copyShadersToExeDirIfNeeded();
-
     void initializeShaderLocations();
 
     GLuint compileShader(const char* source, GLenum type);
