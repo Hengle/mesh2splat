@@ -1,7 +1,7 @@
 # Mesh2Splat
-<p align="center">
+<div style="align: center;">
     <img src="./res/mesh2splatPipeline.jpg" width="550px">
-</p>
+</div>
 
 **Mesh2Splat** is a fast surface splatting approach used to convert convert 3D meshes into 3DGS [(3D Gaussian Splatting)](https://repo-sam.inria.fr/fungraph/3d-gaussian-splatting/) models by exploiting the rasterizer's interpolator the comes with a 3DGS renderer to view the results.<br>
 What if we wanted to represent a synthetic object (3D model) in 3DGS format?<br>
@@ -41,7 +41,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
     - Normal
 - **Enhanced Performance**: Significantly reduce the time needed to transform a 3D mesh into a 3DGS.
 - **Relightability**: Can easily relight the gaussians given a renderer that supports it.
-<div style="text-align: center;">
+<div style="align: center;">
     <img src="./res/conversion.gif" width="550px">
 </div>
 
@@ -51,7 +51,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
 - **Gaussian shading**: supports PBR based shading.
 - **Lighting and shadows**: simple point light and omnidirectional shadow mapping.
 
-<div style="text-align: center;">
+<div style="align: center;">
     <img src="./res/pbrShading.gif" width="550px">
 </div>
 
