@@ -1,5 +1,5 @@
 # Mesh2Splat
-<div style="align: center;">
+<div align="center">
     <img src="./res/mesh2splatPipeline.jpg" width="550px">
 </div>
 
@@ -41,7 +41,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
     - Normal
 - **Enhanced Performance**: Significantly reduce the time needed to transform a 3D mesh into a 3DGS.
 - **Relightability**: Can easily relight the gaussians given a renderer that supports it.
-<div style="align: center;">
+<div align="center">
     <img src="./res/conversion.gif" width="550px">
 </div>
 
@@ -51,7 +51,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
 - **Gaussian shading**: supports PBR based shading.
 - **Lighting and shadows**: simple point light and omnidirectional shadow mapping.
 
-<div style="align: center;">
+<div align="center">
     <img src="./res/pbrShading.gif" width="550px">
 </div>
 
