@@ -42,7 +42,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
 - **Enhanced Performance**: Significantly reduce the time needed to transform a 3D mesh into a 3DGS.
 - **Relightability**: Can easily relight the gaussians given a renderer that supports it.
 <div align="center">
-    <img src="./res/conversion.gif" width="550px">
+    <img src="./res/conversion.gif" width="850px">
 </div>
 
 ### 3DGS Renderer
@@ -52,7 +52,7 @@ $`{\Sigma_{2D}} = \begin{bmatrix} \sigma^{2}_x & 0 \\\ 0 & \sigma^{2}_y \end{bma
 - **Lighting and shadows**: simple point light and omnidirectional shadow mapping.
 
 <div align="center">
-    <img src="./res/pbrShading.gif" width="550px">
+    <img src="./res/pbrShading.gif" width="850px">
 </div>
 
 ## Performance
