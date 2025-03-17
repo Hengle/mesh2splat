@@ -547,6 +547,17 @@ void generateTextures(std::map<std::string, std::map<std::string, utils::Texture
         glUniform3f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2]);
     }
 
+    void setUniform4f(GLuint shaderProgram, std::string uniformName, glm::vec4 uniformValue)
+    {
+        GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());
+
+        if (uniformLocation == -1) {
+            std::cerr << "Could not find uniform: '" + uniformName + "'." << std::endl;
+        }
+
+        glUniform4f(uniformLocation, uniformValue[0], uniformValue[1], uniformValue[2], uniformValue[3]);
+    }
+
     void setUniform2f(GLuint shaderProgram, std::string uniformName, glm::vec2 uniformValue)
     {
         GLint uniformLocation = glGetUniformLocation(shaderProgram, uniformName.c_str());

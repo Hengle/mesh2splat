@@ -87,6 +87,7 @@ void ConversionPass::conversion(
         }
     }
 
+    glUtils::setUniform4f(renderContext.shaderPrograms.converterShaderProgram,      "u_materialFactor", mesh.first.material.baseColorFactor);
     glUtils::setUniform3f(renderContext.shaderPrograms.converterShaderProgram,      "u_bboxMin", mesh.first.bbox.min);
     glUtils::setUniform3f(renderContext.shaderPrograms.converterShaderProgram,      "u_bboxMax", mesh.first.bbox.max);
 

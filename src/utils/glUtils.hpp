@@ -124,6 +124,7 @@ namespace glUtils
     void setUniform1i(GLuint shaderProgram, std::string uniformName, int uniformValue);
     void setUniform1ui(GLuint shaderProgram, std::string uniformName, unsigned int uniformValue);
     void setUniform1uiv(GLuint shaderProgram, std::string uniformName, unsigned int* uniformValue, int count);
+    void setUniform4f(GLuint shaderProgram, std::string uniformName, glm::vec4 uniformValue);
     void setUniform3f(GLuint shaderProgram, std::string uniformName, glm::vec3 uniformValue);
     void setUniform2f(GLuint shaderProgram, std::string uniformName, glm::vec2 uniformValue);
     void setUniform2i(GLuint shaderProgram, std::string uniformName, glm::ivec2 uniformValue);

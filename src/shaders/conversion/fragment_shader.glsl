@@ -10,6 +10,7 @@ uniform sampler2D emissiveTexture;
 uniform int hasAlbedoMap;
 uniform int hasNormalMap;
 uniform int hasMetallicRoughnessMap;
+uniform vec4 u_materialFactor;
 
 struct GaussianVertex {
     vec4 position;
@@ -44,6 +45,10 @@ void main() {
     {
         out_Color = texture(albedoTexture, UV);
     }
+    else
+    {
+        out_Color = vec4(1);
+    }
 
     //NORMAL MAP
     //Should compute the TBN in geometry shader
@@ -75,7 +80,7 @@ void main() {
 
     // Pack Gaussian parameters into the output fragments
     gaussianBuffer.vertices[index].position = vec4(Position.xyz, 1);
-    gaussianBuffer.vertices[index].color = out_Color;
+    gaussianBuffer.vertices[index].color = out_Color * u_materialFactor;
     gaussianBuffer.vertices[index].scale = vec4(Scale, 0.0);
     gaussianBuffer.vertices[index].normal = vec4(out_Normal, 0.0);
     gaussianBuffer.vertices[index].rotation = Quaternion;

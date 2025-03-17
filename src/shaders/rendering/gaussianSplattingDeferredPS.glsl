@@ -108,10 +108,10 @@ void main() {
         return;
     }
 
-
-    vec2 pbr            = texture(gMetallicRoughness, fragUV).xy; 
-    float metallic      = pbr.x;
-    float roughness     = pbr.y;
+    vec3 pbr            = texture(gMetallicRoughness, fragUV).rgb; 
+    float ao            = pbr.r;
+    float metallic      = pbr.b;
+    float roughness     = pbr.g;
 
     vec3 pos            = texture(gPosition, fragUV).xyz;
 
@@ -148,7 +148,7 @@ void main() {
     float NdotL = max(dot(N, L), 0.0);
     vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);
 
-    vec3 ambient = vec3(.3) * albedo;
+    vec3 ambient = vec3(.3) * albedo * ao;
     vec3 color = ambient + Lo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2)); 
