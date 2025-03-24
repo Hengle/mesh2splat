@@ -9,7 +9,8 @@ layout(location = 5) in vec3 scale;
 
 uniform mat4 u_worldToView;
 uniform mat4 u_viewToClip;
+uniform mat4 u_modelToWorld;
 
 void main() {
-    gl_Position     = (u_viewToClip * u_worldToView * vec4(position, 1.0));
+    gl_Position     = (u_viewToClip * u_worldToView * u_modelToWorld * vec4(position, 1.0));
 }
