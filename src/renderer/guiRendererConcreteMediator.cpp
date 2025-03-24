@@ -64,6 +64,17 @@ void GuiRendererConcreteMediator::notify(EventType event)
                 renderer.setLightIntensity(imguiUI.getLightIntensity());
                 renderer.setLightColor(imguiUI.getLightColor());
             }
+
+            if (renderer.getRenderContext()->format == 0 && imguiUI.getIsDepthTestEnabled())
+            {
+                renderer.enableRenderPass(depthPrepassName);
+                renderer.setDepthTestEnabled(true);
+            }
+            else
+            {
+                renderer.setDepthTestEnabled(false);
+            }
+            
             
             renderer.enableRenderPass(gaussianSplattingRelightingPassName);
 
@@ -89,8 +100,11 @@ void GuiRendererConcreteMediator::notify(EventType event)
             break;
         }
         case EventType::ResizedWindow: {
+            renderer.deleteDepthTexture();
+            renderer.createDepthTexture();
             renderer.deleteGBuffer();
             renderer.createGBuffer();
+
             break;
         }
     }
@@ -120,7 +134,7 @@ void GuiRendererConcreteMediator::update()
         notify(EventType::EnableGaussianRendering);
     }
 
-    if (imguiUI.shouldRunConversion() && imguiUI.wasMeshLoaded()) {
+    if (/*imguiUI.shouldRunConversion() &&*/ imguiUI.wasMeshLoaded()) {
         notify(EventType::RunConversion);
     }
 

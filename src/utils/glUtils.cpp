@@ -29,6 +29,9 @@ namespace glUtils
         shaderLocations.shadowsPrepassComputeShaderLocation             = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
         shaderLocations.shadowsCubemapVertexShaderLocation              = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
         shaderLocations.shadowsCubemapFragmentShaderLocation            = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
+
+        shaderLocations.depthPrepassVertexShaderLocation                = (shadersBase / "rendering" / "depthPrepassVS.glsl").string();
+        shaderLocations.depthPrepassFragmentShaderLocation                = (shadersBase / "rendering" / "depthPrepassPS.glsl").string();
     }
 
     GLuint compileShader(const char* source, GLenum type) {
@@ -78,7 +81,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& deferredRelightingShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo)
+        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo,
+        std::vector<std::pair<std::string, GLenum>>& depthPrepassShadersInfo)
     {
         // CONVERSION PASS
         shaderFiles["converterVert"] = { fs::last_write_time(shaderLocations.converterVertexShaderLocation),
@@ -117,6 +121,12 @@ namespace glUtils
                                              shaderLocations.shadowsCubemapVertexShaderLocation };
         shaderFiles["shadowCubemapFrag"] = { fs::last_write_time(shaderLocations.shadowsCubemapFragmentShaderLocation),
                                              shaderLocations.shadowsCubemapFragmentShaderLocation };
+
+        //MESH RENDERING
+        shaderFiles["depthPrepassVert"] = { fs::last_write_time(shaderLocations.depthPrepassVertexShaderLocation),
+                                        shaderLocations.depthPrepassVertexShaderLocation };
+        shaderFiles["depthPrepassFrag"] = { fs::last_write_time(shaderLocations.depthPrepassFragmentShaderLocation),
+                                shaderLocations.depthPrepassFragmentShaderLocation };
 
         // Update the shader info vectors
         converterShadersInfo = {
@@ -158,6 +168,11 @@ namespace glUtils
         shadowsRenderCubemapShaderInfo = {
             { shaderLocations.shadowsCubemapVertexShaderLocation, GL_VERTEX_SHADER },
             { shaderLocations.shadowsCubemapFragmentShaderLocation, GL_FRAGMENT_SHADER }
+        };
+
+        depthPrepassShadersInfo = {
+            { shaderLocations.depthPrepassVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.depthPrepassFragmentShaderLocation, GL_FRAGMENT_SHADER }
         };
     }
 

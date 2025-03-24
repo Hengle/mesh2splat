@@ -41,6 +41,9 @@ public:
 	void resetModelMatrices();
 	void createGBuffer();
 	void deleteGBuffer();
+	void createDepthTexture();
+	void deleteDepthTexture();
+	void setDepthTestEnabled(bool depthTest);
 	void setLightingEnabled(bool isEnabled);
 	void setLightIntensity(float lightIntensity);
 	void setLightColor(glm::vec3 lightColor);
@@ -68,6 +71,7 @@ private:
 	std::vector<std::pair<std::string, GLenum>> deferredRelightingShaderInfo;
 	std::vector<std::pair<std::string, GLenum>> shadowsComputeShaderInfo;
 	std::vector<std::pair<std::string, GLenum>> shadowsRenderCubemapShaderInfo;
+	std::vector<std::pair<std::string, GLenum>> depthPrepassShadersInfo;
 
 
 

@@ -32,7 +32,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
         converterShadersInfo, computeShadersInfo,
         radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
         rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo,
-        deferredRelightingShaderInfo, shadowsComputeShaderInfo, shadowsRenderCubemapShaderInfo
+        deferredRelightingShaderInfo, shadowsComputeShaderInfo, shadowsRenderCubemapShaderInfo, depthPrepassShadersInfo
     );
     //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
     updateShadersIfNeeded(true); //Forcing compilation
@@ -109,6 +109,7 @@ Renderer::~Renderer()
     glDeleteProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
     glDeleteProgram(renderContext.shaderPrograms.shadowPassShaderProgram);
     glDeleteProgram(renderContext.shaderPrograms.shadowPassCubemapRender);
+    glDeleteProgram(renderContext.shaderPrograms.depthPrepassShaderProgram);
     
 
     glDeleteBuffers(1, &(renderContext.gaussianBuffer));
@@ -127,6 +128,7 @@ Renderer::~Renderer()
 void Renderer::initialize() {
 
     renderPasses[conversionPassName]                    = std::make_unique<ConversionPass>();
+    renderPasses[depthPrepassName]                      = std::make_unique<DepthPrepass>();
     renderPasses[gaussiansPrePassName]                  = std::make_unique<GaussiansPrepass>();
     renderPasses[radixSortPassName]                     = std::make_unique<RadixSortPass>();
     renderPasses[gaussianSplattingPassName]             = std::make_unique<GaussianSplattingPass>(renderContext);
@@ -135,6 +137,7 @@ void Renderer::initialize() {
 
     renderPassesOrder = {
         conversionPassName,
+        depthPrepassName,
         gaussiansPrePassName,
         radixSortPassName,
         gaussianSplattingPassName,
@@ -142,7 +145,9 @@ void Renderer::initialize() {
         gaussianSplattingRelightingPassName
     };
 
+    createDepthTexture();
     createGBuffer();
+
 }
 
 void Renderer::renderFrame()
@@ -281,6 +286,50 @@ void Renderer::resetModelMatrices()
     renderContext.modelMat = glm::mat4(1.0f);
 }
 
+void Renderer::createDepthTexture()
+{
+    resetRendererViewportResolution();
+    glGenFramebuffers(1, &renderContext.depthFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderContext.depthFBO);
+
+    glGenTextures(1, &renderContext.meshDepthTexture);
+    glBindTexture(GL_TEXTURE_2D, renderContext.meshDepthTexture);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+
+   glFramebufferTexture2D(
+       GL_FRAMEBUFFER,
+       GL_DEPTH_ATTACHMENT,
+       GL_TEXTURE_2D,
+       renderContext.meshDepthTexture,
+       0
+   );
+   
+   glDrawBuffer(GL_NONE);
+   glReadBuffer(GL_NONE);
+}
+
+void Renderer::deleteDepthTexture()
+{
+    glDeleteFramebuffers(1, &renderContext.depthFBO);
+    glDeleteTextures(1, &renderContext.meshDepthTexture);
+
+    renderContext.depthFBO          = 0;
+    renderContext.meshDepthTexture  = 0;
+}
+
+void Renderer::setDepthTestEnabled(bool depthTest)
+{
+    renderContext.performMeshDepthTest = depthTest;
+}
+
 void Renderer::createGBuffer()
 {
     resetRendererViewportResolution();
@@ -311,7 +360,7 @@ void Renderer::createGBuffer()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, renderContext.gAlbedo, 0);
 
-    //I need to use my own blending function for depth
+    //I need to use my own blending function for depth, (more like: I want to)
     glGenTextures(1, &renderContext.gDepth);
     glBindTexture(GL_TEXTURE_2D, renderContext.gDepth);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, renderContext.rendererResolution.x, renderContext.rendererResolution.y, 0, GL_RGBA, GL_FLOAT, nullptr);
@@ -415,6 +464,9 @@ bool Renderer::updateShadersIfNeeded(bool forceReload) {
 
             this->renderContext.shaderPrograms.renderShaderProgram      = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
             
+            this->renderContext.shaderPrograms.depthPrepassShaderProgram    = glUtils::reloadShaderPrograms(depthPrepassShadersInfo, this->renderContext.shaderPrograms.depthPrepassShaderProgram);
+
+
             this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram      = glUtils::reloadShaderPrograms(rendering3dgsComputePrepassShadersInfo, this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
 
             this->renderContext.shaderPrograms.deferredRelightingShaderProgram   = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);

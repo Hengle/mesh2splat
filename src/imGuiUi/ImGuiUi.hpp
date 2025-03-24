@@ -57,6 +57,9 @@ public:
     float getLightIntensity() const;
     glm::vec3 getLightColor() const;
     
+    void setEnableDepthTest(bool depthTest);
+    bool getIsDepthTestEnabled() const;
+
 
     enum class VisualizationOption
     {
@@ -108,6 +111,8 @@ private:
     bool lightingEnabled = false;
 
     bool savePly = false;
+
+    bool enableDepthTest = false;
 
     std::string meshFilePath;
     std::string meshParentFolder;

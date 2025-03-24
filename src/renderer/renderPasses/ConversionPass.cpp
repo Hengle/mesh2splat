@@ -37,7 +37,7 @@ void ConversionPass::execute(RenderContext &renderContext)
     for (auto& mesh : renderContext.dataMeshAndGlMesh) {
         conversion(renderContext, mesh, framebuffer);
     }
-    
+
     glFinish();
 
     glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, renderContext.atomicCounterBufferConversionPass);

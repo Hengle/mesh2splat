@@ -15,6 +15,7 @@ enum PassesDebugIDs
     GAUSSIAN_SPLATTING_RELIGHTING       = 7,
     GAUSSIAN_SPLATTING_SHADOW_PREPASS   = 8,
     GAUSSIAN_SPLATTING_SHADOW_CUBEMAP   = 9,
+    DEPTH_PREPASS   = 10,
 };
 
 //TODO: split up in sub contexts
@@ -60,6 +61,7 @@ struct RenderContext {
         GLuint deferredRelightingShaderProgram;
         GLuint shadowPassShaderProgram;
         GLuint shadowPassCubemapRender;
+        GLuint depthPrepassShaderProgram;
     } shaderPrograms;
 
     int normalizedUvSpaceWidth;
@@ -108,4 +110,8 @@ struct RenderContext {
     GLuint gDepth = 0;
     GLuint gMetallicRoughness = 0;
 
+    //Depth
+    GLuint depthFBO = 0;
+    GLuint meshDepthTexture = 0;
+    unsigned int performMeshDepthTest = false;
 };

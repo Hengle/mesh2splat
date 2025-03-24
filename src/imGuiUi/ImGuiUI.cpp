@@ -134,6 +134,7 @@ void ImGuiUI::renderUI()
     ImGui::Begin("Properties");
 
     ImGui::Combo("Property visualization", &renderIndex, renderLabels, IM_ARRAYSIZE(renderLabels));
+    ImGui::Checkbox("Enable mesh-gaussian depth test", &enableDepthTest);
 
     //TODO: right now std_dev is not updated in the actual gaussianBuffer, just during rendering. Need to consider this when exporting
     if (ImGui::SliderFloat("Gaussian Scale", &gaussian_std, minStd, maxStd, "%.2f"));
@@ -368,6 +369,10 @@ bool ImGuiUI::isLightSelected() const { return lightSelected; };
 bool ImGuiUI::isLightingEnabled() const { return lightingEnabled; };
 float ImGuiUI::getLightIntensity() const { return lightIntensity; };
 glm::vec3 ImGuiUI::getLightColor() const { return lightColor; };
+
+void ImGuiUI::setEnableDepthTest(bool depthTest) { enableDepthTest = depthTest; }
+bool ImGuiUI::getIsDepthTestEnabled() const { return enableDepthTest; }
+
 
 
 

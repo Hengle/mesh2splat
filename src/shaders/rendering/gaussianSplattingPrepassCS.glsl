@@ -18,13 +18,15 @@ struct QuadNdcTransformation {
 	vec4 wsPos;
 };
 
+uniform sampler2D u_depthTexture;
+
 uniform float u_stdDev;
 uniform mat4 u_worldToView;
 uniform mat4 u_viewToClip;
 uniform mat4 u_modelToWorld;
 uniform vec2 u_resolution;
 uniform vec2 u_nearFar;
-
+uniform unsigned int u_depthTestMesh;
 
 uniform int u_renderMode;
 uniform unsigned int u_format;
@@ -127,18 +129,31 @@ void main() {
 	vec4 gaussian_vs = u_worldToView * vec4(gaussianWs.xyz, 1);
 
 	vec4 pos2d = u_viewToClip * gaussian_vs;
-	
+
 	float clip = 1.05 * pos2d.w; //Need to see how conservative that is
 
-	//TODO: quite conservative honestly
 	if (pos2d.z < -clip || pos2d.x < -clip || pos2d.x > clip || pos2d.y < -clip || pos2d.y > clip) {
 		return;
     }
 
+	//Not working for transparent ones yet
+	bool isDepthTestEnabled = u_depthTestMesh == 1 ? true : false;
+
+	if (isDepthTestEnabled && gaussian.color.a > .95f && u_format == 0 )
+	{
+		vec2 ndc = (pos2d.xy / pos2d.w);      
+		vec2 uv  = ndc * 0.5 + 0.5;         
+		float depth = texture(u_depthTexture, uv).r;
+		float myDepth = (pos2d.z / pos2d.w) * 0.5 + 0.5;
+		float eps = 0.00002f;
+		if (myDepth > depth + eps) {
+			return;
+		}
+	}
+
 	float multiplier = (u_format == 0 || u_format == 3)  ? u_stdDev : 1.0;
 	vec3 modelScale = vec3(length(u_modelToWorld[0]), length(u_modelToWorld[0]), length(u_modelToWorld[1]));
 	vec3 scale = gaussian.scale.xyz * multiplier * (modelScale * modelScale);
-
 
 	mat3 cov3d;
 	mat3 rotMatrix;
@@ -197,10 +212,6 @@ void main() {
 	}
 	
 	pos2d.xyz = pos2d.xyz / pos2d.w;
-
-	float z_n = 2.0 * pos2d.z - 1.0;
-    float linearDepth = 2.0 * u_nearFar.x * u_nearFar.y / (u_nearFar.y + u_nearFar.x - z_n * (u_nearFar.y - u_nearFar.x));
-
 
 	//https://github.com/graphdeco-inria/diff-gaussian-rasterization/blob/59f5f77e3ddbac3ed9db93ec2cfe99ed6c5d121d/cuda_rasterizer/forward.cu#L74 
     float tzSq = gaussian_vs.z * gaussian_vs.z;

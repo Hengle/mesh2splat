@@ -52,6 +52,10 @@ namespace glUtils
         std::string shadowsPrepassComputeShaderLocation;
         std::string shadowsCubemapVertexShaderLocation;
         std::string shadowsCubemapFragmentShaderLocation;
+
+        //MeshPrepass
+        std::string depthPrepassVertexShaderLocation;
+        std::string depthPrepassFragmentShaderLocation;
     };
 
     extern ShaderLocations shaderLocations;
@@ -107,7 +111,8 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& deferredRelightingShaderInfo,
         std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo
+        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo,
+        std::vector<std::pair<std::string, GLenum>>& depthPrepassShadersInfo
     );
 
     bool shaderFileChanged(const ShaderFileInfo& info);
