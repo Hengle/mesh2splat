@@ -73,6 +73,7 @@ To build **Mesh2Splat**, follow the following steps:
    - `run_build_debug.bat`
    - `run_build_release.bat`
 <br>
+
    > **Tip**: Use the release build if you only need the final executable in optimized (Release) mode.
 
 
