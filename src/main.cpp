@@ -35,8 +35,6 @@ int main(int argc, char** argv) {
         lastFrame = currentFrame;
 
         glfwPollEvents();
-
-        glewGlfwHandler.updateResize();
         
         ioHandler.processInput(deltaTime);
 

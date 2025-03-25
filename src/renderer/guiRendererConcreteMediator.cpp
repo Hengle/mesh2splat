@@ -74,8 +74,7 @@ void GuiRendererConcreteMediator::notify(EventType event)
             {
                 renderer.setDepthTestEnabled(false);
             }
-            
-            
+                        
             renderer.enableRenderPass(gaussianSplattingRelightingPassName);
 
             glm::mat4& modelM = imguiUI.isLightSelected() ? renderer.getRenderContext()->pointLightData.pointLightModel : renderer.getRenderContext()->modelMat;

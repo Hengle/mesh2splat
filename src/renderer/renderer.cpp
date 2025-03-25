@@ -216,8 +216,8 @@ void Renderer::updateTransformations()
 void Renderer::clearingPrePass(glm::vec4 clearColor)
 {
     glClearColor(clearColor.r, clearColor.g, clearColor.b, 0); //alpha==0 Important for correct blending --> but still front to back expects first DST to be (0,0,0,0)
-    //TODO: find way to circumvent first write, as bkg color should not be accounted for in blending --> not sure actually possible using "glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_ONE)"
-    glClear(GL_COLOR_BUFFER_BIT);
+    //TODO: find way to circumvent first write, as bkg color should not be accounted for in blending
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void Renderer::setLastShaderCheckTime(double lastShaderCheckedTime)
