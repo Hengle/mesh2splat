@@ -69,12 +69,11 @@ To build **Mesh2Splat**, follow the following steps:
 
 ### Build Steps
 1. Open a terminal (`cmd` or `PowerShell`) in the project root directory.
-2. Run the provided batch scripts:
-    -   ```sh
-       run_build_debug.bat
-    -    ```sh
-       run_build_release.bat
-run the release build if you want to build directly the executable in release mode.
+2. Run one of the provided batch scripts:
+   - `run_build_debug.bat`
+   - `run_build_release.bat`
+
+   > **Tip**: Use the release build if you only need the final executable in optimized (Release) mode.
 
 
 ## Limitations
