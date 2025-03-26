@@ -66,6 +66,7 @@ To build **Mesh2Splat**, follow the following steps:
 ### Prerequisites
 - **CMake** (>= 3.10)
 - **Visual Studio 2019** (or a compatible C++17 compiler)
+- **OpenGL-compatible GPU and drivers**
 
 ### Build Steps
 1. Open a terminal (`cmd` or `PowerShell`) in the project root directory.
