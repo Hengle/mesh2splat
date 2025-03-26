@@ -34,7 +34,7 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
         rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo,
         deferredRelightingShaderInfo, shadowsComputeShaderInfo, shadowsRenderCubemapShaderInfo, depthPrepassShadersInfo
     );
-    //TODO: now that some more passes are being added I see how this won´t scale at all, need a better way to deal with shader registration and passes
+
     updateShadersIfNeeded(true); //Forcing compilation
     
     glGenVertexArrays(1, &(renderContext.vao));
@@ -451,28 +451,28 @@ void Renderer::gaussianBufferFromSize(unsigned int size)
 
 bool Renderer::updateShadersIfNeeded(bool forceReload) {
     for (auto& entry : shaderFiles) {
-        glUtils::ShaderFileInfo& info = entry.second;
+        glUtils::ShaderFileEditingInfo& info = entry.second;
         if (forceReload || shaderFileChanged(info) ) {
             // Update timestamp
             info.lastWriteTime                  = glUtils::fs::last_write_time(info.filePath);
 
-            this->renderContext.shaderPrograms.converterShaderProgram   = glUtils::reloadShaderPrograms(converterShadersInfo, this->renderContext.shaderPrograms.converterShaderProgram);
-            this->renderContext.shaderPrograms.computeShaderProgram     = glUtils::reloadShaderPrograms(computeShadersInfo, this->renderContext.shaderPrograms.computeShaderProgram);
+            this->renderContext.shaderPrograms.converterShaderProgram       = glUtils::reloadShaderPrograms(converterShadersInfo, this->renderContext.shaderPrograms.converterShaderProgram);
+            this->renderContext.shaderPrograms.computeShaderProgram         = glUtils::reloadShaderPrograms(computeShadersInfo, this->renderContext.shaderPrograms.computeShaderProgram);
 
-            this->renderContext.shaderPrograms.radixSortPrepassProgram  = glUtils::reloadShaderPrograms(radixSortPrePassShadersInfo, this->renderContext.shaderPrograms.radixSortPrepassProgram);
-            this->renderContext.shaderPrograms.radixSortGatherProgram   = glUtils::reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
+            this->renderContext.shaderPrograms.radixSortPrepassProgram      = glUtils::reloadShaderPrograms(radixSortPrePassShadersInfo, this->renderContext.shaderPrograms.radixSortPrepassProgram);
+            this->renderContext.shaderPrograms.radixSortGatherProgram       = glUtils::reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
 
-            this->renderContext.shaderPrograms.renderShaderProgram      = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
+            this->renderContext.shaderPrograms.renderShaderProgram          = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
             
             this->renderContext.shaderPrograms.depthPrepassShaderProgram    = glUtils::reloadShaderPrograms(depthPrepassShadersInfo, this->renderContext.shaderPrograms.depthPrepassShaderProgram);
 
 
             this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram      = glUtils::reloadShaderPrograms(rendering3dgsComputePrepassShadersInfo, this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
 
-            this->renderContext.shaderPrograms.deferredRelightingShaderProgram   = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);
+            this->renderContext.shaderPrograms.deferredRelightingShaderProgram          = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);
 
-            this->renderContext.shaderPrograms.shadowPassShaderProgram   = glUtils::reloadShaderPrograms(shadowsComputeShaderInfo, this->renderContext.shaderPrograms.shadowPassShaderProgram);
-            this->renderContext.shaderPrograms.shadowPassCubemapRender   = glUtils::reloadShaderPrograms(shadowsRenderCubemapShaderInfo, this->renderContext.shaderPrograms.shadowPassCubemapRender);
+            this->renderContext.shaderPrograms.shadowPassShaderProgram                  = glUtils::reloadShaderPrograms(shadowsComputeShaderInfo, this->renderContext.shaderPrograms.shadowPassShaderProgram);
+            this->renderContext.shaderPrograms.shadowPassCubemapRender                  = glUtils::reloadShaderPrograms(shadowsRenderCubemapShaderInfo, this->renderContext.shaderPrograms.shadowPassCubemapRender);
 
             
             return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others

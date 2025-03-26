@@ -95,14 +95,14 @@ namespace glUtils
 
     namespace fs = std::experimental::filesystem;
 
-    struct ShaderFileInfo {
+    struct ShaderFileEditingInfo {
         fs::file_time_type lastWriteTime;
         std::string filePath;
     };
 
     //TODO: Wont scale ffs!!!
     void initializeShaderFileMonitoring(
-        std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
+        std::unordered_map<std::string, ShaderFileEditingInfo>& shaderFiles,
         std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
@@ -115,7 +115,7 @@ namespace glUtils
         std::vector<std::pair<std::string, GLenum>>& depthPrepassShadersInfo
     );
 
-    bool shaderFileChanged(const ShaderFileInfo& info);
+    bool shaderFileChanged(const ShaderFileEditingInfo& info);
 
     GLuint reloadShaderPrograms(
         const std::vector<std::pair<std::string, GLenum>>& shaderInfos,

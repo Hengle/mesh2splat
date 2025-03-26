@@ -60,7 +60,7 @@ private:
 	std::unique_ptr<SceneManager> sceneManager;
 	RenderContext renderContext;
 
-	std::unordered_map<std::string, glUtils::ShaderFileInfo> shaderFiles;
+	std::unordered_map<std::string, glUtils::ShaderFileEditingInfo> shaderFiles;
 	//Todo make this into a map and store name->shaderInfo map
 	std::vector<std::pair<std::string, GLenum>> converterShadersInfo;
 	std::vector<std::pair<std::string, GLenum>> computeShadersInfo;
@@ -72,7 +72,6 @@ private:
 	std::vector<std::pair<std::string, GLenum>> shadowsComputeShaderInfo;
 	std::vector<std::pair<std::string, GLenum>> shadowsRenderCubemapShaderInfo;
 	std::vector<std::pair<std::string, GLenum>> depthPrepassShadersInfo;
-
 
 
 	double lastShaderCheckTime;

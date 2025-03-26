@@ -72,7 +72,7 @@ namespace glUtils
 
     //TODO: probably could find way to better generalize this
     void initializeShaderFileMonitoring(
-        std::unordered_map<std::string, ShaderFileInfo>& shaderFiles,
+        std::unordered_map<std::string, ShaderFileEditingInfo>& shaderFiles,
         std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
         std::vector<std::pair<std::string, GLenum>>& radixSortPrePassShadersInfo,
@@ -117,16 +117,16 @@ namespace glUtils
         // SHADOW PASS
         shaderFiles["shadowPrepassCompute"] = { fs::last_write_time(shaderLocations.shadowsPrepassComputeShaderLocation),
                                                 shaderLocations.shadowsPrepassComputeShaderLocation };
-        shaderFiles["shadowCubemapVert"] = { fs::last_write_time(shaderLocations.shadowsCubemapVertexShaderLocation),
-                                             shaderLocations.shadowsCubemapVertexShaderLocation };
-        shaderFiles["shadowCubemapFrag"] = { fs::last_write_time(shaderLocations.shadowsCubemapFragmentShaderLocation),
-                                             shaderLocations.shadowsCubemapFragmentShaderLocation };
+        shaderFiles["shadowCubemapVert"]    = { fs::last_write_time(shaderLocations.shadowsCubemapVertexShaderLocation),
+                                                shaderLocations.shadowsCubemapVertexShaderLocation };
+        shaderFiles["shadowCubemapFrag"]    = { fs::last_write_time(shaderLocations.shadowsCubemapFragmentShaderLocation),
+                                                shaderLocations.shadowsCubemapFragmentShaderLocation };
 
         //MESH RENDERING
         shaderFiles["depthPrepassVert"] = { fs::last_write_time(shaderLocations.depthPrepassVertexShaderLocation),
                                         shaderLocations.depthPrepassVertexShaderLocation };
         shaderFiles["depthPrepassFrag"] = { fs::last_write_time(shaderLocations.depthPrepassFragmentShaderLocation),
-                                shaderLocations.depthPrepassFragmentShaderLocation };
+                                        shaderLocations.depthPrepassFragmentShaderLocation };
 
         // Update the shader info vectors
         converterShadersInfo = {
@@ -176,7 +176,7 @@ namespace glUtils
         };
     }
 
-    bool shaderFileChanged(const ShaderFileInfo& info) {
+    bool shaderFileChanged(const ShaderFileEditingInfo& info) {
         auto currentWriteTime = fs::last_write_time(info.filePath);
         return (currentWriteTime != info.lastWriteTime);
     }
@@ -189,14 +189,12 @@ namespace glUtils
         std::vector<GLuint> shaderIDs;
         shaderIDs.reserve(shaderInfos.size());
 
-        // Compile each shader and attach to the program
         for (auto& pair : shaderInfos) {
             std::string filePath = pair.first;
             GLenum shaderType = pair.second;
             std::string shaderSource = readShaderFile(filePath.c_str());
             GLuint shaderID = compileShader(shaderSource.c_str(), shaderType);
         
-            // If shader compilation failed, clean up and return old program
             if (!shaderID) {
                 std::cerr << "Failed to compile shader: " << filePath << std::endl;
                 for (GLuint id : shaderIDs) {
