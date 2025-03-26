@@ -18,9 +18,11 @@ unsigned int RadixSortPass::computeKeyValuesPre(RenderContext& renderContext)
     glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(uint32_t), &validCount);
 
     // Transform Gaussian positions to view space and apply global sort
-    glUseProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.radixSortPrepassProgram, "u_view", renderContext.viewMat);
-    glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortPrepassProgram, "u_count", validCount);
+    GLuint radixSortPrepassProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::RadixSortPrepassProgram);
+
+    glUseProgram(radixSortPrepassProgramID);
+    glUtils::setUniformMat4(radixSortPrepassProgramID, "u_view", renderContext.viewMat);
+    glUtils::setUniform1ui(radixSortPrepassProgramID, "u_count", validCount);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianDepthPostFiltering);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.keysBuffer);
@@ -58,9 +60,10 @@ void RadixSortPass::gatherPost(RenderContext& renderContext, unsigned int validC
 #ifdef  _DEBUG
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::RADIX_SORT_GATHER, -1, "RADIX_SORT_GATHER");
 #endif 
+    GLuint radixSortGatherProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::RadixSortGatherComputeProgram);
 
-    glUseProgram(renderContext.shaderPrograms.radixSortGatherProgram);
-    glUtils::setUniform1ui(renderContext.shaderPrograms.radixSortGatherProgram, "u_count", validCount);
+    glUseProgram(radixSortGatherProgramID);
+    glUtils::setUniform1ui(radixSortGatherProgramID, "u_count", validCount);
 
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.perQuadTransformationsBuffer);
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, renderContext.perQuadTransformationBufferSorted);  

@@ -122,14 +122,14 @@ void main() {
     albedo              = vec3(pow(albedo.x, 2.2f), pow(albedo.y, 2.2f), pow(albedo.z, 2.2f)); //linear to srgb, should probably just specify the albedo texture as srgband let sampler directly convert
 
     //Lighting
-    vec3 L = normalize(u_LightPosition.xyz - pos);
-    vec3 V = normalize(u_camPos - pos);
+    vec3  L = normalize(u_LightPosition.xyz - pos);
+    vec3  V = normalize(u_camPos - pos);
 
-    vec3 H = normalize(V + L);
+    vec3  H = normalize(V + L);
 
     float d = length(u_LightPosition.xyz - pos);
     float attenuation = 1.0 / (d * d);
-    vec3 radiance = u_lightColor * u_lightIntensity * attenuation;
+    vec3  radiance = u_lightColor * u_lightIntensity * attenuation;
 
     vec3 F0 = vec3(0.04); 
     F0      = mix(F0, albedo, metallic);
@@ -148,7 +148,7 @@ void main() {
     float NdotL = max(dot(N, L), 0.0);
     vec3 Lo = (kD * albedo / PI + specular) * radiance * NdotL * (1.0 - shadow);
 
-    vec3 ambient = vec3(.3) * albedo * ao;
+    vec3 ambient = vec3(.3) * albedo; //* ao;
     vec3 color = ambient + Lo;
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2)); 

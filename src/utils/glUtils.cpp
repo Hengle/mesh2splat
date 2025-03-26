@@ -1,38 +1,8 @@
 #include "glUtils.hpp"
+#include "utils/shaderRegistry.hpp"
 
 namespace glUtils 
 {
-    ShaderLocations shaderLocations;
-
-    void initializeShaderLocations() {
-
-        fs::path shadersBase = fs::path(__FILE__).parent_path() / "../shaders"; //Todo: rather move the shader files relative to the exe loc
-    
-        shaderLocations.converterVertexShaderLocation                   = (shadersBase / "conversion" / "vertex_shader.glsl").string();
-        shaderLocations.converterGeomShaderLocation                     = (shadersBase / "conversion" / "geom_shader.glsl").string();
-        shaderLocations.eigenDecompositionShaderLocation                = (shadersBase / "conversion" / "eigendecomposition.glsl").string();
-        shaderLocations.converterFragShaderLocation                     = (shadersBase / "conversion" / "fragment_shader.glsl").string();
-
-        shaderLocations.transformComputeShaderLocation                  = (shadersBase / "rendering" / "frameBufferReaderCS.glsl").string();
-
-        shaderLocations.radixSortPrepassShaderLocation                  = (shadersBase / "rendering" / "radixSortPrepass.glsl").string();
-        shaderLocations.radixSortGatherShaderLocation                   = (shadersBase / "rendering" / "radixSortGather.glsl").string();
-
-        shaderLocations.rendererPrepassComputeShaderLocation            = (shadersBase / "rendering" / "gaussianSplattingPrepassCS.glsl").string();
-
-        shaderLocations.rendererVertexShaderLocation                    = (shadersBase / "rendering" / "gaussianSplattingVS.glsl").string();
-        shaderLocations.rendererFragmentShaderLocation                  = (shadersBase / "rendering" / "gaussianSplattingPS.glsl").string();
-
-        shaderLocations.rendererDeferredRelightingVertexShaderLocation  = (shadersBase / "rendering" / "gaussianSplattingDeferredVS.glsl").string();
-        shaderLocations.rendererDeferredRelightingFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredPS.glsl").string();
-
-        shaderLocations.shadowsPrepassComputeShaderLocation             = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
-        shaderLocations.shadowsCubemapVertexShaderLocation              = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
-        shaderLocations.shadowsCubemapFragmentShaderLocation            = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
-
-        shaderLocations.depthPrepassVertexShaderLocation                = (shadersBase / "rendering" / "depthPrepassVS.glsl").string();
-        shaderLocations.depthPrepassFragmentShaderLocation                = (shadersBase / "rendering" / "depthPrepassPS.glsl").string();
-    }
 
     GLuint compileShader(const char* source, GLenum type) {
         GLint success;
@@ -70,110 +40,89 @@ namespace glUtils
         }
     }
 
-    //TODO: probably could find way to better generalize this
-    void initializeShaderFileMonitoring(
-        std::unordered_map<std::string, ShaderFileEditingInfo>& shaderFiles,
-        std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& radixSortPrePassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& radixSortGatherPassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& depthPrepassShadersInfo)
+    ShaderLocations shaderLocations;
+
+    //Add new shader location here
+    void initializeShaderLocations() {
+
+        fs::path shadersBase = fs::path(__FILE__).parent_path() / "../shaders"; //Todo: rather move the shader files relative to the exe loc
+    
+        shaderLocations.converterVertexShaderLocation                   = (shadersBase / "conversion" / "vertex_shader.glsl").string();
+        shaderLocations.converterGeomShaderLocation                     = (shadersBase / "conversion" / "geom_shader.glsl").string();
+        shaderLocations.eigenDecompositionShaderLocation                = (shadersBase / "conversion" / "eigendecomposition.glsl").string();
+        shaderLocations.converterFragShaderLocation                     = (shadersBase / "conversion" / "fragment_shader.glsl").string();
+
+        shaderLocations.transformComputeShaderLocation                  = (shadersBase / "rendering" / "frameBufferReaderCS.glsl").string();
+
+        shaderLocations.radixSortPrepassShaderLocation                  = (shadersBase / "rendering" / "radixSortPrepass.glsl").string();
+        shaderLocations.radixSortGatherShaderLocation                   = (shadersBase / "rendering" / "radixSortGather.glsl").string();
+
+        shaderLocations.rendererPrepassComputeShaderLocation            = (shadersBase / "rendering" / "gaussianSplattingPrepassCS.glsl").string();
+
+        shaderLocations.rendererVertexShaderLocation                    = (shadersBase / "rendering" / "gaussianSplattingVS.glsl").string();
+        shaderLocations.rendererFragmentShaderLocation                  = (shadersBase / "rendering" / "gaussianSplattingPS.glsl").string();
+
+        shaderLocations.rendererDeferredRelightingVertexShaderLocation  = (shadersBase / "rendering" / "gaussianSplattingDeferredVS.glsl").string();
+        shaderLocations.rendererDeferredRelightingFragmentShaderLocation = (shadersBase / "rendering" / "gaussianSplattingDeferredPS.glsl").string();
+
+        shaderLocations.shadowsPrepassComputeShaderLocation             = (shadersBase / "rendering" / "gaussianPointShadowMappingCS.glsl").string();
+        shaderLocations.shadowsCubemapVertexShaderLocation              = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowVS.glsl").string();
+        shaderLocations.shadowsCubemapFragmentShaderLocation            = (shadersBase / "rendering" / "gaussianPointLightCubeMapShadowPS.glsl").string();
+
+        shaderLocations.depthPrepassVertexShaderLocation                = (shadersBase / "rendering" / "depthPrepassVS.glsl").string();
+        shaderLocations.depthPrepassFragmentShaderLocation                = (shadersBase / "rendering" / "depthPrepassPS.glsl").string();
+    }
+
+    void initializeShaderFileMonitoring(ShaderRegistry& shaderRegistry)
     {
         // CONVERSION PASS
-        shaderFiles["converterVert"] = { fs::last_write_time(shaderLocations.converterVertexShaderLocation),
-                                         shaderLocations.converterVertexShaderLocation };
-        shaderFiles["converterGeom"] = { fs::last_write_time(shaderLocations.converterGeomShaderLocation),
-                                         shaderLocations.converterGeomShaderLocation };
-        shaderFiles["converterFrag"] = { fs::last_write_time(shaderLocations.converterFragShaderLocation),
-                                         shaderLocations.converterFragShaderLocation };
-        shaderFiles["readerCompute"] = { fs::last_write_time(shaderLocations.transformComputeShaderLocation),
-                                         shaderLocations.transformComputeShaderLocation };
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::ConverterProgram, {
+            { shaderLocations.converterVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.converterGeomShaderLocation, GL_GEOMETRY_SHADER },
+            { shaderLocations.converterFragShaderLocation, GL_FRAGMENT_SHADER }
+        });
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::ComputeTransformProgram, {
+            { shaderLocations.transformComputeShaderLocation, GL_COMPUTE_SHADER }
+        });
 
-        // RADIX SORT PASS
-        shaderFiles["radixSortPrepassCompute"] = { fs::last_write_time(shaderLocations.radixSortPrepassShaderLocation),
-                                                   shaderLocations.radixSortPrepassShaderLocation };
-        shaderFiles["radixSortGatherCompute"] = { fs::last_write_time(shaderLocations.radixSortGatherShaderLocation),
-                                                  shaderLocations.radixSortGatherShaderLocation };
+        // SORTING
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::RadixSortPrepassProgram, {
+            { shaderLocations.radixSortPrepassShaderLocation, GL_COMPUTE_SHADER }
+        });
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::RadixSortGatherComputeProgram, {
+            { shaderLocations.radixSortGatherShaderLocation, GL_COMPUTE_SHADER }
+        });
 
         // 3DGS RENDERING
-        shaderFiles["rendererComputePrepass"] = { fs::last_write_time(shaderLocations.rendererPrepassComputeShaderLocation),
-                                                  shaderLocations.rendererPrepassComputeShaderLocation };
-        shaderFiles["renderer3dgsVert"] = { fs::last_write_time(shaderLocations.rendererVertexShaderLocation),
-                                            shaderLocations.rendererVertexShaderLocation };
-        shaderFiles["renderer3dgsFrag"] = { fs::last_write_time(shaderLocations.rendererFragmentShaderLocation),
-                                            shaderLocations.rendererFragmentShaderLocation };
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::PrepassFiltering3dgsProgram, {
+            { shaderLocations.rendererPrepassComputeShaderLocation, GL_COMPUTE_SHADER }
+        });
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::Rendering3dgsProgram, {
+            { shaderLocations.rendererVertexShaderLocation, GL_VERTEX_SHADER },
+            { shaderLocations.rendererFragmentShaderLocation, GL_FRAGMENT_SHADER }
+        });
 
         // DEFERRED LIGHTING PASS
-        shaderFiles["deferredRelightingVert"] = { fs::last_write_time(shaderLocations.rendererDeferredRelightingVertexShaderLocation),
-                                                  shaderLocations.rendererDeferredRelightingVertexShaderLocation };
-        shaderFiles["deferredRelightingFrag"] = { fs::last_write_time(shaderLocations.rendererDeferredRelightingFragmentShaderLocation),
-                                                  shaderLocations.rendererDeferredRelightingFragmentShaderLocation };
-
-        // SHADOW PASS
-        shaderFiles["shadowPrepassCompute"] = { fs::last_write_time(shaderLocations.shadowsPrepassComputeShaderLocation),
-                                                shaderLocations.shadowsPrepassComputeShaderLocation };
-        shaderFiles["shadowCubemapVert"]    = { fs::last_write_time(shaderLocations.shadowsCubemapVertexShaderLocation),
-                                                shaderLocations.shadowsCubemapVertexShaderLocation };
-        shaderFiles["shadowCubemapFrag"]    = { fs::last_write_time(shaderLocations.shadowsCubemapFragmentShaderLocation),
-                                                shaderLocations.shadowsCubemapFragmentShaderLocation };
-
-        //MESH RENDERING
-        shaderFiles["depthPrepassVert"] = { fs::last_write_time(shaderLocations.depthPrepassVertexShaderLocation),
-                                        shaderLocations.depthPrepassVertexShaderLocation };
-        shaderFiles["depthPrepassFrag"] = { fs::last_write_time(shaderLocations.depthPrepassFragmentShaderLocation),
-                                        shaderLocations.depthPrepassFragmentShaderLocation };
-
-        // Update the shader info vectors
-        converterShadersInfo = {
-            { shaderLocations.converterVertexShaderLocation, GL_VERTEX_SHADER },
-            { shaderLocations.converterGeomShaderLocation,   GL_GEOMETRY_SHADER },
-            { shaderLocations.converterFragShaderLocation,   GL_FRAGMENT_SHADER }
-        };
-
-        computeShadersInfo = {
-            { shaderLocations.transformComputeShaderLocation, GL_COMPUTE_SHADER }
-        };
-
-        radixSortPrePassShadersInfo = {
-            { shaderLocations.radixSortPrepassShaderLocation, GL_COMPUTE_SHADER }
-        };
-
-        radixSortGatherPassShadersInfo = {
-            { shaderLocations.radixSortGatherShaderLocation, GL_COMPUTE_SHADER }
-        };
-
-        rendering3dgsComputePrepassShadersInfo = {
-            { shaderLocations.rendererPrepassComputeShaderLocation, GL_COMPUTE_SHADER }
-        };
-
-        rendering3dgsShadersInfo = {
-            { shaderLocations.rendererVertexShaderLocation,   GL_VERTEX_SHADER },
-            { shaderLocations.rendererFragmentShaderLocation, GL_FRAGMENT_SHADER }
-        };
-
-        deferredRelightingShadersInfo = {
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::DeferredRelightingPassProgram, {
             { shaderLocations.rendererDeferredRelightingVertexShaderLocation, GL_VERTEX_SHADER },
             { shaderLocations.rendererDeferredRelightingFragmentShaderLocation, GL_FRAGMENT_SHADER }
-        };
+        });
 
-        shadowsComputeShaderInfo = {
+        // SHADOW PASS
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::ShadowPrepassComputeProgram, {
             { shaderLocations.shadowsPrepassComputeShaderLocation, GL_COMPUTE_SHADER }
-        };
-
-        shadowsRenderCubemapShaderInfo = {
+        });
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::ShadowCubemapPassProgram, {
             { shaderLocations.shadowsCubemapVertexShaderLocation, GL_VERTEX_SHADER },
             { shaderLocations.shadowsCubemapFragmentShaderLocation, GL_FRAGMENT_SHADER }
-        };
+        });
 
-        depthPrepassShadersInfo = {
+        //MESH DEPTH RENDERING
+        shaderRegistry.registerShaderProgram(ShaderProgramTypes::DepthPrepassProgram, {
             { shaderLocations.depthPrepassVertexShaderLocation, GL_VERTEX_SHADER },
             { shaderLocations.depthPrepassFragmentShaderLocation, GL_FRAGMENT_SHADER }
-        };
+        });
+
     }
 
     bool shaderFileChanged(const ShaderFileEditingInfo& info) {
@@ -236,88 +185,88 @@ namespace glUtils
     }
 
 
-GLenum mapTextureTypeToUnit(const std::string &textureType)
-{
-    if (textureType == "baseColorTexture")
-        return GL_TEXTURE0;
-    else if (textureType == "normalTexture")
-        return GL_TEXTURE1;
-    else if (textureType == "metallicRoughnessTexture")
-        return GL_TEXTURE2;
-    else if (textureType == "occlusionTexture")
-        return GL_TEXTURE3;
-    else if (textureType == "emissiveTexture")
-        return GL_TEXTURE4;
-    return GL_TEXTURE0; 
-}
-
-void generateTextures(std::map<std::string, std::map<std::string, utils::TextureDataGl>>& meshToTextureData)
-{
-    // For each mesh entry in meshToTextureData
-    for (auto &meshEntry : meshToTextureData)
+    GLenum mapTextureTypeToUnit(const std::string &textureType)
     {
-        const std::string& meshName = meshEntry.first;
-        auto &textureMap = meshEntry.second; // map<string, TextureDataGl>
+        if (textureType == "baseColorTexture")
+            return GL_TEXTURE0;
+        else if (textureType == "normalTexture")
+            return GL_TEXTURE1;
+        else if (textureType == "metallicRoughnessTexture")
+            return GL_TEXTURE2;
+        else if (textureType == "occlusionTexture")
+            return GL_TEXTURE3;
+        else if (textureType == "emissiveTexture")
+            return GL_TEXTURE4;
+        return GL_TEXTURE0; 
+    }
 
-        // For each texture type in that mesh's texture map
-        for (auto &texturePair : textureMap)
+    void generateTextures(std::map<std::string, std::map<std::string, utils::TextureDataGl>>& meshToTextureData)
+    {
+        // For each mesh entry in meshToTextureData
+        for (auto &meshEntry : meshToTextureData)
         {
-            const std::string &textureType = texturePair.first;      
-            utils::TextureDataGl &textureDataGl = texturePair.second;
+            const std::string& meshName = meshEntry.first;
+            auto &textureMap = meshEntry.second; // map<string, TextureDataGl>
 
-            // If we want to pick a texture unit based on "textureType", do that here
-            // If you want each mesh to have separate sets of texture units, you might do that differently.
-            GLenum textureUnit = mapTextureTypeToUnit(textureType);
-
-            // Delete existing texture if it exists
-            if (textureDataGl.glTextureID != 0) {
-                glDeleteTextures(1, &textureDataGl.glTextureID);
-                textureDataGl.glTextureID = 0;
-            }
-
-            // Skip if no data
-            if (textureDataGl.width <= 0 ||
-                textureDataGl.height <= 0 ||
-                textureDataGl.textureData.empty())
+            // For each texture type in that mesh's texture map
+            for (auto &texturePair : textureMap)
             {
-                continue;
+                const std::string &textureType = texturePair.first;      
+                utils::TextureDataGl &textureDataGl = texturePair.second;
+
+                // If we want to pick a texture unit based on "textureType", do that here
+                // If you want each mesh to have separate sets of texture units, you might do that differently.
+                GLenum textureUnit = mapTextureTypeToUnit(textureType);
+
+                // Delete existing texture if it exists
+                if (textureDataGl.glTextureID != 0) {
+                    glDeleteTextures(1, &textureDataGl.glTextureID);
+                    textureDataGl.glTextureID = 0;
+                }
+
+                // Skip if no data
+                if (textureDataGl.width <= 0 ||
+                    textureDataGl.height <= 0 ||
+                    textureDataGl.textureData.empty())
+                {
+                    continue;
+                }
+
+                // Now create and upload to GL
+                GLuint texture;
+                glActiveTexture(textureUnit);
+                glGenTextures(1, &texture);
+                glBindTexture(GL_TEXTURE_2D, texture);
+
+                textureDataGl.glTextureID = texture;
+
+                GLenum internalFormat = (textureDataGl.channels == 4) ? GL_RGBA : GL_RGB;
+                GLenum format = internalFormat;
+
+                glTexImage2D(GL_TEXTURE_2D,
+                             0,
+                             internalFormat,
+                             textureDataGl.width,
+                             textureDataGl.height,
+                             0,
+                             format,
+                             GL_UNSIGNED_BYTE,
+                             textureDataGl.textureData.data());
+
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                // Set wrapping/filtering
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
+
+                glBindTexture(GL_TEXTURE_2D, 0);
             }
-
-            // Now create and upload to GL
-            GLuint texture;
-            glActiveTexture(textureUnit);
-            glGenTextures(1, &texture);
-            glBindTexture(GL_TEXTURE_2D, texture);
-
-            textureDataGl.glTextureID = texture;
-
-            GLenum internalFormat = (textureDataGl.channels == 4) ? GL_RGBA : GL_RGB;
-            GLenum format = internalFormat;
-
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         internalFormat,
-                         textureDataGl.width,
-                         textureDataGl.height,
-                         0,
-                         format,
-                         GL_UNSIGNED_BYTE,
-                         textureDataGl.textureData.data());
-
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            // Set wrapping/filtering
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 4);
-
-            glBindTexture(GL_TEXTURE_2D, 0);
         }
     }
-}
 
     void generateMeshesVBO(const std::vector<utils::Mesh>& meshes, std::vector<std::pair<utils::Mesh, utils::GLMesh>>& DataMeshAndGlMesh) {
     

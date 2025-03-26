@@ -2,33 +2,11 @@
 #include "utils.hpp"
 #include "parsers/parsers.hpp"
 
-#define CONVERTER_VERTEX_SHADER_LOCATION "./src/shaders/conversion/vertex_shader.glsl" 
-#define CONVERTER_GEOM_SHADER_LOCATION "./src/shaders/conversion/geom_shader.glsl" 
-#define EIGENDECOMPOSITION_SHADER_LOCATION "./src/shaders/conversion/eigendecomposition.glsl"
-#define CONVERTER_FRAG_SHADER_LOCATION "./src/shaders/conversion/fragment_shader.glsl" 
-
-#define TRANSFORM_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/frameBufferReaderCS.glsl" 
-
-#define RADIX_SORT_PREPASS_SHADER_LOCATION "./src/shaders/rendering/radixSortPrepass.glsl" 
-#define RADIX_SORT_GATHER_SHADER_LOCATION "./src/shaders/rendering/radixSortGather.glsl" 
-
-
-#define RENDERER_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPrepassCS.glsl" 
-
-#define RENDERER_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingVS.glsl" 
-#define RENDERER_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingPS.glsl" 
-
-#define RENDERER_DEFERRED_RELIGHTING_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredVS.glsl" 
-#define RENDERER_DEFERRED_RELIGHTING_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianSplattingDeferredPS.glsl"
-
-#define SHADOWS_PREPASS_COMPUTE_SHADER_LOCATION "./src/shaders/rendering/gaussianPointShadowMappingCS.glsl" 
-#define SHADOWS_CUBEMAP_VERTEX_SHADER_LOCATION "./src/shaders/rendering/gaussianPointLightCubeMapShadowVS.glsl" 
-#define SHADOWS_CUBEMAP_FRAGMENT_SHADER_LOCATION "./src/shaders/rendering/gaussianPointLightCubeMapShadowPS.glsl" 
-
-
+class ShaderRegistry; //forward decl
 
 namespace glUtils
 { 
+    //Register here new shader locations
     struct ShaderLocations
     {
         std::string converterVertexShaderLocation;
@@ -53,12 +31,26 @@ namespace glUtils
         std::string shadowsCubemapVertexShaderLocation;
         std::string shadowsCubemapFragmentShaderLocation;
 
-        //MeshPrepass
         std::string depthPrepassVertexShaderLocation;
         std::string depthPrepassFragmentShaderLocation;
     };
 
     extern ShaderLocations shaderLocations;
+
+    //Register here new shader programs
+    enum ShaderProgramTypes
+    {
+        ConverterProgram,
+        ComputeTransformProgram,
+        RadixSortPrepassProgram,
+        RadixSortGatherComputeProgram,
+        PrepassFiltering3dgsProgram,
+        Rendering3dgsProgram,
+        DeferredRelightingPassProgram,
+        ShadowPrepassComputeProgram,
+        ShadowCubemapPassProgram,
+        DepthPrepassProgram,
+    };
 
     void initializeShaderLocations();
 
@@ -100,20 +92,23 @@ namespace glUtils
         std::string filePath;
     };
 
-    //TODO: Wont scale ffs!!!
-    void initializeShaderFileMonitoring(
-        std::unordered_map<std::string, ShaderFileEditingInfo>& shaderFiles,
-        std::vector<std::pair<std::string, GLenum>>& converterShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& computeShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& radixSortPrePostShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& radixSortGatherShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& rendering3dgsComputePrepassShadersInfo,
-        std::vector<std::pair<std::string, GLenum>>& deferredRelightingShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsComputeShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& shadowsRenderCubemapShaderInfo,
-        std::vector<std::pair<std::string, GLenum>>& depthPrepassShadersInfo
-    );
+    struct ShaderFileInfo {
+        std::string filePath;
+        fs::file_time_type lastModified;
+    };
+
+    struct ShaderInfo {
+        GLenum shaderType;
+        std::shared_ptr<ShaderFileInfo> fileInfo;
+    };
+
+    struct ShaderProgramInfo {
+        ShaderProgramTypes programType;
+        std::vector<ShaderInfo> shaders;
+        GLuint programID; 
+    };
+
+    void initializeShaderFileMonitoring(ShaderRegistry& shaderRegistry);
 
     bool shaderFileChanged(const ShaderFileEditingInfo& info);
 
@@ -136,4 +131,13 @@ namespace glUtils
     void setUniformMat4(GLuint shaderProgram, std::string uniformName, glm::mat4 matrix);
     void setUniformMat4v(GLuint shaderProgram, std::string uniformName, std::vector<glm::mat4> matrices, unsigned int count);
     void setTexture2D(GLuint shaderProgram, std::string textureUniformName, GLuint texture, unsigned int textureUnitNumber);
+}
+
+namespace std {
+    template<>
+    struct hash<glUtils::ShaderProgramTypes> {
+        inline size_t operator()(const glUtils::ShaderProgramTypes& s) const noexcept {
+            return hash<int>()(static_cast<int>(s));
+        }
+    };
 }

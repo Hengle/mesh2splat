@@ -7,7 +7,7 @@ void ConversionPass::execute(RenderContext &renderContext)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::CONVERSION_PASS, -1, "CONVERSION_VS_GS_PS_PASS");
 #endif 
 
-    glUseProgram(renderContext.shaderPrograms.converterShaderProgram);
+    glUseProgram(renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::ConverterProgram));
 
     renderContext.numberOfGaussians = 0;
     glUtils::resetAtomicCounter(renderContext.atomicCounterBufferConversionPass);
@@ -58,38 +58,43 @@ void ConversionPass::conversion(
         RenderContext& renderContext, std::pair<utils::Mesh, utils::GLMesh>& mesh, GLuint dummyFramebuffer
     ) 
 {
+
+    GLuint converterProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::ConverterProgram);
+
     if (renderContext.meshToTextureData.find(mesh.first.name) != renderContext.meshToTextureData.end())
     {
         auto& textureMap = renderContext.meshToTextureData.at(mesh.first.name);
 
         if (textureMap.find(BASE_COLOR_TEXTURE) != textureMap.end())
         {
-            glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "albedoTexture", textureMap.at(BASE_COLOR_TEXTURE).glTextureID, 0);
-            glUtils::setUniform1i(renderContext.shaderPrograms.converterShaderProgram, "hasAlbedoMap", 1);
+            glUtils::setTexture2D(converterProgramID, "albedoTexture", textureMap.at(BASE_COLOR_TEXTURE).glTextureID, 0);
+
+            glUtils::setTexture2D(converterProgramID, "albedoTexture", textureMap.at(BASE_COLOR_TEXTURE).glTextureID, 0);
+            glUtils::setUniform1i(converterProgramID, "hasAlbedoMap", 1);
         }
         if (textureMap.find(NORMAL_TEXTURE) != textureMap.end())
         {
-            glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "normalTexture", textureMap.at(NORMAL_TEXTURE).glTextureID,         1);
-            glUtils::setUniform1i(renderContext.shaderPrograms.converterShaderProgram, "hasNormalMap", 1);
+            glUtils::setTexture2D(converterProgramID, "normalTexture", textureMap.at(NORMAL_TEXTURE).glTextureID,         1);
+            glUtils::setUniform1i(converterProgramID, "hasNormalMap", 1);
         }
         if (textureMap.find(METALLIC_ROUGHNESS_TEXTURE) != textureMap.end())
         {
-            glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "metallicRoughnessTexture", textureMap.at(METALLIC_ROUGHNESS_TEXTURE).glTextureID,     2);
-            glUtils::setUniform1i(renderContext.shaderPrograms.converterShaderProgram, "hasMetallicRoughnessMap", 1);
+            glUtils::setTexture2D(converterProgramID, "metallicRoughnessTexture", textureMap.at(METALLIC_ROUGHNESS_TEXTURE).glTextureID,     2);
+            glUtils::setUniform1i(converterProgramID, "hasMetallicRoughnessMap", 1);
         }
         if (textureMap.find(AO_TEXTURE) != textureMap.end())
         {
-            glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "occlusionTexture", textureMap.at(AO_TEXTURE).glTextureID,          3);
+            glUtils::setTexture2D(converterProgramID, "occlusionTexture", textureMap.at(AO_TEXTURE).glTextureID,          3);
         }
         if (textureMap.find(EMISSIVE_TEXTURE) != textureMap.end())
         {
-            glUtils::setTexture2D(renderContext.shaderPrograms.converterShaderProgram, "emissiveTexture", textureMap.at(EMISSIVE_TEXTURE).glTextureID,     4);
+            glUtils::setTexture2D(converterProgramID, "emissiveTexture", textureMap.at(EMISSIVE_TEXTURE).glTextureID,     4);
         }
     }
 
-    glUtils::setUniform4f(renderContext.shaderPrograms.converterShaderProgram,      "u_materialFactor", mesh.first.material.baseColorFactor);
-    glUtils::setUniform3f(renderContext.shaderPrograms.converterShaderProgram,      "u_bboxMin", mesh.first.bbox.min);
-    glUtils::setUniform3f(renderContext.shaderPrograms.converterShaderProgram,      "u_bboxMax", mesh.first.bbox.max);
+    glUtils::setUniform4f(converterProgramID,      "u_materialFactor", mesh.first.material.baseColorFactor);
+    glUtils::setUniform3f(converterProgramID,      "u_bboxMin", mesh.first.bbox.min);
+    glUtils::setUniform3f(converterProgramID,      "u_bboxMax", mesh.first.bbox.max);
 
     glBindVertexArray(mesh.second.vao);
 

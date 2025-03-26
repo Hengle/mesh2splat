@@ -39,10 +39,12 @@ void GaussianSplattingPass::execute(RenderContext& renderContext)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_RENDER, -1, "GAUSSIAN_SPLATTING_RENDER");
 #endif 
 	
-    glUseProgram(renderContext.shaderPrograms.renderShaderProgram);
+    GLuint renderShaderProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::Rendering3dgsProgram);
 
-    glUtils::setUniform2f(renderContext.shaderPrograms.renderShaderProgram,     "u_resolution", renderContext.rendererResolution);
-    glUtils::setUniform1i(renderContext.shaderPrograms.renderShaderProgram,     "u_renderMode", renderContext.renderMode);
+    glUseProgram(renderShaderProgramID);
+
+    glUtils::setUniform2f(renderShaderProgramID,     "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform1i(renderShaderProgramID,     "u_renderMode", renderContext.renderMode);
 
 
 	glEnable(GL_BLEND);

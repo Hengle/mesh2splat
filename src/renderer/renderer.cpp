@@ -23,17 +23,12 @@ Renderer::Renderer(GLFWwindow* window, Camera& cameraInstance) : camera(cameraIn
     renderContext.normalizedUvSpaceHeight       = 0;
     renderContext.rendererGlfwWindow            = window; //TODO: this double reference is ugly, refactor
 
+    
     lastShaderCheckTime      = glfwGetTime();
     //TODO: should this maybe live in the Renderer rather than shader utils? Probably yes
     glUtils::initializeShaderLocations();
     
-    glUtils::initializeShaderFileMonitoring(
-        shaderFiles,
-        converterShadersInfo, computeShadersInfo,
-        radixSortPrePassShadersInfo, radixSortGatherPassShadersInfo,
-        rendering3dgsShadersInfo, rendering3dgsComputePrepassShadersInfo,
-        deferredRelightingShaderInfo, shadowsComputeShaderInfo, shadowsRenderCubemapShaderInfo, depthPrepassShadersInfo
-    );
+    glUtils::initializeShaderFileMonitoring(renderContext.shaderRegistry);
 
     updateShadersIfNeeded(true); //Forcing compilation
     
@@ -100,25 +95,12 @@ Renderer::~Renderer()
 {
     glDeleteVertexArrays(1, &(renderContext.vao));
 
-    glDeleteProgram(renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
-    glDeleteProgram(renderContext.shaderPrograms.renderShaderProgram);
-    glDeleteProgram(renderContext.shaderPrograms.converterShaderProgram);
-    glDeleteProgram(renderContext.shaderPrograms.computeShaderProgram);
-    glDeleteProgram(renderContext.shaderPrograms.radixSortPrepassProgram);
-    glDeleteProgram(renderContext.shaderPrograms.radixSortGatherProgram);
-    glDeleteProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
-    glDeleteProgram(renderContext.shaderPrograms.shadowPassShaderProgram);
-    glDeleteProgram(renderContext.shaderPrograms.shadowPassCubemapRender);
-    glDeleteProgram(renderContext.shaderPrograms.depthPrepassShaderProgram);
-    
-
     glDeleteBuffers(1, &(renderContext.gaussianBuffer));
     glDeleteBuffers(1, &(renderContext.drawIndirectBuffer));
     glDeleteBuffers(1, &(renderContext.keysBuffer));
     glDeleteBuffers(1, &(renderContext.valuesBuffer));
     glDeleteBuffers(1, &(renderContext.perQuadTransformationBufferSorted));
     glDeleteBuffers(1, &(renderContext.gaussianDepthPostFiltering));
-
 
     for (auto& query : renderContext.queryPool) {
         glDeleteQueries(1, &query);
@@ -450,37 +432,7 @@ void Renderer::gaussianBufferFromSize(unsigned int size)
 }
 
 bool Renderer::updateShadersIfNeeded(bool forceReload) {
-    for (auto& entry : shaderFiles) {
-        glUtils::ShaderFileEditingInfo& info = entry.second;
-        if (forceReload || shaderFileChanged(info) ) {
-            // Update timestamp
-            info.lastWriteTime                  = glUtils::fs::last_write_time(info.filePath);
-
-            this->renderContext.shaderPrograms.converterShaderProgram       = glUtils::reloadShaderPrograms(converterShadersInfo, this->renderContext.shaderPrograms.converterShaderProgram);
-            this->renderContext.shaderPrograms.computeShaderProgram         = glUtils::reloadShaderPrograms(computeShadersInfo, this->renderContext.shaderPrograms.computeShaderProgram);
-
-            this->renderContext.shaderPrograms.radixSortPrepassProgram      = glUtils::reloadShaderPrograms(radixSortPrePassShadersInfo, this->renderContext.shaderPrograms.radixSortPrepassProgram);
-            this->renderContext.shaderPrograms.radixSortGatherProgram       = glUtils::reloadShaderPrograms(radixSortGatherPassShadersInfo, this->renderContext.shaderPrograms.radixSortGatherProgram);
-
-            this->renderContext.shaderPrograms.renderShaderProgram          = glUtils::reloadShaderPrograms(rendering3dgsShadersInfo, this->renderContext.shaderPrograms.renderShaderProgram);
-            
-            this->renderContext.shaderPrograms.depthPrepassShaderProgram    = glUtils::reloadShaderPrograms(depthPrepassShadersInfo, this->renderContext.shaderPrograms.depthPrepassShaderProgram);
-
-
-            this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram      = glUtils::reloadShaderPrograms(rendering3dgsComputePrepassShadersInfo, this->renderContext.shaderPrograms.computeShaderGaussianPrepassProgram);
-
-            this->renderContext.shaderPrograms.deferredRelightingShaderProgram          = glUtils::reloadShaderPrograms(deferredRelightingShaderInfo, this->renderContext.shaderPrograms.deferredRelightingShaderProgram);
-
-            this->renderContext.shaderPrograms.shadowPassShaderProgram                  = glUtils::reloadShaderPrograms(shadowsComputeShaderInfo, this->renderContext.shaderPrograms.shadowPassShaderProgram);
-            this->renderContext.shaderPrograms.shadowPassCubemapRender                  = glUtils::reloadShaderPrograms(shadowsRenderCubemapShaderInfo, this->renderContext.shaderPrograms.shadowPassCubemapRender);
-
-            
-            return true; //TODO: ideally it should just reload the programs for which that shader is included, may need dependency for that? Cannot just recompile one program as some are dependant on others
-            //TODO P1: investigate this, I am not sure I dont think I need to recreate all programs, I am now convinced I can just do reloadShaderPrograms(info, --> ) need to know how it is saved within the map
-            //TODO --> adopt convention in naming of entries in map such that in the "shaderFiles" they are named as the shaderInfo for consistency
-        }
-    }
-    return false;
+    return renderContext.shaderRegistry.reloadModifiedShaders(forceReload);
 }
 
 unsigned int Renderer::getVisibleGaussianCount()

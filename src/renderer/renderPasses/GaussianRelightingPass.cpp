@@ -45,29 +45,32 @@ void GaussianRelightingPass::execute(RenderContext& renderContext)
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUseProgram(renderContext.shaderPrograms.deferredRelightingShaderProgram);
+    GLuint deferredRelightingShaderProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::DeferredRelightingPassProgram);
 
-    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gPosition", renderContext.gPosition, 0);
-    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gNormal", renderContext.gNormal, 1);
-    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gAlbedo", renderContext.gAlbedo, 2);
-    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gDepth", renderContext.gDepth, 3);
-    glUtils::setTexture2D(renderContext.shaderPrograms.deferredRelightingShaderProgram, "gMetallicRoughness", renderContext.gMetallicRoughness, 4);
+
+    glUseProgram(deferredRelightingShaderProgramID);
+
+    glUtils::setTexture2D(deferredRelightingShaderProgramID, "gPosition", renderContext.gPosition, 0);
+    glUtils::setTexture2D(deferredRelightingShaderProgramID, "gNormal", renderContext.gNormal, 1);
+    glUtils::setTexture2D(deferredRelightingShaderProgramID, "gAlbedo", renderContext.gAlbedo, 2);
+    glUtils::setTexture2D(deferredRelightingShaderProgramID, "gDepth", renderContext.gDepth, 3);
+    glUtils::setTexture2D(deferredRelightingShaderProgramID, "gMetallicRoughness", renderContext.gMetallicRoughness, 4);
     
     glActiveTexture(GL_TEXTURE5);
     glBindTexture(GL_TEXTURE_CUBE_MAP, renderContext.pointLightData.m_shadowCubemap);
-    glUniform1i(glGetUniformLocation(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_shadowCubemap"), 5);
+    glUniform1i(glGetUniformLocation(deferredRelightingShaderProgramID, "u_shadowCubemap"), 5);
 
 
-    glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_LightPosition", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
-    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_clipToView", glm::inverse(renderContext.projMat));
-    glUtils::setUniformMat4(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_worldToView", renderContext.viewMat);
-    glUtils::setUniform2i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_resolution", renderContext.rendererResolution);
-    glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_camPos", renderContext.camPos);
-    glUtils::setUniform1i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_isLightingEnalbed", renderContext.pointLightData.lightingEnabled);
-    glUtils::setUniform1f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_farPlane", renderContext.farPlane);
-    glUtils::setUniform1f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_lightIntensity", renderContext.pointLightData.lightIntensity);
-    glUtils::setUniform1i(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_renderMode", renderContext.renderMode);
-    glUtils::setUniform3f(renderContext.shaderPrograms.deferredRelightingShaderProgram, "u_lightColor", renderContext.pointLightData.lightColor);
+    glUtils::setUniform3f(deferredRelightingShaderProgramID, "u_LightPosition", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
+    glUtils::setUniformMat4(deferredRelightingShaderProgramID, "u_clipToView", glm::inverse(renderContext.projMat));
+    glUtils::setUniformMat4(deferredRelightingShaderProgramID, "u_worldToView", renderContext.viewMat);
+    glUtils::setUniform2i(deferredRelightingShaderProgramID, "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform3f(deferredRelightingShaderProgramID, "u_camPos", renderContext.camPos);
+    glUtils::setUniform1i(deferredRelightingShaderProgramID, "u_isLightingEnalbed", renderContext.pointLightData.lightingEnabled);
+    glUtils::setUniform1f(deferredRelightingShaderProgramID, "u_farPlane", renderContext.farPlane);
+    glUtils::setUniform1f(deferredRelightingShaderProgramID, "u_lightIntensity", renderContext.pointLightData.lightIntensity);
+    glUtils::setUniform1i(deferredRelightingShaderProgramID, "u_renderMode", renderContext.renderMode);
+    glUtils::setUniform3f(deferredRelightingShaderProgramID, "u_lightColor", renderContext.pointLightData.lightColor);
 
     glBindVertexArray(m_fullscreenQuadVAO);
 

@@ -2,6 +2,7 @@
 
 #include "utils/utils.hpp"
 #include "utils/glUtils.hpp"
+#include "utils/ShaderRegistry.hpp"
 
 enum PassesDebugIDs
 {
@@ -50,19 +51,7 @@ struct RenderContext {
     float farPlane;
     GLFWwindow* rendererGlfwWindow; //TODO: I also need to store this here for now, as I need to reset the viewport DURING the rendering pass as it may ha
 
-    struct ShaderPrograms
-    {
-        GLuint converterShaderProgram;
-        GLuint computeShaderProgram;
-        GLuint computeShaderGaussianPrepassProgram;
-        GLuint renderShaderProgram;
-        GLuint radixSortPrepassProgram;
-        GLuint radixSortGatherProgram;
-        GLuint deferredRelightingShaderProgram;
-        GLuint shadowPassShaderProgram;
-        GLuint shadowPassCubemapRender;
-        GLuint depthPrepassShaderProgram;
-    } shaderPrograms;
+    ShaderRegistry shaderRegistry;
 
     int normalizedUvSpaceWidth;
     int normalizedUvSpaceHeight;

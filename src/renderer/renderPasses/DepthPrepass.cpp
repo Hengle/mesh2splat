@@ -6,7 +6,9 @@ void DepthPrepass::execute(RenderContext& renderContext)
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::DEPTH_PREPASS, -1, "DEPTH_PREPASS");
 #endif 
 
-    glUseProgram(renderContext.shaderPrograms.depthPrepassShaderProgram);
+    GLuint depthPrepassShaderProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::DepthPrepassProgram);
+
+    glUseProgram(depthPrepassShaderProgramID);
 
     glBindFramebuffer(GL_FRAMEBUFFER, renderContext.depthFBO);
     
@@ -16,9 +18,9 @@ void DepthPrepass::execute(RenderContext& renderContext)
     glDepthFunc(GL_LESS);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glUtils::setUniformMat4(renderContext.shaderPrograms.depthPrepassShaderProgram,   "u_modelToWorld", renderContext.modelMat);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.depthPrepassShaderProgram,   "u_worldToView", renderContext.viewMat);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.depthPrepassShaderProgram,   "u_viewToClip", renderContext.projMat);
+    glUtils::setUniformMat4(depthPrepassShaderProgramID,   "u_modelToWorld", renderContext.modelMat);
+    glUtils::setUniformMat4(depthPrepassShaderProgramID,   "u_worldToView", renderContext.viewMat);
+    glUtils::setUniformMat4(depthPrepassShaderProgramID,   "u_viewToClip", renderContext.projMat);
 
 
     for (auto& mesh : renderContext.dataMeshAndGlMesh)

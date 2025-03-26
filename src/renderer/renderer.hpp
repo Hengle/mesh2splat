@@ -8,6 +8,7 @@
 #include "renderPasses/RenderContext.hpp"
 #include "RenderPasses.hpp"
 #include "utils/SceneManager.hpp"
+#include "utils/ShaderRegistry.hpp"
 
 class Renderer {
 public:
@@ -59,20 +60,6 @@ private:
 
 	std::unique_ptr<SceneManager> sceneManager;
 	RenderContext renderContext;
-
-	std::unordered_map<std::string, glUtils::ShaderFileEditingInfo> shaderFiles;
-	//Todo make this into a map and store name->shaderInfo map
-	std::vector<std::pair<std::string, GLenum>> converterShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> computeShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> radixSortPrePassShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> radixSortGatherPassShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> rendering3dgsComputePrepassShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> rendering3dgsShadersInfo;
-	std::vector<std::pair<std::string, GLenum>> deferredRelightingShaderInfo;
-	std::vector<std::pair<std::string, GLenum>> shadowsComputeShaderInfo;
-	std::vector<std::pair<std::string, GLenum>> shadowsRenderCubemapShaderInfo;
-	std::vector<std::pair<std::string, GLenum>> depthPrepassShadersInfo;
-
 
 	double lastShaderCheckTime;
 

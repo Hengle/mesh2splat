@@ -106,21 +106,23 @@ void GaussianShadowPass::execute(RenderContext& renderContext)
     #ifdef  _DEBUG
     glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, PassesDebugIDs::GAUSSIAN_SPLATTING_SHADOW_PREPASS, -1, "GAUSSIAN_SPLATTING_SHADOW_PREPASS");
 #endif 
-    glUseProgram(renderContext.shaderPrograms.shadowPassShaderProgram);
+    GLuint shadowPrepassShaderProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::ShadowPrepassComputeProgram);
+
+    glUseProgram(shadowPrepassShaderProgramID);
 
     float std_dev = (renderContext.gaussianStd / (float(renderContext.resolutionTarget)));
 
-    glUtils::setUniform1f(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_stdDev", std_dev);
-    glUtils::setUniformMat4v(renderContext.shaderPrograms.shadowPassShaderProgram,  "u_worldToViews", shadowTransforms, 6);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.shadowPassShaderProgram,   "u_viewToClip", shadowProj);
-    glUtils::setUniform2f(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_resolution", renderContext.rendererResolution);
-    glUtils::setUniform1i(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_renderMode", renderContext.renderMode);
-    glUtils::setUniform1ui(renderContext.shaderPrograms.shadowPassShaderProgram,    "u_format", renderContext.format);
-    glUtils::setUniformMat4(renderContext.shaderPrograms.shadowPassShaderProgram,   "u_modelToWorld", renderContext.modelMat);
-    glUtils::setUniform1i(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_gaussianCount", renderContext.numberOfGaussians);
-    glUtils::setUniform3f(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_lightPos", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
+    glUtils::setUniform1f(shadowPrepassShaderProgramID,     "u_stdDev", std_dev);
+    glUtils::setUniformMat4v(shadowPrepassShaderProgramID,  "u_worldToViews", shadowTransforms, 6);
+    glUtils::setUniformMat4(shadowPrepassShaderProgramID,   "u_viewToClip", shadowProj);
+    glUtils::setUniform2f(shadowPrepassShaderProgramID,     "u_resolution", renderContext.rendererResolution);
+    glUtils::setUniform1i(shadowPrepassShaderProgramID,     "u_renderMode", renderContext.renderMode);
+    glUtils::setUniform1ui(shadowPrepassShaderProgramID,    "u_format", renderContext.format);
+    glUtils::setUniformMat4(shadowPrepassShaderProgramID,   "u_modelToWorld", renderContext.modelMat);
+    glUtils::setUniform1i(shadowPrepassShaderProgramID,     "u_gaussianCount", renderContext.numberOfGaussians);
+    glUtils::setUniform3f(shadowPrepassShaderProgramID,     "u_lightPos", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
 
-    glUtils::setUniform2f(renderContext.shaderPrograms.shadowPassShaderProgram,     "u_nearFar", glm::vec2(renderContext.nearPlane, renderContext.farPlane));
+    glUtils::setUniform2f(shadowPrepassShaderProgramID,     "u_nearFar", glm::vec2(renderContext.nearPlane, renderContext.farPlane));
            
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, renderContext.gaussianBuffer);
 
@@ -163,14 +165,16 @@ void GaussianShadowPass::drawToCubeMapFaces(RenderContext& renderContext)
 	
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, renderContext.pointLightData.m_shadowCubemap, 0);
+       
+        GLuint shadowCubemapProgramID = renderContext.shaderRegistry.getProgramID(glUtils::ShaderProgramTypes::ShadowCubemapPassProgram);
 
-        glUseProgram(renderContext.shaderPrograms.shadowPassCubemapRender);
+        glUseProgram(shadowCubemapProgramID);
 
-        glUtils::setUniform2i(renderContext.shaderPrograms.shadowPassCubemapRender,
+        glUtils::setUniform2i(shadowCubemapProgramID,
                                   "u_resolution", glm::ivec2(SHADOW_CUBEMAP_SIZE, SHADOW_CUBEMAP_SIZE));
 
-        glUtils::setUniform3f(renderContext.shaderPrograms.shadowPassCubemapRender,     "u_lightPos", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
-        glUtils::setUniform1f(renderContext.shaderPrograms.shadowPassCubemapRender,     "u_farPlane", renderContext.farPlane);
+        glUtils::setUniform3f(shadowCubemapProgramID,     "u_lightPos", glm::vec3(renderContext.pointLightData.pointLightModel[3]));
+        glUtils::setUniform1f(shadowCubemapProgramID,     "u_farPlane", renderContext.farPlane);
 
 	    glDisable(GL_BLEND);
         glDisable(GL_CULL_FACE);
