@@ -235,13 +235,19 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
                 }
             }
 
-            // Extract vertex data
+            // Extract vertex data, I assume the glb mesh to always have position and normal data
             auto vertices       = getBufferData<glm::vec3>(model, primitive.attributes.at("POSITION"));
-            auto uvs            = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));         
             auto normals        = getBufferData<glm::vec3>(model, primitive.attributes.at("NORMAL"));
+            
+            const glm::vec2* uvs = nullptr;
+            bool hasUvs = false;
+            if (primitive.attributes.find("TEXCOORD_0") != primitive.attributes.end())
+            {
+                uvs = getBufferData<glm::vec2>(model, primitive.attributes.at("TEXCOORD_0"));
+                hasUvs = true;
+            }
 
-            //TODO: 01/2025 --> I wrote this part of the code more than a year ago: what was I thinking?
-            const glm::vec4* tangents = NULL;
+            const glm::vec4* tangents = nullptr;
             bool hasTangents = false;
             if (primitive.attributes.find("TANGENT") != primitive.attributes.end())
             {
@@ -251,7 +257,6 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
             
             parseGltfMaterial(model, primitive.material, parentFolder, myMesh.material);
 
-            //TODO: indices is wrong to be used like this because it is not a global index amongst all primitives
             myMesh.faces.resize(indices.size() / 3);
             utils::Face* dst = myMesh.faces.data();
             
@@ -283,7 +288,7 @@ bool SceneManager::parseGltfFile(const std::string& filePath, const std::string&
                 for (int e = 0; e < 3; e++)
                 {
                     dst->pos[e] = vertices[index[e]];
-                    dst->uv[e] = uvs[index[e]];
+                    if(hasUvs) dst->uv[e] = uvs[index[e]];
                     dst->normal[e] = normals[index[e]]; 
                 }
             }

@@ -30,21 +30,25 @@ void ImGuiUI::initialize(GLFWwindow* window)
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
+
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460"); // Use appropriate GLSL version
 }
 
-
-void ImGuiUI::renderUI()
+void ImGuiUI::renderFileSelectorWindow()
 {
+    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(600, 200), ImGuiCond_FirstUseEver);
+
     ImGui::Begin("File Selector");
-    
+
     ImGui::SeparatorText("Input");
 
     if (ImGui::Button("Select file to load (.glb / .ply)")) {
         IGFD::FileDialogConfig config;
-	    config.path = ".";
+        config.path = ".";
+        ImGui::SetNextWindowSize(ImVec2(700, 400), ImGuiCond_Always);
         ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".glb,.ply", config);
     }
 
@@ -55,37 +59,45 @@ void ImGuiUI::renderUI()
             currentModelFormat = utils::getFileExtension(file);
             switch (currentModelFormat)
             {
-                case utils::ModelFileExtension::GLB:
-                    meshFilePath = file;
-                    meshParentFolder = parentFolder;
-                    break;
-                case utils::ModelFileExtension::PLY:
-                    plyFilePath = file;
-                    plyParentFolder = parentFolder;
-                    break;
-                case utils::ModelFileExtension::NONE:
-                    break;
+            case utils::ModelFileExtension::GLB:
+                meshFilePath = file;
+                meshParentFolder = parentFolder;
+                break;
+            case utils::ModelFileExtension::PLY:
+                plyFilePath = file;
+                plyParentFolder = parentFolder;
+                break;
+            case utils::ModelFileExtension::NONE:
+                break;
             }
 
         }
-    
+
         ImGuiFileDialog::Instance()->Close();
     }
 
     switch (currentModelFormat)
     {
-        case utils::ModelFileExtension::GLB:
-            ImGui::Text("Selected Glb file: %s", meshFilePath.c_str());
-            ImGui::SameLine();
-            loadNewMesh = ImGui::Button("Convert Mesh to 3DGS");
-            break;
-        case utils::ModelFileExtension::PLY:
-            ImGui::Text("Selected Ply file: %s", plyFilePath.c_str());
-            ImGui::SameLine();
-            loadNewPly = ImGui::Button("Load 3DGS ply");
-            break;
-        case utils::ModelFileExtension::NONE:
-            break;
+    case utils::ModelFileExtension::GLB:
+        ImGui::Text("Selected Glb file: %s", meshFilePath.c_str());
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.60f, 0.20f, 1.0f)); 
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.75f, 0.30f, 1.0f)); 
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.50f, 0.15f, 1.0f)); 
+        loadNewMesh = ImGui::Button("Convert Mesh to 3DGS");
+        ImGui::PopStyleColor(3);
+
+        break;
+    case utils::ModelFileExtension::PLY:
+        ImGui::Text("Selected Ply file: %s", plyFilePath.c_str());
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.60f, 0.20f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.75f, 0.30f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.50f, 0.15f, 1.0f));
+        loadNewPly = ImGui::Button("Load 3DGS ply");
+        ImGui::PopStyleColor(3);
+
+        break;
+    case utils::ModelFileExtension::NONE:
+        break;
     }
 
     ImGui::SeparatorText("Output Folder");
@@ -93,24 +105,19 @@ void ImGuiUI::renderUI()
     if (ImGui::Button("Select output folder")) {
         IGFD::FileDialogConfig config;
         config.path = ".";
+        ImGui::SetNextWindowSize(ImVec2(700, 400), ImGuiCond_Always);
         ImGuiFileDialog::Instance()->OpenDialog(
-            "ChooseFolderDlgKey",          // dialog key
-            "Choose Output Folder",        // window title
-            nullptr,                       // no filter => can pick folders
+            "ChooseFolderDlgKey",          
+            "Choose Output Folder",        
+            nullptr,                       
             config
         );
     }
 
-    // Display the dialog when open
     if (ImGuiFileDialog::Instance()->Display("ChooseFolderDlgKey"))
     {
         if (ImGuiFileDialog::Instance()->IsOk()) {
-            // The user validated (OK)
-            // For a folder, we typically use GetCurrentPath()
-            // to get the path of the chosen directory.
             std::string chosenFolder = ImGuiFileDialog::Instance()->GetCurrentPath();
-        
-            // Save or store this folder path somewhere for your usage:
             destinationFilePathFolder = chosenFolder + "\\";
         }
 
@@ -120,7 +127,7 @@ void ImGuiUI::renderUI()
 
     ImGui::SameLine();
     // Show which folder is chosen
-    if(!destinationFilePathFolder.empty()) ImGui::Text("Selected folder: %s", destinationFilePathFolder.c_str());
+    if (!destinationFilePathFolder.empty()) ImGui::Text("Selected folder: %s", destinationFilePathFolder.c_str());
     ImGui::SameLine();
     float availableWidth = ImGui::GetContentRegionAvail().x;
     float comboWidth = std::max(180.0f, availableWidth * 0.25f);
@@ -129,12 +136,22 @@ void ImGuiUI::renderUI()
 
     ImGui::SetNextItemWidth(comboWidth);
     ImGui::Combo("##Combobox", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
-    
+
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.60f, 0.20f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.75f, 0.30f, 1.0f));
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.15f, 0.50f, 0.15f, 1.0f));
     if (ImGui::Button("Save splat")) {
         savePly = true;
     }
+    ImGui::PopStyleColor(3);
 
     ImGui::End();
+}
+
+void ImGuiUI::renderPropertiesWindow()
+{
+    ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(350, 350), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("Properties");
 
@@ -155,15 +172,21 @@ void ImGuiUI::renderUI()
         runConversionFlag = true;
     }
 
-    ImGui::Dummy(ImVec2(0,2.0f));
+    ImGui::Dummy(ImVec2(0, 2.0f));
     ImGui::SeparatorText("##");
-    ImGui::Dummy(ImVec2(0,1.0f));
+    ImGui::Dummy(ImVec2(0, 1.0f));
 
 
     ImGui::ColorEdit4("Background Color", &sceneBackgroundColor.x);
 
     ImGui::End();
+}
 
+
+void ImGuiUI::renderUI()
+{
+    renderFileSelectorWindow();
+    renderPropertiesWindow();
     renderGpuFrametime();
     renderLightingSettings();
 }
@@ -232,10 +255,10 @@ void ImGuiUI::renderGizmoUi(glm::mat4& glmViewMat, glm::mat4& glmProjMat, glm::m
 
 }
 
-
-
 void ImGuiUI::renderGpuFrametime()
 {
+    ImGui::SetNextWindowPos(ImVec2(20, 350), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(400, 240), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("Performance");
     ImGui::Text("Frame Time: %.3f ms", gpuFrameTime);
@@ -280,6 +303,8 @@ void ImGuiUI::renderGpuFrametime()
 
 void ImGuiUI::renderLightingSettings()
 {
+    ImGui::SetNextWindowPos(ImVec2(1000, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(250, 250), ImGuiCond_FirstUseEver);
 
     ImGui::Begin("Lighting");
 
@@ -304,6 +329,8 @@ void ImGuiUI::preframe()
 
 void ImGuiUI::displayGaussianCounts(unsigned int gaussianCount, unsigned int visibleGaussianCount)
 {
+    ImGui::SetNextWindowPos(ImVec2(20, 250), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSize(ImVec2(320, 80), ImGuiCond_FirstUseEver);
     ImGui::Begin("Object info");
     ImGui::Text("Total gaussian count: %s", utils::formatWithCommas(gaussianCount).c_str());
     ImGui::Text("Visible gaussian count: %s", utils::formatWithCommas(visibleGaussianCount).c_str());
@@ -377,13 +404,3 @@ glm::vec3 ImGuiUI::getLightColor() const { return lightColor; };
 
 void ImGuiUI::setEnableDepthTest(bool depthTest) { enableDepthTest = depthTest; }
 bool ImGuiUI::getIsDepthTestEnabled() const { return enableDepthTest; }
-
-
-
-
-
-
-
-
-
-

@@ -56,7 +56,8 @@ public:
     void setPlyLoaded(bool loadedPly);
 
     void renderGizmoUi(glm::mat4& glmViewMat, glm::mat4& glmProjMat, glm::mat4& glmModelMat);
-
+    void renderFileSelectorWindow();
+    void renderPropertiesWindow();
     void renderGpuFrametime();
     void renderLightingSettings();
     float getLightIntensity() const;
