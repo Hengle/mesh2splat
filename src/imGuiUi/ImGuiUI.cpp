@@ -134,7 +134,7 @@ void ImGuiUI::renderFileSelectorWindow()
     {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string chosenFolder = ImGuiFileDialog::Instance()->GetCurrentPath();
-            destinationFilePathFolder = chosenFolder + "\\";
+            destinationFilePathFolder = chosenFolder;
         }
 
         // Close the dialog
@@ -153,6 +153,9 @@ void ImGuiUI::renderFileSelectorWindow()
         exportSplats = true;
     }
     ImGui::PopStyleColor(3);
+
+	// can be optimized
+	ImGui::Text("\"%s\"", getMeshFullFilePathDestination().c_str());
 
     ImGui::End();
 }
@@ -371,7 +374,14 @@ std::string ImGuiUI::getMeshFullFilePathDestination() const {
     if(formatIndex == 3)
         extension = ".mmg";
 
-    return destinationFilePathFolder + "/" + std::string(outputFilename) + extension;
+	std::string ret;
+	if(!destinationFilePathFolder.empty())
+		ret += destinationFilePathFolder + "/";
+	ret += std::string(outputFilename) + extension;
+
+	std::replace(ret.begin(), ret.end(), '\\', '/');
+
+    return ret;
 };
 
 unsigned int ImGuiUI::getFormatOption() const { return formatIndex; };
