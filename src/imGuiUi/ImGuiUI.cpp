@@ -40,24 +40,24 @@ void ImGuiUI::renderFileSelectorWindow()
 {
     ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(600, 200), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(600, 300), ImVec2(FLT_MAX, FLT_MAX));
+    ImGui::SetNextWindowSizeConstraints(ImVec2(600, 300), ImVec2(FLT_MAX, FLT_MAX));
 
-	ImGui::Begin("File Selector");
+    ImGui::Begin("File Selector");
 
-	float availableWidth = ImGui::GetContentRegionAvail().x;
-	float buttonWidth = ImGui::CalcTextSize("...").x + ImGui::GetStyle().FramePadding.x * 2;
+    float availableWidth = ImGui::GetContentRegionAvail().x;
+    float buttonWidth = ImGui::CalcTextSize("...").x + ImGui::GetStyle().FramePadding.x * 2;
 
-	ImGui::SeparatorText("Input (.ply|.glb)");
-	
-	ImGui::Text("file: ");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - buttonWidth + ImGui::GetStyle().WindowPadding.x);
-	ImGui::InputText("##InputFile", &meshFilePath, ImGuiInputTextFlags_ReadOnly);
-	ImGui::SameLine();
+    ImGui::SeparatorText("Input (.ply|.glb)");
+    
+    ImGui::Text("file: ");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - buttonWidth + ImGui::GetStyle().WindowPadding.x);
+    ImGui::InputText("##InputFile", &meshFilePath, ImGuiInputTextFlags_ReadOnly);
+    ImGui::SameLine();
 
     if (ImGui::Button("...##Input")) {
         IGFD::FileDialogConfig config;
-		config.flags |= ImGuiFileDialogFlags_Modal;
+        config.flags |= ImGuiFileDialogFlags_Modal;
         config.path = ".";
         ImGui::SetNextWindowSize(ImVec2(700, 400), ImGuiCond_Always);
         ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".glb,.ply", config);
@@ -75,7 +75,7 @@ void ImGuiUI::renderFileSelectorWindow()
         ImGuiFileDialog::Instance()->Close();
     }
 
-	switch (currentModelFormat)
+    switch (currentModelFormat)
     {
     case utils::ModelFileExtension::GLB:
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.60f, 0.20f, 1.0f)); 
@@ -97,29 +97,29 @@ void ImGuiUI::renderFileSelectorWindow()
         break;
     }
 
-	ImGui::TextUnformatted("");
+    ImGui::TextUnformatted("");
 
-	ImGui::SeparatorText("Output");
+    ImGui::SeparatorText("Output");
 
-	ImGuiIO& io = ImGui::GetIO();
-	float comboWidth = std::max(180.0f, availableWidth * 0.25f) * io.FontGlobalScale;
-	ImGui::TextUnformatted("Format: ");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(comboWidth);
-	ImGui::Combo("##Combobox", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
+    ImGuiIO& io = ImGui::GetIO();
+    float comboWidth = std::max(180.0f, availableWidth * 0.25f) * io.FontGlobalScale;
+    ImGui::TextUnformatted("Format: ");
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(comboWidth);
+    ImGui::Combo("##Combobox", &formatIndex, formatLabels, IM_ARRAYSIZE(formatLabels));
 
-	ImGui::Text("Directory: ");
-	ImGui::SameLine();
+    ImGui::Text("Directory: ");
+    ImGui::SameLine();
 
-	// Show which folder is chosen
-	ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - buttonWidth + ImGui::GetStyle().WindowPadding.x);
-	ImGui::InputText("##OutputFolder", &destinationFilePathFolder, ImGuiInputTextFlags_ReadOnly);
+    // Show which folder is chosen
+    ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() - ImGui::GetStyle().ItemSpacing.x - buttonWidth + ImGui::GetStyle().WindowPadding.x);
+    ImGui::InputText("##OutputFolder", &destinationFilePathFolder, ImGuiInputTextFlags_ReadOnly);
 
-	ImGui::SameLine();
+    ImGui::SameLine();
 
-	if (ImGui::Button("...##Output")) {
-		IGFD::FileDialogConfig config;
-		config.flags |= ImGuiFileDialogFlags_Modal;
+    if (ImGui::Button("...##Output")) {
+        IGFD::FileDialogConfig config;
+        config.flags |= ImGuiFileDialogFlags_Modal;
         config.path = ".";
         ImGui::SetNextWindowSize(ImVec2(700, 400), ImGuiCond_Always);
         ImGuiFileDialog::Instance()->OpenDialog(
@@ -130,7 +130,7 @@ void ImGuiUI::renderFileSelectorWindow()
         );
     }
 
-	if (ImGuiFileDialog::Instance()->Display("ChooseFolderDlgKey"))
+    if (ImGuiFileDialog::Instance()->Display("ChooseFolderDlgKey"))
     {
         if (ImGuiFileDialog::Instance()->IsOk()) {
             std::string chosenFolder = ImGuiFileDialog::Instance()->GetCurrentPath();
@@ -141,9 +141,9 @@ void ImGuiUI::renderFileSelectorWindow()
         ImGuiFileDialog::Instance()->Close();
     }
 
-	ImGui::Text("Name: ");
+    ImGui::Text("Name: ");
     ImGui::SameLine();
-	ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x);
+    ImGui::SetNextItemWidth(availableWidth - ImGui::GetCursorPosX() + ImGui::GetStyle().WindowPadding.x);
     ImGui::InputText("##ExportFileName", outputFilename, sizeof(outputFilename));
 
     ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.60f, 0.20f, 1.0f));
@@ -168,7 +168,7 @@ void ImGuiUI::renderPropertiesWindow()
     ImGui::Checkbox("Enable mesh-gaussian depth test (improves rendering performance)", &enableDepthTest);
 
     //TODO: right now std_dev is not updated in the actual gaussianBuffer, just during rendering. Need to consider this when exporting
-	ImGui::SliderFloat("Gaussian Scale", &gaussian_std, minStd, maxStd, "%.2f");
+    ImGui::SliderFloat("Gaussian Scale", &gaussian_std, minStd, maxStd, "%.2f");
 
     ImGui::SeparatorText("Sampling density settings");
 
@@ -366,10 +366,10 @@ std::string ImGuiUI::getMeshFilePath() const { return meshFilePath; };
 std::string ImGuiUI::getMeshFilePathParentFolder() const {return meshParentFolder;};
 std::string ImGuiUI::getMeshFullFilePathDestination() const {
     
-	const char* extension = ".ply";
+    const char* extension = ".ply";
 
-	if(formatIndex == 3)
-		extension = ".mmg";
+    if(formatIndex == 3)
+        extension = ".mmg";
 
     return destinationFilePathFolder + "/" + std::string(outputFilename) + extension;
 };
