@@ -32,7 +32,6 @@ int main(int argc, char** argv) {
     ImGuiUI ImGuiUI(0.65f, 0.5f); //TODO: give a meaning to these params
     ImGuiUI.initialize(glewGlfwHandler.getWindow());
 
-
     // https://stackoverflow.com/questions/7375003/how-to-convert-hicon-to-hbitmap-in-vc
 #if _WIN32
     {
@@ -81,7 +80,6 @@ int main(int argc, char** argv) {
         }
     }
 #endif
-
 
     Renderer renderer(glewGlfwHandler.getWindow(), camera);
     renderer.initialize();

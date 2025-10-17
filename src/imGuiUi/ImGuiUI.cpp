@@ -34,6 +34,14 @@ void ImGuiUI::initialize(GLFWwindow* window)
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 460"); // Use appropriate GLSL version
+
+	GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+	const GLFWvidmode* mode = glfwGetVideoMode(primaryMonitor);
+	int screenWidth = mode->width;
+	int screenHeight = mode->height;
+
+	if (screenWidth > 1700)
+		largeFont = true;
 }
 
 void ImGuiUI::renderFileSelectorWindow()
@@ -204,7 +212,6 @@ void ImGuiUI::renderUI()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
-	static bool largeFont = false;
 	static bool imguiDemo = false;
 
 	if(imguiDemo)

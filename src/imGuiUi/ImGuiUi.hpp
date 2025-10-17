@@ -78,7 +78,6 @@ public:
     
     ImGuiUI::VisualizationOption selectedRenderMode() const ;
 
-
 private:
     int resolutionIndex = 0;
     const int resolutionOptions[3] = { 1024, 2048, 4096 };
@@ -118,6 +117,8 @@ private:
     bool exportSplats = false;
 
     bool enableDepthTest = false;
+
+	bool largeFont = false;
 
 	// windows
 	bool infoWindow = false;
