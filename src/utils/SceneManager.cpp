@@ -490,6 +490,9 @@ void SceneManager::loadTextures(const std::vector<utils::Mesh>& meshes)
 
 void SceneManager::exportSplats(const std::string outputFile, unsigned int exportFormat)
 {
+	if (!renderContext.numberOfGaussians)
+		return;
+
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, renderContext.gaussianBuffer);
 
     std::vector<utils::GaussianDataSSBO> cpuData(renderContext.numberOfGaussians);
@@ -511,7 +514,7 @@ void SceneManager::exportSplats(const std::string outputFile, unsigned int expor
     std::thread(
         [=, data = std::move(cpuData)]() mutable 
         {
-            parsers::savePlyVector(outputFile, data, format, scaleMultiplier);
+            parsers::saveSplatVector(outputFile, data, format, scaleMultiplier);
         }
     ).detach();
     

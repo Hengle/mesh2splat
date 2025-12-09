@@ -15,8 +15,9 @@ unsigned int RGBSwizzle(unsigned int c) {
 }
 
 int main(int argc, char** argv) {
-    GlewGlfwHandler glewGlfwHandler(glm::ivec2(1080, 720), "Mesh2Splat");
-    
+//    GlewGlfwHandler glewGlfwHandler(glm::ivec2(1080, 720), "Mesh2Splat");
+    GlewGlfwHandler glewGlfwHandler(glm::ivec2(2800, 1280), "Mesh2Splat");
+
     Camera camera(
         glm::vec3(0.0f, 0.0f, 5.0f), 
         glm::vec3(0.0f, 1.0f, 0.0f), 
@@ -102,7 +103,7 @@ int main(int argc, char** argv) {
 
         ImGuiUI.preframe();
         ImGuiUI.renderUI();
-        
+
         guiRendererMediator.update();
 
         renderer.renderFrame();

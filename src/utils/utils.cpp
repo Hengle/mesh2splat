@@ -128,7 +128,7 @@ namespace utils
     }
 
     glm::vec3 linear_to_srgb_float(glm::vec3 rgb) {
-        return glm::vec3(linear_to_srgb_float(rgb.r), linear_to_srgb_float(rgb.g), linear_to_srgb_float(rgb.b));
+        return glm::vec3(linear_to_srgb_float(rgb.x), linear_to_srgb_float(rgb.y), linear_to_srgb_float(rgb.z));
     }
 
     //https://www.nayuki.io/res/srgb-transform-library/srgb-transform.c
@@ -145,7 +145,7 @@ namespace utils
     }
 
     glm::vec3 srgb_to_linear_float(glm::vec3 rgb) {
-        return glm::vec3(srgb_to_linear_float(rgb.r), srgb_to_linear_float(rgb.g), srgb_to_linear_float(rgb.b));
+        return glm::vec3(srgb_to_linear_float(rgb.x), srgb_to_linear_float(rgb.y), srgb_to_linear_float(rgb.z));
     }
 
 
@@ -306,10 +306,10 @@ namespace utils
                 x, y,
                 textureTypeMap[METALLIC_ROUGHNESS_TEXTURE].first, textureTypeMap[METALLIC_ROUGHNESS_TEXTURE].second
             );
-            metallicFactor = material.metallicFactor * metallicRoughness.b;
-            roughnessFactor = material.roughnessFactor * metallicRoughness.g;
-            if (metallicRoughness.r != 1.0f) {
-                aoFactor = metallicRoughness.r;
+            metallicFactor = material.metallicFactor * metallicRoughness.z;
+            roughnessFactor = material.roughnessFactor * metallicRoughness.y;
+            if (metallicRoughness.x != 1.0f) {
+                aoFactor = metallicRoughness.x;
                 aoFactor = std::min(std::max(aoFactor, 0.0f), 1.0f);
             }
         }
@@ -365,16 +365,16 @@ namespace utils
                 textureTypeMap[AO_TEXTURE].first, textureTypeMap[AO_TEXTURE].second
             ));
 
-            if (aoVecFactor.r == 1.0f && aoVecFactor.g == 1.0f && aoVecFactor.b == 1.0f)
+            if (aoVecFactor.x == 1.0f && aoVecFactor.y == 1.0f && aoVecFactor.z == 1.0f)
             {
                 aoFactor = material.occlusionStrength;
             } else {
-                if (aoVecFactor.r != 1.0f) {
-                    aoFactor = aoVecFactor.r * material.occlusionStrength;
-                } else if (aoVecFactor.g != 1.0f) {
-                    aoFactor = aoVecFactor.g * material.occlusionStrength;
-                } else if (aoVecFactor.b != 1.0f) {
-                    aoFactor = aoVecFactor.b * material.occlusionStrength;
+                if (aoVecFactor.x != 1.0f) {
+                    aoFactor = aoVecFactor.x * material.occlusionStrength;
+                } else if (aoVecFactor.y != 1.0f) {
+                    aoFactor = aoVecFactor.y * material.occlusionStrength;
+                } else if (aoVecFactor.z != 1.0f) {
+                    aoFactor = aoVecFactor.z * material.occlusionStrength;
                 }
             }
         }
@@ -387,7 +387,7 @@ namespace utils
         bool skip = false;
         skip |= glm::any(glm::isnan(g.position)) || glm::any(glm::isinf(g.position));
         skip |= glm::any(glm::isnan(g.color))    || glm::any(glm::isinf(g.color));
-        skip |= glm::any(glm::isnan(g.scale))    || glm::any(glm::isinf(g.scale));
+        skip |= glm::any(glm::isnan(g.linearScale))    || glm::any(glm::isinf(g.linearScale));
         skip |= glm::any(glm::isnan(g.normal))   || glm::any(glm::isinf(g.normal));
         skip |= glm::any(glm::isnan(g.rotation)) || glm::any(glm::isinf(g.rotation));
         skip |= glm::any(glm::isnan(g.pbr))      || glm::any(glm::isinf(g.pbr));
@@ -395,7 +395,7 @@ namespace utils
     
         return (g.position == glm::vec4(0.0f) &&
                 g.color    == glm::vec4(0.0f) &&
-                g.scale    == glm::vec4(0.0f) &&
+                g.linearScale    == glm::vec4(0.0f) &&
                 g.normal   == glm::vec4(0.0f) &&
                 g.rotation == glm::vec4(0.0f) &&
                 g.pbr      == glm::vec4(0.0f));
