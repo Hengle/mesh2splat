@@ -4,6 +4,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "ImGuiUI.hpp"
+#include "ini/IniArchive.h"
+
+wchar_t* g_settingIni = L"settings.ini";
+
 
 ImGuiUI::ImGuiUI(float defaultGaussianStd, float defaultMesh2SPlatQuality)
     : resolutionIndex(0),
@@ -20,14 +24,44 @@ ImGuiUI::ImGuiUI(float defaultGaussianStd, float defaultMesh2SPlatQuality)
 
 ImGuiUI::~ImGuiUI()
 {
-    ImGui_ImplOpenGL3_Shutdown();
+	CIniArchive iniArchive;
+
+	// ------------------------
+
+	iniArchive.AddKeyValue("meshFilePath", meshFilePath, "input file path");
+	iniArchive.AddKeyValue("resolutionIndex", resolutionIndex, "index in resolution combobox");
+	iniArchive.AddKeyValue("formatIndex", formatIndex, "index in output format combobox");
+	iniArchive.AddKeyValue("quality", quality, "float quality");
+
+	// ------------------------
+
+	iniArchive.Save(g_settingIni);
+
+	ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
 }
 
 void ImGuiUI::initialize(GLFWwindow* window)
 {
-    IMGUI_CHECKVERSION();
+	CIniArchive iniArchive;
+	iniArchive.Load(g_settingIni);
+
+	// ------------------------
+
+	// todo: test spaces in name
+	if (auto p = iniArchive.GetByKey("meshFilePath"))
+	{
+		meshFilePath = p->Value;
+		currentModelFormat = utils::getFileExtension(meshFilePath);
+	}
+	iniArchive.Get("resolutionIndex", resolutionIndex, 0);
+	iniArchive.Get("formatIndex", formatIndex, 0);
+	iniArchive.Get("quality", quality, 0.5f);
+
+	// ------------------------
+
+	IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
 
@@ -42,6 +76,8 @@ void ImGuiUI::initialize(GLFWwindow* window)
 
 	if (screenWidth > 1700)
 		largeFont = true;
+
+	io.FontGlobalScale = 2.0f;
 }
 
 void ImGuiUI::renderFileSelectorWindow()
@@ -212,6 +248,7 @@ void ImGuiUI::renderUI()
 {
 	ImGuiIO& io = ImGui::GetIO();
 
+	static bool largeFont = false;
 	static bool imguiDemo = false;
 
 	if(imguiDemo)
@@ -416,9 +453,6 @@ std::string ImGuiUI::getMeshFilePathParentFolder() const {return meshParentFolde
 std::string ImGuiUI::getMeshFullFilePathDestination() const {
     
     const char* extension = ".ply";
-
-    if(formatIndex == 3)
-        extension = ".mmg";
 
 	std::string ret;
 	if(!destinationFilePathFolder.empty())

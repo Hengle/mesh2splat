@@ -9,7 +9,6 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_stdlib.h>
-#include <glm/glm.hpp>
 #include "utils/utils.hpp"
 #include "Imguizmo.hpp"
 #include "ImGuiFileDialog.h"
@@ -79,13 +78,13 @@ public:
     ImGuiUI::VisualizationOption selectedRenderMode() const ;
 
 private:
-    int resolutionIndex = 0;
-    const int resolutionOptions[3] = { 1024, 2048, 4096 };
-    const char* resolutionLabels[3] = { "1024", "2048", "4096" };
+    int resolutionIndex = 3;
+    const int resolutionOptions[6] = { 128, 256, 512, 1024, 2048, 4096 };
+    const char* resolutionLabels[6] = { "128", "256", "512", "1024", "2048", "4096" };
 
 	// index into formatLabels
     int formatIndex = 0;
-    const char* formatLabels[3] = { "PLY Standard Format", "PLY PBR", "PLY Compressed PBR"};
+    const char* formatLabels[4] = { "PLY Standard Format", "PLY PBR", "PLY Compressed PBR"};
 
     int renderIndex = 0;
     const ImGuiUI::VisualizationOption renderOptions[6] = {
@@ -120,7 +119,7 @@ private:
 
 	bool largeFont = false;
 
-	// windows
+    // windows
 	bool infoWindow = false;
 	bool lightingWindow = false;
 	bool performanceWindow = false;

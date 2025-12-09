@@ -21,7 +21,7 @@ namespace parsers
 
 	void loadPlyFile(std::string plyFileLocation, std::vector<utils::GaussianDataSSBO>& gaussians);
 
-	void savePlyVector(std::string outputFileLocation, std::vector<utils::GaussianDataSSBO> gaussians_3D_list, unsigned int format, float scaleMultiplier);
+	void saveSplatVector(std::string outputFileLocation, std::vector<utils::GaussianDataSSBO> gaussians_3D_list, unsigned int format, float scaleMultiplier);
 
 	unsigned char* combineMetallicRoughness(const char* path1, const char* path2, int& width, int& height, int& channels);
 

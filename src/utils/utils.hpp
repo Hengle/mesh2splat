@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+#define GLM_FORCE_XYZW_ONLY 1
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -146,7 +147,7 @@ namespace utils
         glm::vec4 position;
         glm::vec4 color;
 		// linear
-        glm::vec4 scale;
+        glm::vec4 linearScale;
         glm::vec4 normal;
         glm::vec4 rotation;
         glm::vec4 pbr;
